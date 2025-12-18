@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudPhone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Ajustements pour le défilement et le look */
+        body { background-color: #0f172a; color: white; }
+        .break-inside-avoid { break-inside: avoid; }
+        /* Masquer la scrollbar tout en gardant le scroll */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <nav class="fixed top-0 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-700 z-50 px-4 py-3 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-cloud text-blue-500 text-xl"></i>
+            <span class="font-bold text-xl tracking-wide">Cloud<span class="text-blue-500">Phone</span></span>
+        </div>
+        <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Ajouter</span>
+        </button>
+    </nav>
+
+    <main class="pt-24 pb-10 px-4 max-w-7xl mx-auto min-h-screen">
+        <div id="gallery" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+            <div class="text-center col-span-full text-gray-500 mt-10 animate-pulse">
+                Chargement de la galerie...
+            </div>
+        </div>
+    </main>
+
+    <div id="uploadModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+        
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 p-6 pointer-events-auto transform transition-all scale-100">
+                
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-white">Ajouter une photo</h2>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 uppercase font-bold">Lien de l'image</label>
+                        <input type="url" id="imgUrl" placeholder="https://exemple.com/image.jpg" 
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 uppercase font-bold">Titre</label>
+                        <input type="text" id="imgTitle" placeholder="Ex: Coucher de soleil" 
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none transition">
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-700 mt-2">
+                        <label class="block text-xs text-red-400 mb-1 uppercase font-bold"><i class="fa-solid fa-lock"></i> Code Secret Admin</label>
+                        <input type="password" id="adminPass" placeholder="Mot de passe requis" 
+                            class="w-full bg-slate-900 border border-red-900/50 rounded-lg p-3 text-white focus:border-red-500 focus:outline-none transition">
+                    </div>
+
+                    <button onclick="uploadPhoto()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-900/20">
+                        Publier maintenant
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+    <script>
+        // Fonctions d'ouverture/fermeture du modal (Design)
+        function openModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
