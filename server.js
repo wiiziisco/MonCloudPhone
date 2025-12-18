@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Tes identifiants 'toto' qui marchent
-process.env.MONGO_URI; "mongodb+srv://toto:toto1234@cluster0>
+const MONGO_URI = process.env.MONGO_URI; "mongodb+srv://toto:toto1234@cluster0>
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Base de données connectée>
