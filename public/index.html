@@ -9,7 +9,7 @@
     <style>
         body { background-color: #0f172a; color: white; }
         .break-inside-avoid { break-inside: avoid; }
-        /* Pour cacher la barre de défilement tout en pouvant scroller */
+        /* Cache la scrollbar tout en permettant le défilement */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -46,12 +46,10 @@
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
             <div class="bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 p-6 pointer-events-auto">
-                
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-white">Nouvelle Photo</h2>
                     <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-
                 <div class="space-y-4">
                     <div class="relative border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition group cursor-pointer" onclick="document.getElementById('fileInput').click()">
                         <input type="file" id="fileInput" accept="image/*" class="hidden">
@@ -61,19 +59,45 @@
                         </div>
                         <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-lg mx-auto">
                     </div>
-
                     <input type="hidden" id="base64String">
-
                     <div>
                         <label class="block text-xs text-gray-400 mb-1 uppercase font-bold">Titre (Facultatif)</label>
                         <input type="text" id="imgTitle" placeholder="Ex: Bamako" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none">
                     </div>
-
                     <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition">
-                        Publier maintenant
+                        Publier
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
 
+    <div id="loginModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeLoginModal()"></div>
+        
+        <div class="relative bg-slate-900/40 backdrop-blur-xl border border-blue-500/30 shadow-[0_0_50px_-12px_rgba(59,130,246,0.5)] rounded-3xl p-6 w-[85%] max-w-[280px] text-center transform transition-all scale-100">
+            
+            <div class="mb-5 relative inline-block">
+                <div class="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
+                <i class="fa-solid fa-lock text-5xl text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-blue-600 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]"></i>
+            </div>
+
+            <h3 class="text-white font-bold text-lg mb-1 tracking-wide">Accès Admin</h3>
+            <p class="text-blue-200/50 text-xs mb-4">Zone sécurisée</p>
+
+            <div class="relative group mb-5">
+                <div class="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg blur opacity-30 group-hover:opacity-75 transition duration-200"></div>
+                <input type="password" id="adminCodeInput" placeholder="Code secret" 
+                    class="relative w-full bg-slate-900/80 text-white text-center border border-slate-700 rounded-lg py-2 px-3 focus:outline-none focus:border-cyan-400 placeholder-gray-600 transition-all text-sm tracking-widest">
+            </div>
+
+            <div class="flex gap-2 justify-center">
+                <button onclick="closeLoginModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800/50 transition">
+                    Annuler
+                </button>
+                <button onclick="confirmLogin()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition transform hover:scale-105">
+                    Ouvrir
+                </button>
             </div>
         </div>
     </div>
