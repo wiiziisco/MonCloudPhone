@@ -111,7 +111,6 @@ function displayPhotos() {
         const div = document.createElement('div');
         div.className = 'break-inside-avoid mb-4 relative group rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md dark:shadow-lg transition-colors duration-300';
         
-        // Boutons Admin (Modifier + Supprimer)
         let adminBtns = '';
         if (isAdmin) {
             adminBtns = `
@@ -146,25 +145,18 @@ function displayPhotos() {
     });
 }
 
-// --- MODIFICATION DE PHOTO (NOUVEAU) ---
+// --- MODIFICATION & UPLOAD ---
 
 function openEditModal(id) {
-    // Trouver la photo
     const photo = allPhotos.find(p => p._id === id);
     if(!photo) return;
-
-    // Remplir le formulaire
     document.getElementById('editPhotoId').value = id;
     document.getElementById('editTitle').value = photo.title || '';
     document.getElementById('editCategory').value = photo.category || 'Autre';
-
-    // Afficher le modal
     document.getElementById('editModal').classList.remove('hidden');
 }
 
-function closeEditModal() {
-    document.getElementById('editModal').classList.add('hidden');
-}
+function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
 async function submitEdit() {
     const id = document.getElementById('editPhotoId').value;
@@ -178,18 +170,13 @@ async function submitEdit() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ title, category, password })
         });
-        
         if (res.ok) {
             showSuccessModal("✅ Photo modifiée !");
             closeEditModal();
             loadGallery();
-        } else {
-            alert("Erreur serveur ou mot de passe.");
-        }
+        } else alert("Erreur serveur.");
     } catch (e) { alert("Erreur connexion"); }
 }
-
-// --- UPLOAD & DELETE ---
 
 function compressImage(file, maxWidth, quality) {
     return new Promise((resolve, reject) => {
@@ -308,4 +295,3 @@ function handleKeyNavigation(e) {
     if (e.key === "ArrowLeft") prevImage();
     if (e.key === "Escape") closeFullscreen();
 }
-
