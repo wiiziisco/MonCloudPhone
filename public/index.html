@@ -9,11 +9,10 @@
     <script>
         // Configuration Tailwind pour activer le mode sombre via le système
         tailwind.config = {
-            darkMode: 'media', // 'media' = suit les réglages du téléphone
+            darkMode: 'media',
         }
     </script>
     <style>
-        /* Plus de couleur de fond forcée ici, on laisse Tailwind gérer */
         .break-inside-avoid { break-inside: avoid; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
@@ -78,7 +77,6 @@
 
     <div id="loginModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeLoginModal()"></div>
-        
         <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-blue-500/30 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)] rounded-3xl p-6 w-[85%] max-w-[280px] text-center transform transition-all scale-100">
             <div class="mb-5 relative inline-block">
                 <div class="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
@@ -95,6 +93,20 @@
                 <button onclick="closeLoginModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800/50 transition">Annuler</button>
                 <button onclick="confirmLogin()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg hover:shadow-blue-500/50 transition transform hover:scale-105">Ouvrir</button>
             </div>
+        </div>
+    </div>
+
+    <div id="successModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeSuccessModal()"></div>
+        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-green-500/30 shadow-[0_0_50px_-12px_rgba(34,197,94,0.3)] rounded-3xl p-6 w-[85%] max-w-[280px] text-center transform transition-all scale-100">
+            <div class="mb-4 relative inline-block">
+                <div class="absolute inset-0 bg-green-500 blur-xl opacity-20 rounded-full"></div>
+                <i class="fa-solid fa-circle-check text-5xl text-transparent bg-clip-text bg-gradient-to-b from-green-400 to-green-600 drop-shadow-sm"></i>
+            </div>
+            <h3 id="successMessage" class="text-slate-800 dark:text-white font-bold text-lg mb-6 tracking-wide">Succès !</h3>
+            <button onclick="closeSuccessModal()" class="w-full px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-green-700 shadow-lg hover:shadow-green-500/50 transition transform hover:scale-105">
+                OK, super !
+            </button>
         </div>
     </div>
 
