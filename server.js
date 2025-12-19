@@ -4,22 +4,26 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+
+// --- MODIFICATION MAJEURE ICI ---
+// On augmente la limite à 50MB pour accepter les photos converties en texte
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 app.use(express.static('public'));
 
 // --- CONFIGURATION ---
-// Récupère le lien secret depuis Render
 const MONGO_URI = process.env.MONGO_URI; 
-const CODE_SECRET = "Mali2025"; // Ton mot de passe admin
+const CODE_SECRET = "Mali2025"; 
 
-// --- CONNEXION BASE DE DONNÉES ---
+// --- CONNEXION ---
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Base de données connectée !'))
   .catch(err => console.error('❌ Erreur connexion DB :', err));
 
 // --- MODÈLE ---
 const PhotoSchema = new mongoose.Schema({
-  url: String,
+  url: String, // Ici on stockera le code géant de l'image (Base64)
   title: String,
   date: { type: Date, default: Date.now }
 });
@@ -36,13 +40,16 @@ app.post('/photos', async (req, res) => {
       if (req.body.password !== CODE_SECRET) {
           return res.status(401).json({ error: "Mot de passe incorrect !" });
       }
+      
       const newPhoto = new Photo({
-          url: req.body.url,
+          url: req.body.url, // On reçoit l'image déjà convertie en texte
           title: req.body.title
       });
+      
       await newPhoto.save();
       res.json(newPhoto);
   } catch (err) {
+      console.error(err); // Pour voir l'erreur dans les logs si besoin
       res.status(500).json({ error: "Erreur sauvegarde" });
   }
 });
