@@ -5,6 +5,8 @@ const EXPECTED_CODE = "Mali2025";
 
 let allPhotos = [];
 let currentIndex = 0;
+// Variable pour stocker l'action à faire quand on clique sur "Confirmer"
+let currentConfirmCallback = null;
 
 checkAdminStatus();
 loadGallery();
@@ -62,25 +64,39 @@ function confirmLogin() {
 }
 
 function logoutAdmin() {
-    if(confirm("Se déconnecter ?")) {
+    // Utilisation du nouveau Modal de Confirmation
+    showConfirm("Se déconnecter ?", () => {
         localStorage.removeItem(ADMIN_CODE_KEY);
         location.reload();
-    }
+    });
 }
 
-// --- GESTION DU MODAL DE SUCCÈS (NOUVEAU) ---
+// --- SYSTÈME DE DIALOGUES (NOUVEAU) ---
 
+// 1. Succès
 function showSuccessModal(message) {
     const modal = document.getElementById('successModal');
-    const messageEl = document.getElementById('successMessage');
-    if (messageEl && modal) {
-        messageEl.textContent = message;
-        modal.classList.remove('hidden');
-    }
+    document.getElementById('successMessage').textContent = message;
+    modal.classList.remove('hidden');
 }
-
 function closeSuccessModal() {
     document.getElementById('successModal').classList.add('hidden');
+}
+
+// 2. Confirmation (Danger)
+function showConfirm(message, callback) {
+    const modal = document.getElementById('confirmModal');
+    document.getElementById('confirmMessage').textContent = message;
+    currentConfirmCallback = callback; // On stocke l'action pour plus tard
+    modal.classList.remove('hidden');
+}
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+    currentConfirmCallback = null;
+}
+function executeConfirm() {
+    if (currentConfirmCallback) currentConfirmCallback(); // On exécute l'action
+    closeConfirmModal();
 }
 
 // --- GALERIE ---
@@ -109,7 +125,6 @@ async function loadGallery() {
         allPhotos.forEach((photo, index) => {
             const div = document.createElement('div');
             div.className = 'break-inside-avoid mb-4 relative group rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md dark:shadow-lg transition-colors duration-300';
-            
             const cleanTitle = (photo.title || 'image').replace(/[^a-z0-9]/gi, '_');
 
             let deleteBtn = '';
@@ -124,14 +139,12 @@ async function loadGallery() {
                 <div class="cursor-pointer" onclick="openFullscreen(${index})">
                     <img src="${photo.url}" alt="${photo.title}" class="w-full h-auto object-cover transform transition duration-500 group-hover:scale-105" loading="lazy">
                 </div>
-                
                 <div class="absolute top-2 right-2 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
                     <a href="${photo.url}" download="${cleanTitle}.png" onclick="event.stopPropagation()" class="bg-white/80 dark:bg-black/60 text-blue-600 dark:text-blue-400 p-2 rounded-full backdrop-blur-md hover:bg-blue-600 hover:text-white transition shadow-sm">
                         <i class="fa-solid fa-download"></i>
                     </a>
                     ${deleteBtn}
                 </div>
-
                 <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10 pointer-events-none">
                     <h3 class="font-bold text-white text-xs truncate drop-shadow-md">${photo.title || 'Sans titre'}</h3>
                 </div>
@@ -145,64 +158,25 @@ async function loadGallery() {
     }
 }
 
-// --- LIGHTBOX ---
-
-function openFullscreen(index) {
-    currentIndex = index;
-    updateFullscreenImage();
-    document.getElementById('fullscreenModal').classList.remove('hidden');
-    document.addEventListener('keydown', handleKeyNavigation);
-}
-
-function closeFullscreen() {
-    document.getElementById('fullscreenModal').classList.add('hidden');
-    document.removeEventListener('keydown', handleKeyNavigation);
-}
-
-function updateFullscreenImage() {
-    const photo = allPhotos[currentIndex];
-    const imgEl = document.getElementById('fullscreenImage');
-    const titleEl = document.getElementById('fullscreenTitle');
-    
-    imgEl.style.opacity = '0.5';
-    
-    setTimeout(() => {
-        imgEl.src = photo.url;
-        titleEl.innerText = (currentIndex + 1) + '/' + allPhotos.length + ' - ' + (photo.title || '');
-        imgEl.onload = () => { imgEl.style.opacity = '1'; };
-    }, 150);
-}
-
-function nextImage() {
-    currentIndex = (currentIndex + 1) % allPhotos.length;
-    updateFullscreenImage();
-}
-
-function prevImage() {
-    currentIndex = (currentIndex - 1 + allPhotos.length) % allPhotos.length;
-    updateFullscreenImage();
-}
-
-function handleKeyNavigation(e) {
-    if (e.key === "ArrowRight") nextImage();
-    if (e.key === "ArrowLeft") prevImage();
-    if (e.key === "Escape") closeFullscreen();
-}
-
-// --- ACTIONS ---
+// --- ACTIONS & UPLOAD ---
 
 async function deletePhoto(id) {
-    if(!confirm("Supprimer cette photo ?")) return;
-    const password = localStorage.getItem(ADMIN_CODE_KEY);
-    try {
-        const res = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ password })
-        });
-        if (res.ok) loadGallery();
-        else alert("Erreur session.");
-    } catch (e) { alert("Erreur connexion"); }
+    // NOUVEAU : On utilise notre modal personnalisé
+    showConfirm("Supprimer cette photo ?", async () => {
+        const password = localStorage.getItem(ADMIN_CODE_KEY);
+        try {
+            const res = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ password })
+            });
+            if (res.ok) {
+                loadGallery();
+                // Optionnel : un petit message de succès
+                // showSuccessModal("Photo supprimée !");
+            } else alert("Erreur session.");
+        } catch (e) { alert("Erreur connexion"); }
+    });
 }
 
 const fileInput = document.getElementById('fileInput');
@@ -245,8 +219,8 @@ async function processAndUpload() {
             body: JSON.stringify({ url, title, password })
         });
         if (res.ok) {
-            // ON UTILISE NOTRE NOUVEAU MODAL STYLÉ ICI
-            showSuccessModal("✅ Photo publiée avec succès !");
+            // NOUVEAU : Message stylé
+            showSuccessModal("✅ Publié avec succès !");
             
             closeModal();
             document.getElementById('fileInput').value = '';
@@ -261,5 +235,35 @@ async function processAndUpload() {
     } catch (e) { alert("Erreur connexion"); }
     btn.innerText = oldText;
     btn.disabled = false;
+}
+
+// --- LIGHTBOX ( inchangée) ---
+function openFullscreen(index) {
+    currentIndex = index;
+    updateFullscreenImage();
+    document.getElementById('fullscreenModal').classList.remove('hidden');
+    document.addEventListener('keydown', handleKeyNavigation);
+}
+function closeFullscreen() {
+    document.getElementById('fullscreenModal').classList.add('hidden');
+    document.removeEventListener('keydown', handleKeyNavigation);
+}
+function updateFullscreenImage() {
+    const photo = allPhotos[currentIndex];
+    const imgEl = document.getElementById('fullscreenImage');
+    const titleEl = document.getElementById('fullscreenTitle');
+    imgEl.style.opacity = '0.5';
+    setTimeout(() => {
+        imgEl.src = photo.url;
+        titleEl.innerText = (currentIndex + 1) + '/' + allPhotos.length + ' - ' + (photo.title || '');
+        imgEl.onload = () => { imgEl.style.opacity = '1'; };
+    }, 150);
+}
+function nextImage() { currentIndex = (currentIndex + 1) % allPhotos.length; updateFullscreenImage(); }
+function prevImage() { currentIndex = (currentIndex - 1 + allPhotos.length) % allPhotos.length; updateFullscreenImage(); }
+function handleKeyNavigation(e) {
+    if (e.key === "ArrowRight") nextImage();
+    if (e.key === "ArrowLeft") prevImage();
+    if (e.key === "Escape") closeFullscreen();
 }
 
