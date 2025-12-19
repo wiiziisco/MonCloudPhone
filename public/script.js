@@ -68,6 +68,21 @@ function logoutAdmin() {
     }
 }
 
+// --- GESTION DU MODAL DE SUCCÈS (NOUVEAU) ---
+
+function showSuccessModal(message) {
+    const modal = document.getElementById('successModal');
+    const messageEl = document.getElementById('successMessage');
+    if (messageEl && modal) {
+        messageEl.textContent = message;
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeSuccessModal() {
+    document.getElementById('successModal').classList.add('hidden');
+}
+
 // --- GALERIE ---
 
 async function loadGallery() {
@@ -93,7 +108,6 @@ async function loadGallery() {
 
         allPhotos.forEach((photo, index) => {
             const div = document.createElement('div');
-            // C'EST ICI LA MAGIE : bg-white le jour, bg-slate-800 la nuit
             div.className = 'break-inside-avoid mb-4 relative group rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md dark:shadow-lg transition-colors duration-300';
             
             const cleanTitle = (photo.title || 'image').replace(/[^a-z0-9]/gi, '_');
@@ -231,7 +245,9 @@ async function processAndUpload() {
             body: JSON.stringify({ url, title, password })
         });
         if (res.ok) {
-            alert("✅ Publié !");
+            // ON UTILISE NOTRE NOUVEAU MODAL STYLÉ ICI
+            showSuccessModal("✅ Photo publiée avec succès !");
+            
             closeModal();
             document.getElementById('fileInput').value = '';
             document.getElementById('base64String').value = '';
