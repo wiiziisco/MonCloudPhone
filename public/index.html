@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>CloudPhone | Ma Galerie Pro</title>
-    <meta name="description" content="Espace de stockage sécurisé et partagé. Accédez à mes projets et souvenirs partout au Mali.">
+    <meta name="description" content="Espace de stockage sécurisé.">
     <meta property="og:title" content="CloudPhone Mali">
-    <meta property="og:description" content="Ma galerie privée sécurisée dans le cloud.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200"> <meta property="og:url" content="https://moncloudphone-1.onrender.com">
     <meta name="theme-color" content="#0f172a">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,7 +16,6 @@
         .break-inside-avoid { break-inside: avoid; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
-        /* Style pour masquer la barre de filtres horizontalement */
         .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -65,19 +62,16 @@
                         <input type="file" id="fileInput" accept="image/*" class="hidden">
                         <div id="uploadPlaceholder">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2 group-hover:text-blue-500"></i>
-                            <p class="text-sm text-slate-500 dark:text-gray-400">Appuyer pour choisir</p>
+                            <p class="text-sm text-slate-500 dark:text-gray-400">Choisir une image</p>
                         </div>
                         <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-lg mx-auto">
                         <p id="compressionInfo" class="hidden text-xs text-green-500 mt-2 font-bold"></p>
                     </div>
-                    
                     <input type="hidden" id="base64String">
-
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Titre</label>
                         <input type="text" id="imgTitle" placeholder="Ex: Plan du site" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors">
                     </div>
-
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Catégorie</label>
                         <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors appearance-none">
@@ -88,9 +82,42 @@
                             <option value="Perso">🔒 Perso</option>
                         </select>
                     </div>
+                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">Publier</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">
-                        Publier (Optimisé)
+    <div id="editModal" class="fixed inset-0 z-[70] hidden">
+        <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeEditModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Modifier</h2>
+                    <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                
+                <input type="hidden" id="editPhotoId">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouveau Titre</label>
+                        <input type="text" id="editTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouvelle Catégorie</label>
+                        <select id="editCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors appearance-none">
+                            <option value="Autre">Aucune</option>
+                            <option value="Travail">💼 Travail</option>
+                            <option value="Famille">🏠 Famille</option>
+                            <option value="Projet">🚀 Projet</option>
+                            <option value="Perso">🔒 Perso</option>
+                        </select>
+                    </div>
+
+                    <button onclick="submitEdit()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-yellow-500/30">
+                        Enregistrer les changements
                     </button>
                 </div>
             </div>
@@ -156,5 +183,5 @@
 
     <script src="script.js"></script>
 </body>
-</html>
+            </html>
 
