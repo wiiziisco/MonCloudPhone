@@ -64,12 +64,25 @@
             <div class="font-display font-black text-2xl tracking-widest text-white">
                 <span class="text-neonBlue">&lt;</span>F么Ma DEV<span class="text-neonBlue">/&gt;</span>
             </div>
-            <div class="hidden md:flex gap-8 font-bold tracking-wider text-sm uppercase">
+            
+            <div class="hidden md:flex gap-8 font-bold tracking-wider text-sm uppercase items-center">
                 <a href="#modules" class="hover:text-neonBlue transition duration-300">Modules</a>
                 <a href="#mission" class="hover:text-neonBlue transition duration-300">Protocole</a>
-                <a href="https://grafikart.fr/forum" target="_blank" class="text-neonBlue border border-neonBlue px-4 py-1 rounded hover:bg-neonBlue hover:text-black transition duration-300 shadow-[0_0_10px_rgba(0,243,255,0.3)]">Communauté</a>
+                <button onclick="openVideo()" class="text-neonOrange border border-neonOrange px-4 py-1 rounded hover:bg-neonOrange hover:text-black transition duration-300 shadow-[0_0_10px_rgba(255,77,0,0.3)] animate-pulse">
+                    <i class="fa-solid fa-play mr-2"></i> DÉMO IA
+                </button>
             </div>
-           <button class="md:hidden text-3xl hover:scale-110 transition">🤖</button>
+
+            <button onclick="toggleMenu()" class="md:hidden text-3xl hover:scale-110 transition z-50 relative">🤖</button>
+        </div>
+
+        <div id="mobileMenu" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-40 transform translate-x-full transition-transform duration-300 flex flex-col items-center justify-center space-y-8">
+            <a href="#modules" onclick="toggleMenu()" class="text-2xl font-display text-white hover:text-neonBlue">MODULES</a>
+            <a href="#mission" onclick="toggleMenu()" class="text-2xl font-display text-white hover:text-neonBlue">PROTOCOLE</a>
+            
+            <button onclick="openVideo(); toggleMenu()" class="mt-8 px-8 py-4 border-2 border-neonOrange text-neonOrange font-display font-bold text-xl rounded-lg shadow-[0_0_20px_rgba(255,77,0,0.4)] hover:bg-neonOrange hover:text-black transition">
+                <i class="fa-solid fa-microchip mr-2"></i> DÉMO IA
+            </button>
         </div>
     </nav>
 
@@ -151,11 +164,11 @@
                     <div class="relative glass-panel p-8 rounded-lg border border-white/10">
                         <pre class="text-xs md:text-sm font-mono text-neonBlue overflow-x-auto">
 <span class="text-neonOrange">const mission = {
-    target: "Innovation Totale",  // Change ça
+    target: "Innovation Totale",  
     accessibility: true,
-    community: "F么MA Clan",       // Change ça
+    community: "F么MA Clan",       
     execute: function() {
-        return "Coder le futur, maintenant."; // Ta phrase choc
+        return "Coder le futur, maintenant."; 
     }
 };
                         </pre>
@@ -189,5 +202,56 @@
         </p>
     </footer>
 
+    <div id="videoModal" class="fixed inset-0 z-[100] hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl bg-black border-2 border-neonBlue rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,243,255,0.3)]">
+            
+            <div class="bg-white/10 p-3 flex justify-between items-center border-b border-white/10">
+                <span class="text-neonBlue font-mono tracking-widest text-sm md:text-base">
+                    <i class="fa-solid fa-robot mr-2"></i>DÉMO_IA.exe
+                </span>
+                <button onclick="closeVideo()" class="text-white hover:text-red-500 font-bold px-2 text-xl transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="aspect-video w-full bg-black">
+                <iframe class="w-full h-full" 
+                    src="https://www.youtube.com/embed/ad79nYk2keg?enablejsapi=1" 
+                    title="Demo IA" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gestion du Menu Robot
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            if (menu.classList.contains('translate-x-full')) {
+                menu.classList.remove('translate-x-full');
+                menu.classList.add('translate-x-0');
+            } else {
+                menu.classList.add('translate-x-full');
+                menu.classList.remove('translate-x-0');
+            }
+        }
+
+        // Gestion de la Vidéo
+        function openVideo() {
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function closeVideo() {
+            const modal = document.getElementById('videoModal');
+            modal.classList.add('hidden');
+            // Stop la vidéo quand on ferme
+            const iframe = modal.querySelector('iframe');
+            const tempSrc = iframe.src;
+            iframe.src = tempSrc; 
+        }
+    </script>
 </body>
 </html>
