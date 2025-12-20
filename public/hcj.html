@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCJ | Le Nexus du Code</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rajdhani', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        neonOrange: '#ff4d00',
+                        neonBlue: '#00f3ff',
+                        neonYellow: '#fcee0a',
+                        void: '#050505'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        .glass-panel {
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-text-blue { text-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
+        .neon-text-orange { text-shadow: 0 0 10px #ff4d00, 0 0 20px #ff4d00; }
+        .neon-box:hover {
+            box-shadow: 0 0 20px var(--glow-color), inset 0 0 10px var(--glow-color);
+            border-color: var(--glow-color);
+        }
+    </style>
+</head>
+<body class="text-gray-300 overflow-x-hidden antialiased selection:bg-neonBlue selection:text-black">
+
+    <nav class="fixed top-0 w-full z-50 border-b border-white/10 glass-panel">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="font-display font-black text-2xl tracking-widest text-white">
+                <span class="text-neonBlue">&lt;</span>HCJ<span class="text-neonBlue">/&gt;</span>
+            </div>
+            <div class="hidden md:flex gap-8 font-bold tracking-wider text-sm uppercase">
+                <a href="#modules" class="hover:text-neonBlue transition duration-300">Modules</a>
+                <a href="#mission" class="hover:text-neonBlue transition duration-300">Protocole</a>
+                <a href="https://grafikart.fr/forum" target="_blank" class="text-neonBlue border border-neonBlue px-4 py-1 rounded hover:bg-neonBlue hover:text-black transition duration-300 shadow-[0_0_10px_rgba(0,243,255,0.3)]">Communauté</a>
+            </div>
+            <button class="md:hidden text-2xl text-white"><i class="fa-solid fa-bars-staggered"></i></button>
+        </div>
+    </nav>
+
+    <header class="relative min-h-screen flex items-center justify-center pt-20 px-4">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-neonBlue/20 rounded-full blur-[100px] animate-pulse-slow"></div>
+        
+        <div class="relative text-center max-w-4xl z-10">
+            <h2 class="text-neonBlue font-mono text-sm mb-4 tracking-[0.3em] uppercase">Initialisation du système...</h2>
+            <h1 class="font-display text-5xl md:text-8xl font-black text-white mb-6 leading-tight">
+                MAÎTRISEZ LE <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neonOrange via-neonYellow to-neonBlue animate-pulse">WEB VERSE</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Votre porte d'entrée vers l'architecture numérique. HTML pour la structure. CSS pour le style. JS pour la vie.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#modules" class="px-8 py-4 bg-white text-black font-display font-bold text-lg uppercase tracking-wider hover:bg-neonBlue transition duration-300 clip-path-slant">
+                    Lancer les Modules
+                </a>
+                <a href="#mission" class="px-8 py-4 border border-white/30 text-white font-display font-bold text-lg uppercase tracking-wider hover:bg-white/10 transition duration-300">
+                    En savoir plus
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section id="modules" class="py-20 px-4 max-w-7xl mx-auto">
+        <h3 class="font-display text-3xl text-white mb-12 flex items-center gap-4">
+            <span class="w-2 h-8 bg-neonBlue"></span>
+            SÉLECTIONNEZ VOTRE ARME
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <a href="https://grafikart.fr/tutoriels/html" target="_blank" class="group relative glass-panel p-8 rounded-xl transition duration-500 hover:-translate-y-2 neon-box" style="--glow-color: #ff4d00">
+                <div class="absolute -top-6 left-8 bg-black border border-[#ff4d00] p-4 rounded-lg shadow-[0_0_15px_#ff4d0040]">
+                    <i class="fa-brands fa-html5 text-4xl text-[#ff4d00]"></i>
+                </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-white group-hover:text-[#ff4d00] transition">HTML 5</h4>
+                <p class="mt-4 text-gray-400 text-sm leading-relaxed">L'ossature du web. Apprenez à structurer l'information dans le chaos numérique.</p>
+                <div class="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
+                    <span class="text-xs font-mono text-[#ff4d00]">STATUS: ESSENTIEL</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 text-white"></i>
+                </div>
+            </a>
+
+            <a href="https://grafikart.fr/tutoriels/css" target="_blank" class="group relative glass-panel p-8 rounded-xl transition duration-500 hover:-translate-y-2 neon-box" style="--glow-color: #00f3ff">
+                <div class="absolute -top-6 left-8 bg-black border border-[#00f3ff] p-4 rounded-lg shadow-[0_0_15px_#00f3ff40]">
+                    <i class="fa-brands fa-css3-alt text-4xl text-[#00f3ff]"></i>
+                </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-white group-hover:text-[#00f3ff] transition">CSS 3</h4>
+                <p class="mt-4 text-gray-400 text-sm leading-relaxed">L'art visuel. Manipulez la grille, les couleurs et les animations pour créer l'immersion.</p>
+                <div class="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
+                    <span class="text-xs font-mono text-[#00f3ff]">STATUS: CRÉATIF</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 text-white"></i>
+                </div>
+            </a>
+
+            <a href="https://grafikart.fr/tutoriels/javascript" target="_blank" class="group relative glass-panel p-8 rounded-xl transition duration-500 hover:-translate-y-2 neon-box" style="--glow-color: #fcee0a">
+                <div class="absolute -top-6 left-8 bg-black border border-[#fcee0a] p-4 rounded-lg shadow-[0_0_15px_#fcee0a40]">
+                    <i class="fa-brands fa-js text-4xl text-[#fcee0a]"></i>
+                </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-white group-hover:text-[#fcee0a] transition">JavaScript</h4>
+                <p class="mt-4 text-gray-400 text-sm leading-relaxed">L'étincelle de vie. Logique, interactivité et données. Le cœur battant de l'application.</p>
+                <div class="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
+                    <span class="text-xs font-mono text-[#fcee0a]">STATUS: LOGIQUE</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 text-white"></i>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section id="mission" class="py-20 relative overflow-hidden">
+        <div class="absolute inset-0 bg-neonBlue/5 skew-y-3 transform origin-bottom-right"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 relative z-10 flex flex-col md:flex-row gap-12 items-center">
+            <div class="w-full md:w-1/2">
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-neonOrange to-neonBlue rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                    <div class="relative glass-panel p-8 rounded-lg border border-white/10">
+                        <pre class="text-xs md:text-sm font-mono text-neonBlue overflow-x-auto">
+<span class="text-neonOrange">const</span> mission = {
+    target: <span class="text-neonYellow">"Autonomie Totale"</span>,
+    accessibility: <span class="text-neonYellow">true</span>,
+    community: <span class="text-neonYellow">"Active"</span>,
+    execute: <span class="text-neonOrange">function</span>() {
+        return "Transformer les aspirations en compétences.";
+    }
+};
+                        </pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="w-full md:w-1/2">
+                <h3 class="font-display text-3xl text-white mb-6">NOTRE PROTOCOLE</h3>
+                <p class="text-gray-400 mb-6 leading-relaxed">
+                    Bienvenue sur HCJ. Nous ne sommes pas une école, nous sommes une base de lancement. Que vous soyez un initié cherchant à approfondir le code ou un novice prêt à plonger dans le flux de données, nous avons les coordonnées.
+                </p>
+                <ul class="space-y-4 font-mono text-sm text-gray-300">
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-neonBlue"></i> Ressources Haute Qualité
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-neonBlue"></i> Liens d'affiliation certifiés
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-neonBlue"></i> Support Communautaire
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-white/10 bg-black py-10 text-center">
+        <p class="text-gray-600 text-sm font-mono">
+            HCJ SYSTEM V2.0 // DESIGNED BY <span class="text-white">YOU</span> // <span class="text-neonBlue">RENDERED</span>
+        </p>
+    </footer>
+
+</body>
+</html>
