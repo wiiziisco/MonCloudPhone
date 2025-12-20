@@ -2,6 +2,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express();
+// --- LE MOUCHARD DE VISITES ---
+app.use((req, res, next) => {
+    // On ignore les requêtes automatiques inutiles (images, icônes...)
+    if (req.url !== '/preview.jpg' && req.url !== '/favicon.ico') {
+        const date = new Date().toLocaleTimeString();
+        console.log(`🔔 [${date}] VISITE DÉTECTÉE sur : ${req.url}`);
+    }
+    next();
+});
+// ------------------------------
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
