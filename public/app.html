@@ -4,229 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json">
-
-    <title>CloudPhone | Coffre-Fort Numérique</title>
-    <meta name="description" content="Ma galerie et mes documents sécurisés dans le cloud.">
-
-    <meta property="og:title" content="CloudPhone Mali">
-    <meta property="og:description" content="Espace de stockage illimité et sécurisé.">
-    <meta property="og:image" content="https://moncloudphone-1.onrender.com/preview.jpg">
-    <meta property="og:url" content="https://moncloudphone-1.onrender.com">
-    <meta property="og:type" content="website">
-
+    <title>CloudPhone | File Manager</title>
     <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script> tailwind.config = { darkMode: 'class' } </script>
     <style>
-        .break-inside-avoid { break-inside: avoid; }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
         .hide-scroll::-webkit-scrollbar { display: none; }
+        .file-icon { font-size: 3rem; margin-bottom: 0.5rem; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
 
-    <a href="index.html" style="
-        position: fixed; 
-        top: 15px; 
-        left: 15px; 
-        z-index: 99999; 
-        background-color: rgba(0, 0, 0, 0.6); 
-        backdrop-filter: blur(5px); 
-        color: #00f3ff; 
-        border: 1px solid #00f3ff; 
-        padding: 6px 12px; 
-        border-radius: 50px; 
-        text-decoration: none; 
-        font-family: sans-serif; 
-        font-weight: bold; 
-        font-size: 14px; 
-        box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        transition: transform 0.2s;
-    ">
+    <a href="index.html" class="fixed top-4 left-4 z-50 flex items-center gap-2 bg-black/60 backdrop-blur-sm text-cyan-400 border border-cyan-400 px-3 py-1.5 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(0,243,255,0.4)] no-underline">
         <span>⬅</span> Lab
     </a>
 
-    <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50 px-4 py-3 flex justify-end items-center shadow-sm dark:shadow-lg transition-colors duration-300">
-        
-        <div class="flex items-center gap-2 cursor-pointer absolute left-1/2 -translate-x-1/2" onclick="filterGallery('all')">
+    <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-40 px-4 py-3 flex justify-end items-center">
+        <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer" onclick="filterGallery('all')">
             <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-500 text-xl"></i>
             <span class="font-bold text-xl tracking-wide">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></span>
         </div>
-
         <div class="flex gap-2">
-            <button id="btnLogin" onclick="loginAdmin()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-lock"></i></button>
-            <button id="btnLogout" onclick="logoutAdmin()" class="hidden bg-red-100 hover:bg-red-200 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <button id="btnLogin" onclick="loginAdmin()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-white px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-lock"></i></button>
+            <button id="btnLogout" onclick="logoutAdmin()" class="hidden bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
     </nav>
 
-    <div class="fixed top-[60px] w-full z-40 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur py-2 border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 overflow-x-auto hide-scroll flex gap-2">
-            <button onclick="filterGallery('all')" id="filter-all" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-blue-600 text-white shadow-md transition">Tout</button>
-            <button onclick="filterGallery('Documents')" id="filter-Documents" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition border border-slate-300 dark:border-slate-600">📂 Documents</button>
-            <button onclick="filterGallery('Travail')" id="filter-Travail" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">💼 Travail</button>
-            <button onclick="filterGallery('Famille')" id="filter-Famille" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🏠 Famille</button>
-            <button onclick="filterGallery('Projet')" id="filter-Projet" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🚀 Projets</button>
-            <button onclick="filterGallery('Perso')" id="filter-Perso" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🔒 Perso</button>
+    <div class="fixed top-[60px] w-full z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur py-2 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 overflow-x-auto hide-scroll flex gap-2 justify-center">
+            <button onclick="filterGallery('all')" id="filter-all" class="filter-btn px-4 py-1 rounded-full text-sm font-bold bg-blue-600 text-white shadow-md transition">Tout</button>
+            <button onclick="filterGallery('Documents')" id="filter-Documents" class="filter-btn px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700"><i class="fa-solid fa-file-lines mr-1"></i> Docs</button>
+            <button onclick="filterGallery('Photos')" id="filter-Photos" class="filter-btn px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700"><i class="fa-solid fa-image mr-1"></i> Photos</button>
+            <button onclick="filterGallery('Audio')" id="filter-Audio" class="filter-btn px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700"><i class="fa-solid fa-music mr-1"></i> Audio</button>
+            <button onclick="filterGallery('Video')" id="filter-Video" class="filter-btn px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700"><i class="fa-solid fa-video mr-1"></i> Vidéo</button>
         </div>
     </div>
 
-    <main class="pt-32 pb-24 px-4 max-w-7xl mx-auto min-h-screen">
-        <div id="gallery" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-            <div class="text-center col-span-full text-gray-500 mt-10">Chargement...</div>
+    <main class="pt-36 pb-24 px-4 max-w-7xl mx-auto min-h-screen">
+        <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="text-center col-span-full text-gray-500 mt-10">Chargement des fichiers...</div>
         </div>
     </main>
-
-    <button id="btnAdd" onclick="openModal()" class="hidden fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-lg shadow-blue-500/30 transition transform hover:scale-110 active:scale-95">
-        <i class="fa-solid fa-plus text-xl"></i>
-    </button>
 
     <div id="uploadModal" class="fixed inset-0 z-[60] hidden">
         <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-            <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300 max-h-[90vh] overflow-y-auto">
+            <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Ajouter</h2>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Ajouter un Fichier</h2>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
+                
                 <div class="space-y-4">
-                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition group cursor-pointer bg-slate-50 dark:bg-slate-900/50" onclick="document.getElementById('fileInput').click()">
-                        <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 dark:bg-slate-900/50" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx,.zip,.rar,.apk,.exe,.html,.css,image/*,audio/*,video/*" class="hidden">
                         <div id="uploadPlaceholder">
-                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2 group-hover:text-blue-500"></i>
-                            <p class="text-sm text-slate-500 dark:text-gray-400">Choisir une image ou un document</p>
+                            <i class="fa-solid fa-upload text-3xl text-slate-400 mb-2"></i>
+                            <p class="text-sm text-slate-500 dark:text-gray-400">Clique pour sélectionner</p>
+                            <p class="text-[10px] text-slate-400 mt-1">(Images, Audio, Vidéo, Docs, APK, ZIP...)</p>
                         </div>
-                        <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-lg mx-auto">
-                        <p id="compressionInfo" class="hidden text-xs text-green-500 mt-2 font-bold"></p>
+                        <div id="filePreviewInfo" class="hidden text-center">
+                            <i id="previewIcon" class="fa-solid fa-file text-4xl text-blue-500 mb-2"></i>
+                            <p id="previewName" class="text-sm font-bold truncate px-4"></p>
+                        </div>
                     </div>
+                    
                     <input type="hidden" id="base64String">
-                    <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Titre</label>
-                        <input type="text" id="imgTitle" placeholder="Ex: CNI, Passeport..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors">
+                    <input type="hidden" id="fileType"> <div>
+                        <label class="block text-xs text-slate-500 mb-1 font-bold">NOM DU FICHIER</label>
+                        <input type="text" id="imgTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none">
                     </div>
+                    
                     <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Catégorie</label>
-                        <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors appearance-none">
-                            <option value="Documents">📂 Documents (Sécurisé)</option>
-                            <option value="Autre">Aucune</option>
-                            <option value="Travail">💼 Travail</option>
-                            <option value="Famille">🏠 Famille</option>
-                            <option value="Projet">🚀 Projet</option>
-                            <option value="Perso">🔒 Perso</option>
+                        <label class="block text-xs text-slate-500 mb-1 font-bold">CATÉGORIE</label>
+                        <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none">
+                            <option value="Documents">📂 Documents (.zip .apk .exe...)</option>
+                            <option value="Photos">📷 Photos</option>
+                            <option value="Audio">🎵 Audio</option>
+                            <option value="Video">🎥 Vidéo</option>
                         </select>
                     </div>
-                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">Enregistrer</button>
+                    
+                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 shadow-lg">Sauvegarder</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="editModal" class="fixed inset-0 z-[70] hidden">
-        <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeEditModal()"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-            <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Modifier</h2>
-                    <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                <input type="hidden" id="editPhotoId">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouveau Titre</label>
-                        <input type="text" id="editTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouvelle Catégorie</label>
-                        <select id="editCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors appearance-none">
-                            <option value="Documents">📂 Documents (Sécurisé)</option>
-                            <option value="Autre">Aucune</option>
-                            <option value="Travail">💼 Travail</option>
-                            <option value="Famille">🏠 Famille</option>
-                            <option value="Projet">🚀 Projet</option>
-                            <option value="Perso">🔒 Perso</option>
-                        </select>
-                    </div>
-                    <button onclick="submitEdit()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-yellow-500/30">
-                        Enregistrer les changements
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="loginModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeLoginModal()"></div>
-        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-blue-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
-            <div class="mb-5 relative inline-block">
-                <div class="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
-                <i class="fa-solid fa-lock text-5xl text-transparent bg-clip-text bg-gradient-to-b from-blue-400 to-blue-600"></i>
-            </div>
-            <h3 class="text-slate-800 dark:text-white font-bold text-lg mb-1">Accès Admin</h3>
-            <div class="relative group mb-5 mt-4">
-                <input type="password" id="adminCodeInput" placeholder="Code secret" class="relative w-full bg-white/80 dark:bg-slate-900/80 text-center border border-slate-300 dark:border-slate-700 rounded-lg py-2 px-3 focus:outline-none focus:border-blue-500 transition-all text-sm tracking-widest">
-            </div>
-            <div class="flex gap-2 justify-center">
-                <button onclick="closeLoginModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800/50 transition">Annuler</button>
-                <button onclick="confirmLogin()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg hover:shadow-blue-500/50 transition transform hover:scale-105">Ouvrir</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="successModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeSuccessModal()"></div>
-        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-green-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
-            <div class="mb-4 relative inline-block">
-                <div class="absolute inset-0 bg-green-500 blur-xl opacity-20 rounded-full"></div>
-                <i class="fa-solid fa-circle-check text-5xl text-transparent bg-clip-text bg-gradient-to-b from-green-400 to-green-600"></i>
-            </div>
-            <h3 id="successMessage" class="text-slate-800 dark:text-white font-bold text-lg mb-6">Succès !</h3>
-            <button onclick="closeSuccessModal()" class="w-full px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-green-700 shadow-lg hover:shadow-green-500/50 transition transform hover:scale-105">Super !</button>
-        </div>
-    </div>
-
-    <div id="confirmModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeConfirmModal()"></div>
-        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-red-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
-            <div class="mb-4 relative inline-block">
-                <div class="absolute inset-0 bg-red-500 blur-xl opacity-20 rounded-full"></div>
-                <i class="fa-solid fa-circle-exclamation text-5xl text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-600"></i>
-            </div>
-            <h3 id="confirmMessage" class="text-slate-800 dark:text-white font-bold text-lg mb-2">Êtes-vous sûr ?</h3>
-            <div class="flex gap-2 justify-center mt-6">
-                <button onclick="closeConfirmModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800/50 transition">Annuler</button>
-                <button onclick="executeConfirm()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-600 to-red-500 shadow-lg hover:shadow-red-500/50 transition transform hover:scale-105">Confirmer</button>
-            </div>
-        </div>
-    </div>
+    <div id="loginModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeLoginModal()"></div><div class="relative bg-white dark:bg-slate-900 p-6 rounded-2xl w-[80%] max-w-xs text-center border border-slate-700"><i class="fa-solid fa-lock text-4xl text-blue-500 mb-4"></i><h3 class="text-white font-bold mb-4">Admin</h3><input type="password" id="adminCodeInput" placeholder="Code" class="w-full bg-slate-800 text-white text-center p-2 rounded mb-4"><button onclick="confirmLogin()" class="w-full bg-blue-600 text-white py-2 rounded font-bold">Ouvrir</button></div></div>
+    <div id="successModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center pointer-events-none"><div class="bg-white dark:bg-slate-800 border border-green-500/50 p-6 rounded-2xl shadow-2xl text-center"><i class="fa-solid fa-check-circle text-4xl text-green-500 mb-2"></i><h3 class="text-white font-bold">Enregistré !</h3></div></div>
 
     <div id="fullscreenModal" class="fixed inset-0 z-[200] hidden bg-black/95 backdrop-blur-md flex items-center justify-center">
-        <button onclick="closeFullscreen()" class="absolute top-4 right-4 z-[210] text-white/70 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-3 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
-        <button onclick="prevImage()" class="absolute left-2 z-[210] text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-4 transition"><i class="fa-solid fa-chevron-left text-3xl"></i></button>
-        <div class="relative w-full h-full flex items-center justify-center p-2">
-            <img id="fullscreenImage" src="" alt="Plein écran" class="max-h-[90vh] max-w-full object-contain drop-shadow-2xl rounded-sm">
-            <div class="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
-                <span id="fullscreenTitle" class="bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm"></span>
+        <button onclick="closeFullscreen()" class="absolute top-4 right-4 z-[210] text-white/70 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        <div id="fullscreenContent" class="w-full h-full flex items-center justify-center p-4">
             </div>
-        </div>
-        <button onclick="nextImage()" class="absolute right-2 z-[210] text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-4 transition"><i class="fa-solid fa-chevron-right text-3xl"></i></button>
     </div>
 
     <script src="script.js"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').then(() => console.log('Service Worker chargé !'));
-      }
-      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-      } else {
-          document.documentElement.classList.remove('dark');
-      }
+      // Force Dark Mode & SW
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
     </script>
-
 </body>
 </html>
