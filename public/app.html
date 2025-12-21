@@ -49,7 +49,7 @@
         gap: 5px;
         transition: transform 0.2s;
     ">
-        <span>⬅</span> F么Ma Lab
+        <span>⬅</span> Lab
     </a>
 
     <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50 px-4 py-3 flex justify-end items-center shadow-sm dark:shadow-lg transition-colors duration-300">
@@ -61,7 +61,6 @@
 
         <div class="flex gap-2">
             <button id="btnLogin" onclick="loginAdmin()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-lock"></i></button>
-            <button id="btnAdd" onclick="openModal()" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Ajouter</span></button>
             <button id="btnLogout" onclick="logoutAdmin()" class="hidden bg-red-100 hover:bg-red-200 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
     </nav>
@@ -77,11 +76,15 @@
         </div>
     </div>
 
-    <main class="pt-32 pb-10 px-4 max-w-7xl mx-auto min-h-screen">
+    <main class="pt-32 pb-24 px-4 max-w-7xl mx-auto min-h-screen">
         <div id="gallery" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
             <div class="text-center col-span-full text-gray-500 mt-10">Chargement...</div>
         </div>
     </main>
+
+    <button id="btnAdd" onclick="openModal()" class="hidden fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-lg shadow-blue-500/30 transition transform hover:scale-110 active:scale-95">
+        <i class="fa-solid fa-plus text-xl"></i>
+    </button>
 
     <div id="uploadModal" class="fixed inset-0 z-[60] hidden">
         <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
@@ -101,14 +104,11 @@
                         <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-lg mx-auto">
                         <p id="compressionInfo" class="hidden text-xs text-green-500 mt-2 font-bold"></p>
                     </div>
-                    
                     <input type="hidden" id="base64String">
-                    
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Titre</label>
                         <input type="text" id="imgTitle" placeholder="Ex: CNI, Passeport..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors">
                     </div>
-                    
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Catégorie</label>
                         <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors appearance-none">
@@ -120,7 +120,6 @@
                             <option value="Perso">🔒 Perso</option>
                         </select>
                     </div>
-                    
                     <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">Enregistrer</button>
                 </div>
             </div>
@@ -135,15 +134,12 @@
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white">Modifier</h2>
                     <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                
                 <input type="hidden" id="editPhotoId">
-                
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouveau Titre</label>
                         <input type="text" id="editTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors">
                     </div>
-
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouvelle Catégorie</label>
                         <select id="editCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors appearance-none">
@@ -155,7 +151,6 @@
                             <option value="Perso">🔒 Perso</option>
                         </select>
                     </div>
-
                     <button onclick="submitEdit()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-yellow-500/30">
                         Enregistrer les changements
                     </button>
@@ -224,11 +219,8 @@
     <script src="script.js"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-          .then(() => console.log('Service Worker chargé !'));
+        navigator.serviceWorker.register('/sw.js').then(() => console.log('Service Worker chargé !'));
       }
-    
-      // Initialisation du thème sombre intelligent
       if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark');
       } else {
