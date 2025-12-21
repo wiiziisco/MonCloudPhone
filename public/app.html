@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json">
 
-    <title>CloudPhone | Ma Galerie Pro V2</title>
-    <meta name="description" content="Ma galerie privée sécurisée dans le cloud.">
+    <title>CloudPhone | Coffre-Fort Numérique</title>
+    <meta name="description" content="Ma galerie et mes documents sécurisés dans le cloud.">
 
     <meta property="og:title" content="CloudPhone Mali">
     <meta property="og:description" content="Espace de stockage illimité et sécurisé.">
@@ -17,7 +17,8 @@
     <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script> tailwind.config = { darkMode: 'media' } </script>
+    
+    <script> tailwind.config = { darkMode: 'class' } </script>
     <style>
         .break-inside-avoid { break-inside: avoid; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
@@ -26,35 +27,38 @@
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
-<a href="index.html" style="
-    position: fixed; 
-    top: 15px; 
-    left: 15px; 
-    z-index: 99999; 
-    background-color: rgba(0, 0, 0, 0.6); /* Noir transparent à 60% */
-    backdrop-filter: blur(5px); /* Effet de flou derrière le bouton */ 
-    color: #00f3ff; 
-    border: 1px solid #00f3ff; 
-    padding: 8px 16px; 
-    border-radius: 50px; 
-    text-decoration: none; 
-    font-family: sans-serif; 
-    font-weight: bold; 
-    font-size: 14px; 
-    box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: transform 0.2s;
-">
-    <span>⬅</span> F么Ma Lab
-</a>
 
-    <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50 px-4 py-3 flex justify-between items-center shadow-sm dark:shadow-lg transition-colors duration-300">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="filterGallery('all')">
+    <a href="index.html" style="
+        position: fixed; 
+        top: 15px; 
+        left: 15px; 
+        z-index: 99999; 
+        background-color: rgba(0, 0, 0, 0.6); 
+        backdrop-filter: blur(5px); 
+        color: #00f3ff; 
+        border: 1px solid #00f3ff; 
+        padding: 6px 12px; 
+        border-radius: 50px; 
+        text-decoration: none; 
+        font-family: sans-serif; 
+        font-weight: bold; 
+        font-size: 14px; 
+        box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: transform 0.2s;
+    ">
+        <span>⬅</span> F么Ma Lab
+    </a>
+
+    <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50 px-4 py-3 flex justify-end items-center shadow-sm dark:shadow-lg transition-colors duration-300">
+        
+        <div class="flex items-center gap-2 cursor-pointer absolute left-1/2 -translate-x-1/2" onclick="filterGallery('all')">
             <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-500 text-xl"></i>
             <span class="font-bold text-xl tracking-wide">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></span>
         </div>
+
         <div class="flex gap-2">
             <button id="btnLogin" onclick="loginAdmin()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-lock"></i></button>
             <button id="btnAdd" onclick="openModal()" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Ajouter</span></button>
@@ -65,6 +69,7 @@
     <div class="fixed top-[60px] w-full z-40 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur py-2 border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-7xl mx-auto px-4 overflow-x-auto hide-scroll flex gap-2">
             <button onclick="filterGallery('all')" id="filter-all" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-blue-600 text-white shadow-md transition">Tout</button>
+            <button onclick="filterGallery('Documents')" id="filter-Documents" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition border border-slate-300 dark:border-slate-600">📂 Documents</button>
             <button onclick="filterGallery('Travail')" id="filter-Travail" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">💼 Travail</button>
             <button onclick="filterGallery('Famille')" id="filter-Famille" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🏠 Famille</button>
             <button onclick="filterGallery('Projet')" id="filter-Projet" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🚀 Projets</button>
@@ -83,7 +88,7 @@
         <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
             <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Nouvelle Photo</h2>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Ajouter</h2>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <div class="space-y-4">
@@ -91,19 +96,23 @@
                         <input type="file" id="fileInput" accept="image/*" class="hidden">
                         <div id="uploadPlaceholder">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2 group-hover:text-blue-500"></i>
-                            <p class="text-sm text-slate-500 dark:text-gray-400">Choisir une image</p>
+                            <p class="text-sm text-slate-500 dark:text-gray-400">Choisir une image ou un document</p>
                         </div>
                         <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-lg mx-auto">
                         <p id="compressionInfo" class="hidden text-xs text-green-500 mt-2 font-bold"></p>
                     </div>
+                    
                     <input type="hidden" id="base64String">
+                    
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Titre</label>
-                        <input type="text" id="imgTitle" placeholder="Ex: Plan du site" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors">
+                        <input type="text" id="imgTitle" placeholder="Ex: CNI, Passeport..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors">
                     </div>
+                    
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Catégorie</label>
                         <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors appearance-none">
+                            <option value="Documents">📂 Documents (Sécurisé)</option>
                             <option value="Autre">Aucune</option>
                             <option value="Travail">💼 Travail</option>
                             <option value="Famille">🏠 Famille</option>
@@ -111,7 +120,8 @@
                             <option value="Perso">🔒 Perso</option>
                         </select>
                     </div>
-                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">Publier</button>
+                    
+                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">Enregistrer</button>
                 </div>
             </div>
         </div>
@@ -137,6 +147,7 @@
                     <div>
                         <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouvelle Catégorie</label>
                         <select id="editCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors appearance-none">
+                            <option value="Documents">📂 Documents (Sécurisé)</option>
                             <option value="Autre">Aucune</option>
                             <option value="Travail">💼 Travail</option>
                             <option value="Famille">🏠 Famille</option>
@@ -211,23 +222,19 @@
     </div>
 
     <script src="script.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => console.log('Service Worker chargé !'));
-  }
-</script>
-<script>
-    // Config Tailwind pour le mode manuel
-    window.tailwind.config = { darkMode: 'class' };
-
-    // Vérifie la mémoire et applique le thème immédiatement
-    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
-</script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('Service Worker chargé !'));
+      }
+    
+      // Initialisation du thème sombre intelligent
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+      } else {
+          document.documentElement.classList.remove('dark');
+      }
+    </script>
 
 </body>
 </html>
