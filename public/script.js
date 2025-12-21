@@ -2,7 +2,6 @@
 const ADMIN_CODE = "28071999"; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Force la vue Documents si aucune n'est définie (supprime 'all')
     if (!localStorage.getItem('activeFilter') || localStorage.getItem('activeFilter') === 'all') {
         localStorage.setItem('activeFilter', 'Documents');
     }
@@ -10,37 +9,83 @@ document.addEventListener('DOMContentLoaded', () => {
     setupFileInput();
 });
 
-// --- GESTION UPLOAD ---
+// --- GESTION STRICTE DES FICHIERS ---
 function setupFileInput() {
     const fileInput = document.getElementById('fileInput');
+    
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Récupération du contexte actuel
+        const currentFolder = localStorage.getItem('activeFilter');
+
+        // Validation STRICTE côté JS (Double sécurité)
+        // Si on est dans Photos mais que le fichier n'est pas une image -> Rejet
+        if (currentFolder === 'Photos' && !file.type.startsWith('image/')) return alert("Erreur: Seules les PHOTOS sont autorisées ici !");
+        if (currentFolder === 'Video' && !file.type.startsWith('video/')) return alert("Erreur: Seules les VIDÉOS sont autorisées ici !");
+        if (currentFolder === 'Audio' && !file.type.startsWith('audio/')) return alert("Erreur: Seul l'AUDIO est autorisé ici !");
+        
+        // Affichage Prévisualisation
         document.getElementById('uploadPlaceholder').classList.add('hidden');
         document.getElementById('filePreviewInfo').classList.remove('hidden');
         document.getElementById('previewName').textContent = file.name;
         document.getElementById('imgTitle').value = file.name.split('.')[0];
 
-        // Auto-détection du type
-        let category = "Documents";
-        let type = "doc";
+        // Icônes et Types
         let icon = "fa-file";
+        let type = "doc";
 
-        if (file.type.startsWith('image/')) { category = "Photos"; type = "image"; icon = "fa-image"; }
-        else if (file.type.startsWith('audio/')) { category = "Audio"; type = "audio"; icon = "fa-music"; }
-        else if (file.type.startsWith('video/')) { category = "Video"; type = "video"; icon = "fa-video"; }
-        else if (file.name.endsWith('.apk')) { category = "Documents"; type = "apk"; icon = "fa-android"; }
-        else if (file.name.endsWith('.zip') || file.name.endsWith('.rar')) { category = "Documents"; type = "zip"; icon = "fa-file-zipper"; }
+        if (file.type.startsWith('image/')) { icon = "fa-image"; type = "image"; }
+        else if (file.type.startsWith('audio/')) { icon = "fa-music"; type = "audio"; }
+        else if (file.type.startsWith('video/')) { icon = "fa-video"; type = "video"; }
+        else if (file.name.endsWith('.apk')) { icon = "fa-android"; type = "apk"; }
+        else if (file.name.endsWith('.zip') || file.name.endsWith('.rar')) { icon = "fa-file-zipper"; type = "zip"; }
 
         document.getElementById('previewIcon').className = `fa-solid ${icon} text-4xl text-blue-500 mb-2`;
-        document.getElementById('imgCategory').value = category;
         document.getElementById('fileType').value = type;
 
+        // Encodage
         const reader = new FileReader();
         reader.onload = (e) => document.getElementById('base64String').value = e.target.result;
         reader.readAsDataURL(file);
     });
+}
+
+// --- OUVERTURE MODAL INTELLIGENTE ---
+function openModal() { 
+    const modal = document.getElementById('uploadModal');
+    const currentFolder = localStorage.getItem('activeFilter') || 'Documents';
+    const input = document.getElementById('fileInput');
+    const instruction = document.getElementById('uploadInstruction');
+    const allowed = document.getElementById('allowedTypes');
+    const categorySelect = document.getElementById('imgCategory');
+
+    // 1. VERROUILLAGE DU SELECTEUR
+    categorySelect.value = currentFolder;
+    // On laisse le select disabled dans le HTML, pas besoin de le toucher ici
+
+    // 2. FILTRAGE STRICT DES EXTENSIONS (L'input ne montrera que ces fichiers)
+    if (currentFolder === 'Photos') {
+        input.accept = "image/*"; // Que des images
+        instruction.innerText = "Ajouter une PHOTO";
+        allowed.innerText = "JPG, PNG, GIF, WEBP...";
+    } else if (currentFolder === 'Video') {
+        input.accept = "video/*"; // Que des vidéos
+        instruction.innerText = "Ajouter une VIDÉO";
+        allowed.innerText = "MP4, MOV, AVI...";
+    } else if (currentFolder === 'Audio') {
+        input.accept = "audio/*"; // Que de l'audio
+        instruction.innerText = "Ajouter un AUDIO";
+        allowed.innerText = "MP3, WAV, M4A...";
+    } else {
+        // Documents : On exclut explicitement les médias pour éviter la confusion
+        input.accept = ".pdf,.doc,.docx,.txt,.zip,.rar,.apk,.exe,.html,.css,.js";
+        instruction.innerText = "Ajouter un DOCUMENT";
+        allowed.innerText = "PDF, ZIP, APK, TXT, DOC...";
+    }
+
+    modal.classList.remove('hidden'); 
 }
 
 // --- AFFICHAGE GALERIE ---
@@ -50,7 +95,7 @@ function loadGallery() {
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
     const isAdmin = sessionStorage.getItem('admin_access') === 'true';
 
-    // Mise à jour des boutons filtres
+    // Mise à jour des boutons
     document.querySelectorAll('.filter-btn').forEach(btn => {
         if(btn.id === `filter-${currentFilter}`) {
             btn.classList.remove('bg-slate-200', 'dark:bg-slate-800', 'text-slate-600');
@@ -64,33 +109,26 @@ function loadGallery() {
     gallery.innerHTML = '';
     const filtered = photos.filter(p => p.category === currentFilter);
 
-    // 1. BOUTON D'AJOUT PERSONNALISÉ (Visible pour tous !)
+    // BOUTON D'AJOUT (Spécifique au dossier)
     const addDiv = document.createElement('div');
     addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition group";
     
-    // Personnalisation de l'icône selon le dossier
     let addIcon = "fa-plus";
-    let addText = "Ajouter";
-    
-    if (currentFilter === 'Photos') { addIcon = "fa-camera"; addText = "Photo"; }
-    else if (currentFilter === 'Audio') { addIcon = "fa-microphone"; addText = "Audio"; }
-    else if (currentFilter === 'Video') { addIcon = "fa-video-plus"; addText = "Vidéo"; }
-    else if (currentFilter === 'Documents') { addIcon = "fa-file-circle-plus"; addText = "Fichier"; }
+    if (currentFilter === 'Photos') addIcon = "fa-camera";
+    else if (currentFilter === 'Audio') addIcon = "fa-microphone";
+    else if (currentFilter === 'Video') addIcon = "fa-video-plus";
+    else if (currentFilter === 'Documents') addIcon = "fa-file-circle-plus";
 
     addDiv.innerHTML = `
         <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition shadow-sm">
             <i class="fa-solid ${addIcon} text-blue-600 dark:text-blue-400 text-2xl"></i>
         </div>
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${addText}</span>
+        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ajouter</span>
     `;
-    
-    addDiv.onclick = () => {
-        openModal();
-        document.getElementById('imgCategory').value = currentFilter;
-    };
+    addDiv.onclick = openModal; // Appelle la fonction intelligente
     gallery.appendChild(addDiv);
 
-    // 2. LISTE DES FICHIERS
+    // LISTE DES FICHIERS
     filtered.forEach(photo => {
         const div = document.createElement('div');
         div.className = "relative group break-inside-avoid mb-4 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700";
@@ -126,17 +164,21 @@ function filterGallery(cat) { localStorage.setItem('activeFilter', cat); loadGal
 function processAndUpload() {
     const file = document.getElementById('base64String').value;
     const title = document.getElementById('imgTitle').value;
-    const cat = document.getElementById('imgCategory').value;
+    const cat = document.getElementById('imgCategory').value; // Récupère la valeur verrouillée
     const type = document.getElementById('fileType').value;
-    if(!file) return alert("Erreur");
+    
+    if(!file) return alert("Veuillez sélectionner un fichier !");
     
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
     photos.unshift({ id: Date.now(), image: file, title: title, category: cat, type: type, date: new Date().toLocaleDateString() });
     localStorage.setItem('my_gallery_data', JSON.stringify(photos));
     
     closeModal();
+    // Reset complet
     document.getElementById('uploadPlaceholder').classList.remove('hidden');
     document.getElementById('filePreviewInfo').classList.add('hidden');
+    document.getElementById('fileInput').value = ""; // Vide l'input
+    
     loadGallery();
 }
 
@@ -161,7 +203,6 @@ function deletePhoto(id) {
 }
 
 function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-function openModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
 function loginAdmin() { document.getElementById('loginModal').classList.remove('hidden'); }
 function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
 function closeFullscreen() { document.getElementById('fullscreenModal').classList.add('hidden'); document.getElementById('fullscreenContent').innerHTML = ''; }

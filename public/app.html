@@ -15,7 +15,6 @@
     </script>
     <style>
         .hide-scroll::-webkit-scrollbar { display: none; }
-        .file-icon { font-size: 3rem; margin-bottom: 0.5rem; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
@@ -45,8 +44,7 @@
     </div>
 
     <main class="pt-36 pb-24 px-4 max-w-7xl mx-auto min-h-screen">
-        <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            </div>
+        <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
     </main>
 
     <div id="uploadModal" class="fixed inset-0 z-[60] hidden">
@@ -60,11 +58,14 @@
                 
                 <div class="space-y-4">
                     <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 dark:bg-slate-900/50" onclick="document.getElementById('fileInput').click()">
-                        <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx,.zip,.rar,.apk,.exe,.html,.css,image/*,audio/*,video/*" class="hidden">
+                        <input type="file" id="fileInput" class="hidden">
+                        
                         <div id="uploadPlaceholder">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
-                            <p class="text-sm text-slate-500 dark:text-gray-400">Clique pour sélectionner</p>
+                            <p id="uploadInstruction" class="text-sm text-slate-500 dark:text-gray-400 font-bold">Sélectionner un fichier</p>
+                            <p id="allowedTypes" class="text-[10px] text-slate-400 mt-1 uppercase"></p>
                         </div>
+
                         <div id="filePreviewInfo" class="hidden text-center">
                             <i id="previewIcon" class="fa-solid fa-file text-4xl text-blue-500 mb-2"></i>
                             <p id="previewName" class="text-sm font-bold truncate px-4"></p>
@@ -80,8 +81,8 @@
                     </div>
                     
                     <div>
-                        <label class="block text-xs text-slate-500 mb-1 font-bold">DOSSIER CIBLE</label>
-                        <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none">
+                        <label class="block text-xs text-slate-500 mb-1 font-bold">DOSSIER (Verrouillé)</label>
+                        <select id="imgCategory" disabled class="w-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-500 dark:text-gray-400 cursor-not-allowed font-bold opacity-70">
                             <option value="Documents">📂 Documents</option>
                             <option value="Photos">📷 Photos</option>
                             <option value="Audio">🎵 Audio</option>
