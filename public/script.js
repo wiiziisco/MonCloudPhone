@@ -1,83 +1,56 @@
-// --- CONFIGURATION ---
-const GITHUB_USERNAME = "wiiziisco"; 
-const REPO_NAME = "MonCloudPhone";   
-const EMAIL = "wiizzardiisco@gmail.com"; 
+// CONFIGURATION
 const ADMIN_CODE = "28071999"; 
 
-// Initialisation
 document.addEventListener('DOMContentLoaded', () => {
+    // Force la vue Documents si aucune n'est définie (supprime 'all')
+    if (!localStorage.getItem('activeFilter') || localStorage.getItem('activeFilter') === 'all') {
+        localStorage.setItem('activeFilter', 'Documents');
+    }
     loadGallery();
-    setupFileInput(); // Nouveau gestionnaire de fichiers
+    setupFileInput();
 });
 
-// --- GESTION DES FICHIERS & UPLOAD ---
-
+// --- GESTION UPLOAD ---
 function setupFileInput() {
     const fileInput = document.getElementById('fileInput');
-    const previewName = document.getElementById('previewName');
-    const previewIcon = document.getElementById('previewIcon');
-    const placeholder = document.getElementById('uploadPlaceholder');
-    const infoDiv = document.getElementById('filePreviewInfo');
-    const typeInput = document.getElementById('fileType');
-    const categorySelect = document.getElementById('imgCategory');
-
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // 1. Afficher le nom et l'icône
-        placeholder.classList.add('hidden');
-        infoDiv.classList.remove('hidden');
-        previewName.textContent = file.name;
-        document.getElementById('imgTitle').value = file.name.split('.')[0]; // Pré-remplir le titre
+        document.getElementById('uploadPlaceholder').classList.add('hidden');
+        document.getElementById('filePreviewInfo').classList.remove('hidden');
+        document.getElementById('previewName').textContent = file.name;
+        document.getElementById('imgTitle').value = file.name.split('.')[0];
 
-        // 2. Détecter le type et suggérer la catégorie
-        let iconClass = "fa-file";
+        // Auto-détection du type
         let category = "Documents";
         let type = "doc";
+        let icon = "fa-file";
 
-        if (file.type.startsWith('image/')) {
-            iconClass = "fa-image";
-            category = "Photos";
-            type = "image";
-        } else if (file.type.startsWith('audio/')) {
-            iconClass = "fa-music";
-            category = "Audio";
-            type = "audio";
-        } else if (file.type.startsWith('video/')) {
-            iconClass = "fa-video";
-            category = "Video";
-            type = "video";
-        } else if (file.name.endsWith('.apk')) {
-            iconClass = "fa-android";
-            category = "Documents";
-            type = "apk";
-        } else if (file.name.endsWith('.zip') || file.name.endsWith('.rar')) {
-            iconClass = "fa-file-zipper";
-            category = "Documents";
-            type = "zip";
-        }
+        if (file.type.startsWith('image/')) { category = "Photos"; type = "image"; icon = "fa-image"; }
+        else if (file.type.startsWith('audio/')) { category = "Audio"; type = "audio"; icon = "fa-music"; }
+        else if (file.type.startsWith('video/')) { category = "Video"; type = "video"; icon = "fa-video"; }
+        else if (file.name.endsWith('.apk')) { category = "Documents"; type = "apk"; icon = "fa-android"; }
+        else if (file.name.endsWith('.zip')) { category = "Documents"; type = "zip"; icon = "fa-file-zipper"; }
 
-        previewIcon.className = `fa-solid ${iconClass} text-4xl text-blue-500 mb-2`;
-        categorySelect.value = category;
-        typeInput.value = type;
+        document.getElementById('previewIcon').className = `fa-solid ${icon} text-4xl text-blue-500 mb-2`;
+        document.getElementById('imgCategory').value = category;
+        document.getElementById('fileType').value = type;
 
-        // 3. Convertir en Base64
         const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('base64String').value = e.target.result;
-        };
+        reader.onload = (e) => document.getElementById('base64String').value = e.target.result;
         reader.readAsDataURL(file);
     });
 }
 
-// --- AFFICHAGE DE LA GALERIE (Mode Fichiers) ---
-
+// --- AFFICHAGE GALERIE ---
 function loadGallery() {
     const gallery = document.getElementById('gallery');
-    const currentFilter = localStorage.getItem('activeFilter') || 'all';
-    
-    // Mise à jour des boutons de filtre
+    const currentFilter = localStorage.getItem('activeFilter') || 'Documents';
+    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+    const isAdmin = sessionStorage.getItem('admin_access') === 'true';
+
+    // Mise à jour des boutons filtres
     document.querySelectorAll('.filter-btn').forEach(btn => {
         if(btn.id === `filter-${currentFilter}`) {
             btn.classList.remove('bg-slate-200', 'dark:bg-slate-800', 'text-slate-600');
@@ -88,192 +61,115 @@ function loadGallery() {
         }
     });
 
-    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
-    const isAdmin = sessionStorage.getItem('admin_access') === 'true';
-
-    // Filtrage
-    const filtered = currentFilter === 'all' 
-        ? photos 
-        : photos.filter(p => p.category === currentFilter);
-
     gallery.innerHTML = '';
+    const filtered = photos.filter(p => p.category === currentFilter);
 
-    // 1. AJOUTER LA TUILE D'AJOUT (Smart Add Button)
-    if (isAdmin && currentFilter !== 'all') {
+    // 1. BOUTON D'AJOUT PERSONNALISÉ (Toujours visible si Admin)
+    if (isAdmin) {
         const addDiv = document.createElement('div');
         addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition group";
+        
+        // Personnalisation de l'icône selon le dossier
+        let addIcon = "fa-plus";
+        let addText = "Ajouter";
+        
+        if (currentFilter === 'Photos') { addIcon = "fa-camera"; addText = "Photo"; }
+        else if (currentFilter === 'Audio') { addIcon = "fa-microphone"; addText = "Audio"; }
+        else if (currentFilter === 'Video') { addIcon = "fa-video-plus"; addText = "Vidéo"; }
+        else if (currentFilter === 'Documents') { addIcon = "fa-file-circle-plus"; addText = "Fichier"; }
+
+        addDiv.innerHTML = `
+            <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition shadow-sm">
+                <i class="fa-solid ${addIcon} text-blue-600 dark:text-blue-400 text-2xl"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${addText}</span>
+        `;
+        
         addDiv.onclick = () => {
             openModal();
-            // Pré-sélectionner la bonne catégorie
             document.getElementById('imgCategory').value = currentFilter;
         };
-        addDiv.innerHTML = `
-            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition">
-                <i class="fa-solid fa-plus text-blue-600 dark:text-blue-400 text-xl"></i>
-            </div>
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Ajouter ${currentFilter}</span>
-        `;
         gallery.appendChild(addDiv);
     }
 
-    // 2. AFFICHER LES FICHIERS
-    filtered.forEach(photo => {
-        const div = document.createElement('div');
-        div.className = "relative group break-inside-avoid mb-4 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700";
-        
-        // Déterminer le visuel selon le type
-        let visualContent = '';
-        let type = photo.type || 'image'; // Rétrocompatibilité
-
-        if (type === 'image') {
-            visualContent = `<img src="${photo.image}" class="w-full h-40 object-cover" loading="lazy">`;
-        } else {
-            // Pour Audio/Video/Docs : Afficher une belle icône
-            let icon = 'fa-file';
-            let color = 'text-gray-500';
-            if (type === 'audio') { icon = 'fa-music'; color = 'text-pink-500'; }
-            if (type === 'video') { icon = 'fa-video'; color = 'text-red-500'; }
-            if (type === 'apk') { icon = 'fa-android'; color = 'text-green-500'; }
-            if (type === 'zip') { icon = 'fa-file-zipper'; color = 'text-yellow-500'; }
+    // 2. LISTE DES FICHIERS
+    if (filtered.length === 0 && !isAdmin) {
+        gallery.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">Dossier vide</div>`;
+    } else {
+        filtered.forEach(photo => {
+            const div = document.createElement('div');
+            div.className = "relative group break-inside-avoid mb-4 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700";
             
-            visualContent = `
-                <div class="w-full h-40 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
-                    <i class="fa-solid ${icon} ${color} text-5xl mb-2"></i>
-                    <span class="text-[10px] uppercase font-bold text-slate-400">${type}</span>
+            let visual = '';
+            if (photo.type === 'image') visual = `<img src="${photo.image}" class="w-full h-40 object-cover">`;
+            else {
+                let icon = 'fa-file';
+                let color = 'text-gray-500';
+                if (photo.type === 'audio') { icon = 'fa-music'; color = 'text-pink-500'; }
+                if (photo.type === 'video') { icon = 'fa-video'; color = 'text-red-500'; }
+                if (photo.type === 'apk') { icon = 'fa-android'; color = 'text-green-500'; }
+                if (photo.type === 'zip') { icon = 'fa-file-zipper'; color = 'text-yellow-500'; }
+                visual = `<div class="w-full h-40 flex items-center justify-center bg-slate-50 dark:bg-slate-900"><i class="fa-solid ${icon} ${color} text-5xl"></i></div>`;
+            }
+
+            div.innerHTML = `
+                <div onclick="openFullscreen('${photo.id}')" class="cursor-pointer">
+                    ${visual}
+                    <div class="p-3">
+                        <h3 class="font-bold text-sm truncate dark:text-gray-200">${photo.title}</h3>
+                        <p class="text-[10px] text-gray-400 uppercase">${photo.type}</p>
+                    </div>
                 </div>
+                ${isAdmin ? `<button onclick="deletePhoto(${photo.id})" class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
             `;
-        }
-
-        div.innerHTML = `
-            <div onclick="openFullscreen('${photo.id}')" class="cursor-pointer">
-                ${visualContent}
-                <div class="p-3">
-                    <h3 class="font-bold text-sm truncate dark:text-gray-200">${photo.title}</h3>
-                    <p class="text-xs text-gray-400 mt-1 flex justify-between">
-                        <span>${photo.category}</span>
-                        <span>${photo.date}</span>
-                    </p>
-                </div>
-            </div>
-            ${isAdmin ? `
-            <button onclick="deletePhoto(${photo.id})" class="absolute top-2 right-2 bg-red-500/80 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg backdrop-blur-sm">
-                <i class="fa-solid fa-trash text-xs"></i>
-            </button>` : ''}
-        `;
-        gallery.appendChild(div);
-    });
+            gallery.appendChild(div);
+        });
+    }
 }
 
-// --- FONCTIONS SYSTÈME (Login, Upload, Fullscreen) ---
-
-function filterGallery(category) {
-    localStorage.setItem('activeFilter', category);
-    loadGallery();
-}
-
+// FONCTIONS UTILITAIRES
+function filterGallery(cat) { localStorage.setItem('activeFilter', cat); loadGallery(); }
 function processAndUpload() {
-    const fileBase64 = document.getElementById('base64String').value;
+    const file = document.getElementById('base64String').value;
     const title = document.getElementById('imgTitle').value;
-    const category = document.getElementById('imgCategory').value;
-    const type = document.getElementById('fileType').value || 'doc';
-
-    if (!fileBase64 || !title) return alert("Fichier manquant !");
-
-    const newFile = {
-        id: Date.now(),
-        image: fileBase64, // Contient les données du fichier
-        title: title,
-        category: category,
-        type: type, // Important : on stocke le type
-        date: new Date().toLocaleDateString()
-    };
-
+    const cat = document.getElementById('imgCategory').value;
+    const type = document.getElementById('fileType').value;
+    if(!file) return alert("Erreur");
+    
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
-    photos.unshift(newFile);
+    photos.unshift({ id: Date.now(), image: file, title: title, category: cat, type: type, date: new Date().toLocaleDateString() });
     localStorage.setItem('my_gallery_data', JSON.stringify(photos));
-
+    
     closeModal();
-    // Reset form
     document.getElementById('uploadPlaceholder').classList.remove('hidden');
     document.getElementById('filePreviewInfo').classList.add('hidden');
-    
-    // Afficher un succès
-    const successModal = document.getElementById('successModal');
-    successModal.classList.remove('hidden');
-    setTimeout(() => successModal.classList.add('hidden'), 1500);
-
     loadGallery();
 }
 
-// Visualiseur adapté aux types
 function openFullscreen(id) {
-    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
-    const file = photos.find(p => p.id == id);
-    if (!file) return;
-
-    const modal = document.getElementById('fullscreenModal');
-    const container = document.getElementById('fullscreenContent');
-    modal.classList.remove('hidden');
+    const p = JSON.parse(localStorage.getItem('my_gallery_data') || '[]').find(x => x.id == id);
+    if(!p) return;
+    const c = document.getElementById('fullscreenContent');
+    const m = document.getElementById('fullscreenModal');
+    m.classList.remove('hidden');
     
-    // Nettoyer
-    container.innerHTML = '';
-
-    if (file.type === 'image' || !file.type) {
-        container.innerHTML = `<img src="${file.image}" class="max-h-full max-w-full object-contain rounded-lg shadow-2xl">`;
-    } else if (file.type === 'video') {
-        container.innerHTML = `<video controls autoplay class="max-h-full max-w-full rounded-lg shadow-2xl"><source src="${file.image}"></video>`;
-    } else if (file.type === 'audio') {
-        container.innerHTML = `
-            <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl flex flex-col items-center">
-                <i class="fa-solid fa-music text-6xl text-pink-500 mb-4 animate-pulse"></i>
-                <h3 class="text-xl font-bold mb-4 dark:text-white">${file.title}</h3>
-                <audio controls autoplay src="${file.image}"></audio>
-            </div>`;
-    } else {
-        // Pour les autres fichiers (ZIP, APK...), on propose le téléchargement
-        container.innerHTML = `
-            <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl flex flex-col items-center text-center">
-                <i class="fa-solid fa-file-arrow-down text-6xl text-blue-500 mb-4"></i>
-                <h3 class="text-xl font-bold mb-2 dark:text-white">${file.title}</h3>
-                <p class="text-gray-400 mb-6">Type: ${file.type}</p>
-                <a href="${file.image}" download="${file.title}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2">
-                    <i class="fa-solid fa-download"></i> Télécharger le fichier
-                </a>
-            </div>`;
-    }
-}
-
-function closeFullscreen() {
-    document.getElementById('fullscreenModal').classList.add('hidden');
-    // Arrêter les médias si nécessaire
-    document.getElementById('fullscreenContent').innerHTML = '';
-}
-
-// Modals
-function openModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
-function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-function loginAdmin() { document.getElementById('loginModal').classList.remove('hidden'); }
-function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
-
-function confirmLogin() {
-    if (document.getElementById('adminCodeInput').value === ADMIN_CODE) {
-        sessionStorage.setItem('admin_access', 'true');
-        closeLoginModal();
-        loadGallery();
-    } else {
-        alert("Code incorrect");
-    }
-}
-
-function logoutAdmin() {
-    sessionStorage.removeItem('admin_access');
-    loadGallery();
+    if (p.type === 'image') c.innerHTML = `<img src="${p.image}" class="max-h-full max-w-full rounded-lg">`;
+    else if (p.type === 'video') c.innerHTML = `<video controls autoplay src="${p.image}" class="max-h-full max-w-full rounded-lg"></video>`;
+    else if (p.type === 'audio') c.innerHTML = `<div class="bg-slate-800 p-8 rounded-xl text-center"><i class="fa-solid fa-music text-6xl text-pink-500 mb-4"></i><h3 class="text-white mb-4">${p.title}</h3><audio controls autoplay src="${p.image}"></audio></div>`;
+    else c.innerHTML = `<div class="bg-slate-800 p-8 rounded-xl text-center"><i class="fa-solid fa-download text-6xl text-blue-500 mb-4"></i><h3 class="text-white mb-4">${p.title}</h3><a href="${p.image}" download="${p.title}" class="bg-blue-600 text-white px-4 py-2 rounded">Télécharger</a></div>`;
 }
 
 function deletePhoto(id) {
-    if(!confirm("Supprimer ce fichier ?")) return;
-    let photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
-    photos = photos.filter(p => p.id !== id);
+    if(!confirm("Supprimer ?")) return;
+    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]').filter(p => p.id !== id);
     localStorage.setItem('my_gallery_data', JSON.stringify(photos));
     loadGallery();
 }
+
+function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+function openModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
+function loginAdmin() { document.getElementById('loginModal').classList.remove('hidden'); }
+function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+function closeFullscreen() { document.getElementById('fullscreenModal').classList.add('hidden'); document.getElementById('fullscreenContent').innerHTML = ''; }
+function confirmLogin() { if(document.getElementById('adminCodeInput').value === ADMIN_CODE) { sessionStorage.setItem('admin_access', 'true'); closeLoginModal(); loadGallery(); } else alert("Erreur"); }
+function logoutAdmin() { sessionStorage.removeItem('admin_access'); loadGallery(); }
