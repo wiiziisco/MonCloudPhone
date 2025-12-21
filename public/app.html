@@ -26,7 +26,66 @@
     </style>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
+<body
+<div id="security-gate" style="position: fixed; inset: 0; background: #000; z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Courier New', monospace;">
+    
+    <div style="text-align: center; color: #00f3ff;">
+        <h2 style="margin-bottom: 10px; font-size: 24px; letter-spacing: 2px; font-weight: bold;">🔒 ACCÈS RESTREINT</h2>
+        
+        <p style="color: #00f3ff; font-size: 14px; margin-bottom: 25px; opacity: 0.8; font-style: italic;">
+            (Indice : Date Anniversaire 🎂)
+        </p>
+        
+        <input type="password" id="passcode" placeholder="DATE (JJMMAAAA)" maxlength="8" 
+            style="background: #000; border: 2px solid #00f3ff; color: #fff; padding: 15px; font-size: 24px; text-align: center; width: 240px; border-radius: 10px; outline: none; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto; letter-spacing: 5px;">
+        
+        <div style="color: red; font-size: 12px; height: 15px; margin-bottom: 10px; font-weight: bold;" id="error-msg"></div>
+
+        <button onclick="checkAccess()" style="background: #00f3ff; color: #000; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 16px; text-transform: uppercase;">
+            Entrer
+        </button>
+    </div>
+
+    <script>
+        // 👇👇👇 MODIFIE TA DATE ICI (Format JJMMAAAA) 👇👇👇
+        const SECRET_KEY = "28071999"; 
+        // 👆👆👆 Exemple: "25121998" pour 25 Déc 1998
+
+        const gate = document.getElementById('security-gate');
+        const input = document.getElementById('passcode');
+        const error = document.getElementById('error-msg');
+
+        // Vérifie si la porte est déjà ouverte (Mémoire de session)
+        if (sessionStorage.getItem('f4ma_access') === 'granted') {
+            gate.style.display = 'none';
+        }
+
+        function checkAccess() {
+            if (input.value === SECRET_KEY) {
+                // Code bon : On ouvre et on mémorise
+                sessionStorage.setItem('f4ma_access', 'granted');
+                gate.style.transition = "opacity 0.5s";
+                gate.style.opacity = "0";
+                setTimeout(() => gate.style.display = 'none', 500);
+            } else {
+                // Code faux
+                error.innerText = "ACCÈS REFUSÉ";
+                input.style.borderColor = "red";
+                input.value = "";
+                setTimeout(() => { 
+                    input.style.borderColor = "#00f3ff"; 
+                    error.innerText = "";
+                }, 1000);
+            }
+        }
+        
+        // Touche Entrée pour valider
+        input.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") { checkAccess(); }
+        });
+    </script>
+</div>
+ class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
 <a href="index.html" style="
     position: fixed; 
     top: 15px; 
