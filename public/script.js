@@ -3,92 +3,51 @@ document.addEventListener('DOMContentLoaded', () => {
     setupFileInput();
 });
 
-// --- SYSTÈME DE NOTIFICATION (REMPLACE ALERT) ---
-function showNotification(message, type = 'success') {
-    const modal = document.getElementById('customAlert');
-    const title = document.getElementById('alertTitle');
-    const msg = document.getElementById('alertMessage');
-    const iconDiv = document.getElementById('alertIconDiv');
-    const icon = document.getElementById('alertIcon');
-
-    msg.textContent = message;
-    modal.classList.remove('hidden');
-
-    if (type === 'success') {
-        title.textContent = "Succès";
-        title.className = "text-white font-bold text-lg mb-2";
-        iconDiv.className = "w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4";
-        icon.className = "fa-solid fa-check text-3xl text-green-500";
-    } else if (type === 'error') {
-        title.textContent = "Erreur";
-        title.className = "text-red-500 font-bold text-lg mb-2";
-        iconDiv.className = "w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4";
-        icon.className = "fa-solid fa-xmark text-3xl text-red-500";
-    } else {
-        title.textContent = "Info";
-        title.className = "text-blue-400 font-bold text-lg mb-2";
-        iconDiv.className = "w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4";
-        icon.className = "fa-solid fa-info text-3xl text-blue-500";
-    }
+// --- NOTIFICATIONS ---
+function showNotification(msg, type = 'success') {
+    const m = document.getElementById('customAlert');
+    document.getElementById('alertMessage').textContent = msg;
+    document.getElementById('alertTitle').textContent = type === 'error' ? 'Erreur' : (type === 'success' ? 'Succès' : 'Info');
+    document.getElementById('alertIcon').className = `fa-solid ${type === 'error' ? 'fa-xmark text-red-500' : (type === 'success' ? 'fa-check text-green-500' : 'fa-info text-blue-500')} text-3xl`;
+    m.classList.remove('hidden');
 }
-
-function closeCustomAlert() {
-    document.getElementById('customAlert').classList.add('hidden');
-}
+function closeCustomAlert() { document.getElementById('customAlert').classList.add('hidden'); }
 
 // --- AUTHENTIFICATION ---
 let isRegistering = false;
-
-function checkAuth() {
-    if (localStorage.getItem('is_logged_in') === 'true') {
-        showApp();
-    }
-}
+function checkAuth() { if (localStorage.getItem('is_logged_in') === 'true') showApp(); }
 
 function toggleAuthMode() {
     isRegistering = !isRegistering;
-    const btn = document.getElementById('auth-btn');
-    const toggle = document.getElementById('auth-toggle-text');
-    
-    if (isRegistering) {
-        btn.innerText = "S'INSCRIRE";
-        toggle.innerText = "Retour à la connexion";
-    } else {
-        btn.innerText = "ENTRER";
-        toggle.innerText = "Première visite ? Créer un accès";
-    }
+    document.getElementById('auth-btn').innerText = isRegistering ? "S'INSCRIRE" : "ENTRER";
+    document.getElementById('auth-toggle-text').innerText = isRegistering ? "Retour à la connexion" : "Première visite ? Créer un accès";
 }
 
 function handleAuth() {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
-
-    if (!user || !pass) return showNotification("Veuillez remplir tous les champs.", "error");
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    if (!u || !p) return showNotification("Champs vides !", "error");
 
     if (isRegistering) {
-        if (localStorage.getItem('user_account')) {
-            return showNotification("Un compte existe déjà sur cet appareil.", "error");
-        }
-        localStorage.setItem('user_account', JSON.stringify({ u: user, p: pass }));
+        if (localStorage.getItem('user_account')) return showNotification("Compte déjà existant.", "error");
+        localStorage.setItem('user_account', JSON.stringify({ u, p }));
         localStorage.setItem('is_logged_in', 'true');
-        showNotification("Bienvenue " + user + " ! Votre espace est prêt.", "success");
+        showNotification("Compte créé !", "success");
         showApp();
     } else {
-        const stored = JSON.parse(localStorage.getItem('user_account'));
-        if (!stored) return showNotification("Aucun compte trouvé. Veuillez vous inscrire.", "error");
-        
-        if (user === stored.u && pass === stored.p) {
+        const acc = JSON.parse(localStorage.getItem('user_account'));
+        if (acc && u === acc.u && p === acc.p) {
             localStorage.setItem('is_logged_in', 'true');
             showApp();
         } else {
-            showNotification("Identifiants incorrects.", "error");
+            showNotification("Erreur d'identification", "error");
         }
     }
 }
 
 function showApp() {
     document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('main-app').classList.remove('hidden');
+    document.getElementById('app-wrapper').classList.remove('hidden');
     if (!localStorage.getItem('activeFilter') || localStorage.getItem('activeFilter') === 'all') {
         localStorage.setItem('activeFilter', 'Documents');
     }
@@ -96,77 +55,47 @@ function showApp() {
 }
 
 function logoutUser() {
-    if(confirm("Se déconnecter ?")) { // On garde confirm() ici car c'est une action système
+    if(confirm("Déconnexion ?")) {
         localStorage.removeItem('is_logged_in');
         location.reload();
     }
 }
 
-// --- GESTION FICHIERS ---
+// --- LOGIQUE FICHIERS ---
 function setupFileInput() {
-    const fileInput = document.getElementById('fileInput');
-    fileInput.addEventListener('change', function(e) {
+    document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
+        const cat = localStorage.getItem('activeFilter');
+        
+        if (cat === 'Photos' && !file.type.startsWith('image/')) return showNotification("Photos uniquement !", "error");
+        if (cat === 'Video' && !file.type.startsWith('video/')) return showNotification("Vidéos uniquement !", "error");
+        if (cat === 'Audio' && !file.type.startsWith('audio/')) return showNotification("Audio uniquement !", "error");
 
-        const currentFolder = localStorage.getItem('activeFilter');
-        
-        // Validation visuelle avec les nouvelles notifications
-        if (currentFolder === 'Photos' && !file.type.startsWith('image/')) return showNotification("Ici, seulement les PHOTOS !", "error");
-        if (currentFolder === 'Video' && !file.type.startsWith('video/')) return showNotification("Ici, seulement les VIDÉOS !", "error");
-        if (currentFolder === 'Audio' && !file.type.startsWith('audio/')) return showNotification("Ici, seulement l'AUDIO !", "error");
-        
         document.getElementById('uploadPlaceholder').classList.add('hidden');
         document.getElementById('filePreviewInfo').classList.remove('hidden');
         document.getElementById('previewName').textContent = file.name;
         document.getElementById('imgTitle').value = file.name.split('.')[0];
-
-        let icon = "fa-file";
-        let type = "doc";
-        if (file.type.startsWith('image/')) { icon = "fa-image"; type = "image"; }
-        else if (file.type.startsWith('audio/')) { icon = "fa-music"; type = "audio"; }
-        else if (file.type.startsWith('video/')) { icon = "fa-video"; type = "video"; }
-        else if (file.name.endsWith('.apk')) { icon = "fa-android"; type = "apk"; }
-        else if (file.name.endsWith('.zip')) { icon = "fa-file-zipper"; type = "zip"; }
-
-        document.getElementById('previewIcon').className = `fa-solid ${icon} text-4xl text-blue-500 mb-2`;
+        
+        // Détection type pour icône
+        let type = 'doc';
+        if (file.type.startsWith('image/')) type = 'image';
+        else if (file.type.startsWith('video/')) type = 'video';
+        else if (file.type.startsWith('audio/')) type = 'audio';
+        else if (file.name.endsWith('.apk')) type = 'apk';
+        else if (file.name.endsWith('.zip')) type = 'zip';
+        
         document.getElementById('fileType').value = type;
 
         const reader = new FileReader();
-        reader.onload = (e) => document.getElementById('base64String').value = e.target.result;
+        reader.onload = (ev) => document.getElementById('base64String').value = ev.target.result;
         reader.readAsDataURL(file);
     });
 }
 
-function openModal() { 
-    const modal = document.getElementById('uploadModal');
-    const currentFolder = localStorage.getItem('activeFilter') || 'Documents';
-    const input = document.getElementById('fileInput');
-    const instruction = document.getElementById('uploadInstruction');
-    const allowed = document.getElementById('allowedTypes');
-    const categorySelect = document.getElementById('imgCategory');
-
-    categorySelect.value = currentFolder;
-    
-    // Définition stricte des types acceptés par l'explorateur de fichiers
-    if (currentFolder === 'Photos') {
-        input.accept = "image/*";
-        instruction.innerText = "Ajouter une PHOTO";
-        allowed.innerText = "JPG, PNG, GIF...";
-    } else if (currentFolder === 'Video') {
-        input.accept = "video/*";
-        instruction.innerText = "Ajouter une VIDÉO";
-        allowed.innerText = "MP4, MKV, AVI...";
-    } else if (currentFolder === 'Audio') {
-        input.accept = "audio/*";
-        instruction.innerText = "Ajouter un AUDIO";
-        allowed.innerText = "MP3, WAV, M4A...";
-    } else {
-        input.accept = ".pdf,.doc,.docx,.txt,.zip,.rar,.apk,.exe";
-        instruction.innerText = "Ajouter un DOCUMENT";
-        allowed.innerText = "PDF, ZIP, APK, TXT...";
-    }
-    modal.classList.remove('hidden'); 
+function filterGallery(cat) {
+    localStorage.setItem('activeFilter', cat);
+    loadGallery();
 }
 
 function loadGallery() {
@@ -174,85 +103,109 @@ function loadGallery() {
     const currentFilter = localStorage.getItem('activeFilter') || 'Documents';
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
 
+    // Mise à jour visuelle des boutons (Style Actif/Inactif)
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        if(btn.id === `filter-${currentFilter}`) {
-            btn.classList.remove('bg-slate-800', 'text-gray-400');
-            btn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
-        } else {
-            btn.classList.add('bg-slate-800', 'text-gray-400');
-            btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
-        }
+        const isActive = btn.id === `filter-${currentFilter}`;
+        btn.className = `filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-slate-800 text-gray-400 border-transparent hover:text-white'}`;
     });
 
     gallery.innerHTML = '';
     const filtered = photos.filter(p => p.category === currentFilter);
 
-    // Bouton Ajout
+    // 1. Bouton Ajout (Correctif icône vidéo)
     const addDiv = document.createElement('div');
-    addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-700 hover:border-blue-500 flex flex-col items-center justify-center cursor-pointer bg-slate-800/50 hover:bg-slate-800 transition group";
+    addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-blue-500 transition flex flex-col items-center justify-center cursor-pointer group";
     
     let addIcon = "fa-plus";
-    if (currentFilter === 'Photos') addIcon = "fa-camera";
-    else if (currentFilter === 'Audio') addIcon = "fa-microphone";
-    else if (currentFilter === 'Video') addIcon = "fa-video-plus";
-    else if (currentFilter === 'Documents') addIcon = "fa-file-circle-plus";
+    let addLabel = "Ajouter";
+    
+    if (currentFilter === 'Photos') { addIcon = "fa-camera"; addLabel = "Photo"; }
+    else if (currentFilter === 'Audio') { addIcon = "fa-microphone"; addLabel = "Audio"; }
+    else if (currentFilter === 'Video') { addIcon = "fa-film"; addLabel = "Vidéo"; } // ICI : fa-film (Gratuit)
+    else { addIcon = "fa-file-circle-plus"; addLabel = "Fichier"; }
 
     addDiv.innerHTML = `
         <div class="w-12 h-12 rounded-full bg-slate-700 group-hover:bg-blue-600 flex items-center justify-center mb-2 transition shadow-lg">
-            <i class="fa-solid ${addIcon} text-blue-400 group-hover:text-white text-xl transition"></i>
+            <i class="fa-solid ${addIcon} text-blue-400 group-hover:text-white text-xl"></i>
         </div>
-        <span class="text-[10px] font-bold text-gray-400 group-hover:text-white uppercase tracking-wider">Ajouter</span>
+        <span class="text-[10px] font-bold text-gray-500 group-hover:text-white uppercase tracking-wider">${addLabel}</span>
     `;
     addDiv.onclick = openModal;
     gallery.appendChild(addDiv);
 
-    // Fichiers
-    filtered.forEach(photo => {
+    // 2. Liste Fichiers
+    filtered.forEach(p => {
         const div = document.createElement('div');
-        div.className = "relative group aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-slate-700 shadow-lg";
+        div.className = "relative group aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-slate-700 shadow-md";
         
         let visual = '';
-        if (photo.type === 'image') visual = `<img src="${photo.image}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition">`;
+        if (p.type === 'image') visual = `<img src="${p.image}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition">`;
         else {
             let icon = 'fa-file';
-            let color = 'text-gray-500';
-            if (photo.type === 'audio') { icon = 'fa-music'; color = 'text-pink-500'; }
-            if (photo.type === 'video') { icon = 'fa-video'; color = 'text-red-500'; }
-            if (photo.type === 'apk') { icon = 'fa-android'; color = 'text-green-500'; }
-            if (photo.type === 'zip') { icon = 'fa-file-zipper'; color = 'text-yellow-500'; }
-            visual = `<div class="w-full h-full flex items-center justify-center bg-slate-900"><i class="fa-solid ${icon} ${color} text-4xl"></i></div>`;
+            let col = 'text-gray-500';
+            if (p.type === 'video') { icon = 'fa-video'; col = 'text-red-500'; }
+            if (p.type === 'audio') { icon = 'fa-music'; col = 'text-pink-500'; }
+            if (p.type === 'apk') { icon = 'fa-android'; col = 'text-green-500'; }
+            if (p.type === 'zip') { icon = 'fa-file-zipper'; col = 'text-yellow-500'; }
+            visual = `<div class="w-full h-full flex items-center justify-center bg-slate-900"><i class="fa-solid ${icon} ${col} text-4xl"></i></div>`;
         }
 
         div.innerHTML = `
-            <div onclick="openFullscreen('${photo.id}')" class="cursor-pointer w-full h-full">
+            <div onclick="openFullscreen('${p.id}')" class="w-full h-full cursor-pointer">
                 ${visual}
-                <div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2">
-                    <h3 class="font-bold text-xs text-white truncate text-center">${photo.title}</h3>
+                <div class="absolute bottom-0 left-0 w-full bg-black/60 backdrop-blur-sm p-1.5 text-center">
+                    <p class="text-[10px] font-bold text-white truncate">${p.title}</p>
                 </div>
             </div>
-            <button onclick="deletePhoto(${photo.id})" class="absolute top-2 right-2 bg-red-500/80 text-white w-8 h-8 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg backdrop-blur-sm"><i class="fa-solid fa-trash text-xs"></i></button>
+            <button onclick="deletePhoto(${p.id})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-[10px]"></i></button>
         `;
         gallery.appendChild(div);
     });
 }
 
+function openModal() {
+    const modal = document.getElementById('uploadModal');
+    const cat = localStorage.getItem('activeFilter') || 'Documents';
+    const input = document.getElementById('fileInput');
+    const instr = document.getElementById('uploadInstruction');
+    
+    document.getElementById('imgCategory').value = cat;
+    
+    if (cat === 'Photos') { input.accept = "image/*"; instr.textContent = "Ajouter PHOTO"; }
+    else if (cat === 'Video') { input.accept = "video/*"; instr.textContent = "Ajouter VIDÉO"; }
+    else if (cat === 'Audio') { input.accept = "audio/*"; instr.textContent = "Ajouter AUDIO"; }
+    else { input.accept = "*"; instr.textContent = "Ajouter DOC"; }
+    
+    modal.classList.remove('hidden');
+}
+
 function processAndUpload() {
     const file = document.getElementById('base64String').value;
-    const title = document.getElementById('imgTitle').value;
+    const title = document.getElementById('imgTitle').value || 'Sans titre';
     const cat = document.getElementById('imgCategory').value;
     const type = document.getElementById('fileType').value;
     
-    if(!file) return showNotification("Fichier manquant !", "error");
+    if(!file) return showNotification("Fichier manquant", "error");
     
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
-    photos.unshift({ id: Date.now(), image: file, title: title, category: cat, type: type, date: new Date().toLocaleDateString() });
+    photos.unshift({ id: Date.now(), image: file, title, category: cat, type, date: new Date().toLocaleDateString() });
     localStorage.setItem('my_gallery_data', JSON.stringify(photos));
     
     closeModal();
     document.getElementById('uploadPlaceholder').classList.remove('hidden');
     document.getElementById('filePreviewInfo').classList.add('hidden');
     document.getElementById('fileInput').value = "";
-    showNotification("Fichier ajouté avec succès !", "success");
+    document.getElementById('imgTitle').value = "";
+    
+    showNotification("Fichier ajouté !", "success");
+    loadGallery();
+}
+
+function deletePhoto(id) {
+    if(!confirm("Supprimer ?")) return;
+    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+    const newPhotos = photos.filter(p => p.id !== id);
+    localStorage.setItem('my_gallery_data', JSON.stringify(newPhotos));
     loadGallery();
 }
 
@@ -263,18 +216,10 @@ function openFullscreen(id) {
     const m = document.getElementById('fullscreenModal');
     m.classList.remove('hidden');
     
-    if (p.type === 'image') c.innerHTML = `<img src="${p.image}" class="max-h-full max-w-full rounded-lg shadow-2xl">`;
-    else if (p.type === 'video') c.innerHTML = `<video controls autoplay src="${p.image}" class="max-h-full max-w-full rounded-lg shadow-2xl"></video>`;
-    else if (p.type === 'audio') c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center border border-slate-700 shadow-2xl"><i class="fa-solid fa-music text-6xl text-pink-500 mb-6 animate-pulse"></i><h3 class="text-white text-xl font-bold mb-6">${p.title}</h3><audio controls autoplay src="${p.image}" class="w-64"></audio></div>`;
-    else c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center border border-slate-700 shadow-2xl"><i class="fa-solid fa-download text-6xl text-blue-500 mb-6"></i><h3 class="text-white text-xl font-bold mb-6">${p.title}</h3><a href="${p.image}" download="${p.title}" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg">Télécharger le fichier</a></div>`;
-}
-
-function deletePhoto(id) {
-    if(!confirm("Vraiment supprimer ?")) return;
-    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]').filter(p => p.id !== id);
-    localStorage.setItem('my_gallery_data', JSON.stringify(photos));
-    loadGallery();
-    showNotification("Fichier supprimé.", "info");
+    if (p.type === 'image') c.innerHTML = `<img src="${p.image}" class="max-h-full max-w-full rounded-lg">`;
+    else if (p.type === 'video') c.innerHTML = `<video controls autoplay src="${p.image}" class="max-h-full max-w-full rounded-lg"></video>`;
+    else if (p.type === 'audio') c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center"><i class="fa-solid fa-music text-6xl text-pink-500 mb-4 animate-pulse"></i><h3 class="text-white text-xl font-bold mb-4">${p.title}</h3><audio controls autoplay src="${p.image}" class="w-full"></audio></div>`;
+    else c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center"><i class="fa-solid fa-download text-6xl text-blue-500 mb-4"></i><h3 class="text-white text-xl font-bold mb-4">${p.title}</h3><a href="${p.image}" download="${p.title}" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Télécharger</a></div>`;
 }
 
 function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
