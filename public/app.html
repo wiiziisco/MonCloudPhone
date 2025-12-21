@@ -218,6 +218,17 @@
       .then(() => console.log('Service Worker chargé !'));
   }
 </script>
+<script>
+    // Config Tailwind pour le mode manuel
+    window.tailwind.config = { darkMode: 'class' };
+
+    // Vérifie la mémoire et applique le thème immédiatement
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+</script>
 
 </body>
 </html>
