@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudPhone | File Manager</title>
+    <title>CloudPhone | Accès Réservé</title>
     <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,37 +15,77 @@
     </script>
     <style>
         .hide-scroll::-webkit-scrollbar { display: none; }
+        /* Animation d'entrée */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
+<body class="bg-slate-900 text-white transition-colors duration-300 overflow-hidden">
 
-    <a href="index.html" class="fixed top-4 left-4 z-50 flex items-center gap-2 bg-black/60 backdrop-blur-sm text-cyan-400 border border-cyan-400 px-3 py-1.5 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(0,243,255,0.4)] no-underline">
-        <span>⬅</span> Lab
-    </a>
-
-    <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-40 px-4 py-3 flex justify-end items-center">
-        <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer" onclick="filterGallery('Documents')">
-            <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-500 text-xl"></i>
-            <span class="font-bold text-xl tracking-wide">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></span>
+    <div id="auth-screen" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6">
+        
+        <div class="mb-8 text-center animate-bounce">
+            <i class="fa-solid fa-cloud text-6xl text-blue-500 mb-2"></i>
+            <h1 class="text-3xl font-bold tracking-widest">Cloud<span class="text-blue-500">Phone</span></h1>
+            <p class="text-xs text-gray-500 uppercase tracking-[0.3em] mt-1">Secure Access</p>
         </div>
-        <div class="flex gap-2">
-            <button id="btnLogin" onclick="loginAdmin()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-white px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-lock"></i></button>
-            <button id="btnLogout" onclick="logoutAdmin()" class="hidden bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-right-from-bracket"></i></button>
-        </div>
-    </nav>
 
-    <div class="fixed top-[60px] w-full z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur py-2 border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 overflow-x-auto hide-scroll flex gap-2">
-            <button onclick="filterGallery('Documents')" id="filter-Documents" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-blue-600 text-white shadow-md transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-folder-open"></i> Docs</button>
-            <button onclick="filterGallery('Photos')" id="filter-Photos" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-images"></i> Photos</button>
-            <button onclick="filterGallery('Audio')" id="filter-Audio" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-music"></i> Audio</button>
-            <button onclick="filterGallery('Video')" id="filter-Video" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-film"></i> Vidéo</button>
+        <div class="w-full max-w-sm bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl">
+            
+            <h2 id="auth-title" class="text-2xl font-bold text-center mb-6 text-white">Connexion</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1 font-bold ml-2">PSEUDO</label>
+                    <input type="text" id="username" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 focus:outline-none transition text-center font-bold tracking-wide" placeholder="Votre nom">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1 font-bold ml-2">MOT DE PASSE</label>
+                    <input type="password" id="password" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 focus:outline-none transition text-center font-bold tracking-widest" placeholder="••••••">
+                </div>
+
+                <button onclick="handleAuth()" id="auth-btn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold py-3 rounded-xl mt-4 shadow-lg hover:scale-105 transition transform">
+                    ENTRER
+                </button>
+            </div>
+
+            <p class="text-center text-sm text-gray-400 mt-6 cursor-pointer hover:text-white transition" onclick="toggleAuthMode()">
+                <span id="auth-toggle-text">Pas de compte ? Créer un compte</span>
+            </p>
         </div>
     </div>
 
-    <main class="pt-36 pb-24 px-4 max-w-7xl mx-auto min-h-screen">
-        <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-    </main>
+    <div id="main-app" class="hidden h-screen overflow-y-auto bg-slate-50 dark:bg-slate-900">
+        
+        <a href="index.html" class="fixed top-4 left-4 z-50 flex items-center gap-2 bg-black/60 backdrop-blur-sm text-cyan-400 border border-cyan-400 px-3 py-1.5 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(0,243,255,0.4)] no-underline">
+            <span>⬅</span> Lab
+        </a>
+
+        <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-40 px-4 py-3 flex justify-end items-center">
+            <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer" onclick="filterGallery('Documents')">
+                <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-500 text-xl"></i>
+                <span class="font-bold text-xl tracking-wide">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></span>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="logoutUser()" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Sortir</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="fixed top-[60px] w-full z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur py-2 border-b border-slate-200 dark:border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 overflow-x-auto hide-scroll flex gap-2">
+                <button onclick="filterGallery('Documents')" id="filter-Documents" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-blue-600 text-white shadow-md transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-folder-open"></i> Docs</button>
+                <button onclick="filterGallery('Photos')" id="filter-Photos" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-images"></i> Photos</button>
+                <button onclick="filterGallery('Audio')" id="filter-Audio" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-music"></i> Audio</button>
+                <button onclick="filterGallery('Video')" id="filter-Video" class="filter-btn px-6 py-2 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition hover:bg-white dark:hover:bg-slate-700 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-film"></i> Vidéo</button>
+            </div>
+        </div>
+
+        <main class="pt-36 pb-24 px-4 max-w-7xl mx-auto min-h-screen">
+            <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        </main>
+    </div>
 
     <div id="uploadModal" class="fixed inset-0 z-[60] hidden">
         <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
@@ -55,53 +95,34 @@
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white">Ajouter un Fichier</h2>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                
                 <div class="space-y-4">
                     <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 dark:bg-slate-900/50" onclick="document.getElementById('fileInput').click()">
                         <input type="file" id="fileInput" class="hidden">
-                        
                         <div id="uploadPlaceholder">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
-                            <p id="uploadInstruction" class="text-sm text-slate-500 dark:text-gray-400 font-bold">Sélectionner un fichier</p>
+                            <p id="uploadInstruction" class="text-sm text-slate-500 dark:text-gray-400 font-bold">Sélectionner</p>
                             <p id="allowedTypes" class="text-[10px] text-slate-400 mt-1 uppercase"></p>
                         </div>
-
                         <div id="filePreviewInfo" class="hidden text-center">
                             <i id="previewIcon" class="fa-solid fa-file text-4xl text-blue-500 mb-2"></i>
                             <p id="previewName" class="text-sm font-bold truncate px-4"></p>
                         </div>
                     </div>
-                    
-                    <input type="hidden" id="base64String">
-                    <input type="hidden" id="fileType">
-                    
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1 font-bold">NOM</label>
-                        <input type="text" id="imgTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1 font-bold">DOSSIER (Verrouillé)</label>
-                        <select id="imgCategory" disabled class="w-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-500 dark:text-gray-400 cursor-not-allowed font-bold opacity-70">
-                            <option value="Documents">📂 Documents</option>
-                            <option value="Photos">📷 Photos</option>
-                            <option value="Audio">🎵 Audio</option>
-                            <option value="Video">🎥 Vidéo</option>
-                        </select>
-                    </div>
-                    
+                    <input type="hidden" id="base64String"><input type="hidden" id="fileType">
+                    <div><label class="block text-xs text-slate-500 mb-1 font-bold">NOM</label><input type="text" id="imgTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs text-slate-500 mb-1 font-bold">DOSSIER (Verrouillé)</label><select id="imgCategory" disabled class="w-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-500 dark:text-gray-400 cursor-not-allowed font-bold opacity-70"><option value="Documents">📂 Documents</option><option value="Photos">📷 Photos</option><option value="Audio">🎵 Audio</option><option value="Video">🎥 Vidéo</option></select></div>
                     <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 shadow-lg">Sauvegarder</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="loginModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeLoginModal()"></div><div class="relative bg-white dark:bg-slate-900 p-6 rounded-2xl w-[80%] max-w-xs text-center border border-slate-700"><i class="fa-solid fa-lock text-4xl text-blue-500 mb-4"></i><h3 class="text-white font-bold mb-4">Admin</h3><input type="password" id="adminCodeInput" placeholder="Code" class="w-full bg-slate-800 text-white text-center p-2 rounded mb-4"><button onclick="confirmLogin()" class="w-full bg-blue-600 text-white py-2 rounded font-bold">Ouvrir</button></div></div>
     <div id="successModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center pointer-events-none"><div class="bg-white dark:bg-slate-800 border border-green-500/50 p-6 rounded-2xl shadow-2xl text-center"><i class="fa-solid fa-check-circle text-4xl text-green-500 mb-2"></i><h3 class="text-white font-bold">Enregistré !</h3></div></div>
     <div id="fullscreenModal" class="fixed inset-0 z-[200] hidden bg-black/95 backdrop-blur-md flex items-center justify-center"><button onclick="closeFullscreen()" class="absolute top-4 right-4 z-[210] text-white/70 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button><div id="fullscreenContent" class="w-full h-full flex items-center justify-center p-4"></div></div>
 
     <script src="script.js"></script>
     <script>
+        // Détection Thème
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {

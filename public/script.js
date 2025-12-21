@@ -1,15 +1,88 @@
-// CONFIGURATION
-const ADMIN_CODE = "28071999"; 
-
 document.addEventListener('DOMContentLoaded', () => {
+    checkAuth(); // Vérifie si on est connecté au chargement
+    setupFileInput();
+});
+
+// --- SYSTÈME D'AUTHENTIFICATION ---
+let isRegistering = false; // Mode actuel (Connexion par défaut)
+
+function checkAuth() {
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    if (isLoggedIn) {
+        showApp(); // Si connecté, montrer l'app direct
+    } else {
+        // Sinon, rester sur l'écran de login
+    }
+}
+
+function toggleAuthMode() {
+    isRegistering = !isRegistering;
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('auth-btn');
+    const toggle = document.getElementById('auth-toggle-text');
+
+    if (isRegistering) {
+        title.innerText = "Créer un compte";
+        btn.innerText = "S'INSCRIRE";
+        toggle.innerText = "Déjà un compte ? Se connecter";
+    } else {
+        title.innerText = "Connexion";
+        btn.innerText = "ENTRER";
+        toggle.innerText = "Pas de compte ? Créer un compte";
+    }
+}
+
+function handleAuth() {
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value.trim();
+
+    if (!user || !pass) return alert("Veuillez tout remplir !");
+
+    if (isRegistering) {
+        // --- INSCRIPTION ---
+        if (localStorage.getItem('user_account')) {
+            return alert("Un compte existe déjà sur cet appareil !");
+        }
+        const account = { u: user, p: pass };
+        localStorage.setItem('user_account', JSON.stringify(account));
+        localStorage.setItem('is_logged_in', 'true');
+        alert("Compte créé avec succès ! Bienvenue " + user);
+        showApp();
+    } else {
+        // --- CONNEXION ---
+        const stored = JSON.parse(localStorage.getItem('user_account'));
+        if (!stored) return alert("Aucun compte trouvé. Veuillez vous inscrire.");
+        
+        if (user === stored.u && pass === stored.p) {
+            localStorage.setItem('is_logged_in', 'true');
+            showApp();
+        } else {
+            alert("Identifiants incorrects !");
+        }
+    }
+}
+
+function showApp() {
+    document.getElementById('auth-screen').classList.add('hidden'); // Cache le login
+    const app = document.getElementById('main-app');
+    app.classList.remove('hidden'); // Montre l'app
+    app.classList.add('fade-in'); // Petite animation
+    
+    // Initialise l'app
     if (!localStorage.getItem('activeFilter') || localStorage.getItem('activeFilter') === 'all') {
         localStorage.setItem('activeFilter', 'Documents');
     }
     loadGallery();
-    setupFileInput();
-});
+}
 
-// --- GESTION STRICTE DES FICHIERS ---
+function logoutUser() {
+    if(confirm("Se déconnecter ?")) {
+        localStorage.removeItem('is_logged_in');
+        location.reload(); // Recharge la page pour revenir au login
+    }
+}
+
+// --- RESTE DU CODE (GESTION FICHIERS) ---
 function setupFileInput() {
     const fileInput = document.getElementById('fileInput');
     
@@ -17,22 +90,17 @@ function setupFileInput() {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Récupération du contexte actuel
         const currentFolder = localStorage.getItem('activeFilter');
 
-        // Validation STRICTE côté JS (Double sécurité)
-        // Si on est dans Photos mais que le fichier n'est pas une image -> Rejet
-        if (currentFolder === 'Photos' && !file.type.startsWith('image/')) return alert("Erreur: Seules les PHOTOS sont autorisées ici !");
-        if (currentFolder === 'Video' && !file.type.startsWith('video/')) return alert("Erreur: Seules les VIDÉOS sont autorisées ici !");
-        if (currentFolder === 'Audio' && !file.type.startsWith('audio/')) return alert("Erreur: Seul l'AUDIO est autorisé ici !");
+        if (currentFolder === 'Photos' && !file.type.startsWith('image/')) return alert("Seules les PHOTOS sont autorisées ici !");
+        if (currentFolder === 'Video' && !file.type.startsWith('video/')) return alert("Seules les VIDÉOS sont autorisées ici !");
+        if (currentFolder === 'Audio' && !file.type.startsWith('audio/')) return alert("Seul l'AUDIO est autorisé ici !");
         
-        // Affichage Prévisualisation
         document.getElementById('uploadPlaceholder').classList.add('hidden');
         document.getElementById('filePreviewInfo').classList.remove('hidden');
         document.getElementById('previewName').textContent = file.name;
         document.getElementById('imgTitle').value = file.name.split('.')[0];
 
-        // Icônes et Types
         let icon = "fa-file";
         let type = "doc";
 
@@ -45,14 +113,12 @@ function setupFileInput() {
         document.getElementById('previewIcon').className = `fa-solid ${icon} text-4xl text-blue-500 mb-2`;
         document.getElementById('fileType').value = type;
 
-        // Encodage
         const reader = new FileReader();
         reader.onload = (e) => document.getElementById('base64String').value = e.target.result;
         reader.readAsDataURL(file);
     });
 }
 
-// --- OUVERTURE MODAL INTELLIGENTE ---
 function openModal() { 
     const modal = document.getElementById('uploadModal');
     const currentFolder = localStorage.getItem('activeFilter') || 'Documents';
@@ -61,41 +127,35 @@ function openModal() {
     const allowed = document.getElementById('allowedTypes');
     const categorySelect = document.getElementById('imgCategory');
 
-    // 1. VERROUILLAGE DU SELECTEUR
     categorySelect.value = currentFolder;
-    // On laisse le select disabled dans le HTML, pas besoin de le toucher ici
 
-    // 2. FILTRAGE STRICT DES EXTENSIONS (L'input ne montrera que ces fichiers)
     if (currentFolder === 'Photos') {
-        input.accept = "image/*"; // Que des images
+        input.accept = "image/*";
         instruction.innerText = "Ajouter une PHOTO";
-        allowed.innerText = "JPG, PNG, GIF, WEBP...";
+        allowed.innerText = "JPG, PNG, GIF...";
     } else if (currentFolder === 'Video') {
-        input.accept = "video/*"; // Que des vidéos
+        input.accept = "video/*";
         instruction.innerText = "Ajouter une VIDÉO";
-        allowed.innerText = "MP4, MOV, AVI...";
+        allowed.innerText = "MP4, MOV...";
     } else if (currentFolder === 'Audio') {
-        input.accept = "audio/*"; // Que de l'audio
+        input.accept = "audio/*";
         instruction.innerText = "Ajouter un AUDIO";
-        allowed.innerText = "MP3, WAV, M4A...";
+        allowed.innerText = "MP3, WAV...";
     } else {
-        // Documents : On exclut explicitement les médias pour éviter la confusion
         input.accept = ".pdf,.doc,.docx,.txt,.zip,.rar,.apk,.exe,.html,.css,.js";
         instruction.innerText = "Ajouter un DOCUMENT";
-        allowed.innerText = "PDF, ZIP, APK, TXT, DOC...";
+        allowed.innerText = "PDF, ZIP, APK, TXT...";
     }
-
     modal.classList.remove('hidden'); 
 }
 
-// --- AFFICHAGE GALERIE ---
 function loadGallery() {
     const gallery = document.getElementById('gallery');
     const currentFilter = localStorage.getItem('activeFilter') || 'Documents';
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
-    const isAdmin = sessionStorage.getItem('admin_access') === 'true';
+    // Note: On affiche pour tout le monde car l'accès au site est déjà protégé par le login
+    const isUserLoggedIn = true; 
 
-    // Mise à jour des boutons
     document.querySelectorAll('.filter-btn').forEach(btn => {
         if(btn.id === `filter-${currentFilter}`) {
             btn.classList.remove('bg-slate-200', 'dark:bg-slate-800', 'text-slate-600');
@@ -109,7 +169,6 @@ function loadGallery() {
     gallery.innerHTML = '';
     const filtered = photos.filter(p => p.category === currentFilter);
 
-    // BOUTON D'AJOUT (Spécifique au dossier)
     const addDiv = document.createElement('div');
     addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition group";
     
@@ -125,10 +184,9 @@ function loadGallery() {
         </div>
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ajouter</span>
     `;
-    addDiv.onclick = openModal; // Appelle la fonction intelligente
+    addDiv.onclick = openModal;
     gallery.appendChild(addDiv);
 
-    // LISTE DES FICHIERS
     filtered.forEach(photo => {
         const div = document.createElement('div');
         div.className = "relative group break-inside-avoid mb-4 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700";
@@ -153,32 +211,29 @@ function loadGallery() {
                     <p class="text-[10px] text-gray-400 uppercase">${photo.type}</p>
                 </div>
             </div>
-            ${isAdmin ? `<button onclick="deletePhoto(${photo.id})" class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+            <button onclick="deletePhoto(${photo.id})" class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-xs"></i></button>
         `;
         gallery.appendChild(div);
     });
 }
 
-// FONCTIONS UTILITAIRES
 function filterGallery(cat) { localStorage.setItem('activeFilter', cat); loadGallery(); }
 function processAndUpload() {
     const file = document.getElementById('base64String').value;
     const title = document.getElementById('imgTitle').value;
-    const cat = document.getElementById('imgCategory').value; // Récupère la valeur verrouillée
+    const cat = document.getElementById('imgCategory').value;
     const type = document.getElementById('fileType').value;
     
-    if(!file) return alert("Veuillez sélectionner un fichier !");
+    if(!file) return alert("Fichier manquant !");
     
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
     photos.unshift({ id: Date.now(), image: file, title: title, category: cat, type: type, date: new Date().toLocaleDateString() });
     localStorage.setItem('my_gallery_data', JSON.stringify(photos));
     
     closeModal();
-    // Reset complet
     document.getElementById('uploadPlaceholder').classList.remove('hidden');
     document.getElementById('filePreviewInfo').classList.add('hidden');
-    document.getElementById('fileInput').value = ""; // Vide l'input
-    
+    document.getElementById('fileInput').value = "";
     loadGallery();
 }
 
@@ -203,8 +258,4 @@ function deletePhoto(id) {
 }
 
 function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-function loginAdmin() { document.getElementById('loginModal').classList.remove('hidden'); }
-function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
 function closeFullscreen() { document.getElementById('fullscreenModal').classList.add('hidden'); document.getElementById('fullscreenContent').innerHTML = ''; }
-function confirmLogin() { if(document.getElementById('adminCodeInput').value === ADMIN_CODE) { sessionStorage.setItem('admin_access', 'true'); closeLoginModal(); loadGallery(); } else alert("Erreur"); }
-function logoutAdmin() { sessionStorage.removeItem('admin_access'); loadGallery(); }
