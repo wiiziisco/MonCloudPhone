@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+
+    <title>CloudPhone | Ma Galerie Pro V2</title>
+    <meta name="description" content="Ma galerie privée sécurisée dans le cloud.">
+
+    <meta property="og:title" content="CloudPhone Mali">
+    <meta property="og:description" content="Espace de stockage illimité et sécurisé.">
+    <meta property="og:image" content="https://moncloudphone-1.onrender.com/preview.jpg">
+    <meta property="og:url" content="https://moncloudphone-1.onrender.com">
+    <meta property="og:type" content="website">
+
+    <meta name="theme-color" content="#0f172a">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script> tailwind.config = { darkMode: 'media' } </script>
+    <style>
+        .break-inside-avoid { break-inside: avoid; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
+
+    <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50 px-4 py-3 flex justify-between items-center shadow-sm dark:shadow-lg transition-colors duration-300">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="filterGallery('all')">
+            <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-500 text-xl"></i>
+            <span class="font-bold text-xl tracking-wide">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></span>
+        </div>
+        <div class="flex gap-2">
+            <button id="btnLogin" onclick="loginAdmin()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-lock"></i></button>
+            <button id="btnAdd" onclick="openModal()" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Ajouter</span></button>
+            <button id="btnLogout" onclick="logoutAdmin()" class="hidden bg-red-100 hover:bg-red-200 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+    </nav>
+
+    <div class="fixed top-[60px] w-full z-40 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur py-2 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 overflow-x-auto hide-scroll flex gap-2">
+            <button onclick="filterGallery('all')" id="filter-all" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-blue-600 text-white shadow-md transition">Tout</button>
+            <button onclick="filterGallery('Travail')" id="filter-Travail" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">💼 Travail</button>
+            <button onclick="filterGallery('Famille')" id="filter-Famille" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🏠 Famille</button>
+            <button onclick="filterGallery('Projet')" id="filter-Projet" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🚀 Projets</button>
+            <button onclick="filterGallery('Perso')" id="filter-Perso" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🔒 Perso</button>
+        </div>
+    </div>
+
+    <main class="pt-32 pb-10 px-4 max-w-7xl mx-auto min-h-screen">
+        <div id="gallery" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+            <div class="text-center col-span-full text-gray-500 mt-10">Chargement...</div>
+        </div>
+    </main>
+
+    <div id="uploadModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Nouvelle Photo</h2>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div class="space-y-4">
+                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition group cursor-pointer bg-slate-50 dark:bg-slate-900/50" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept="image/*" class="hidden">
+                        <div id="uploadPlaceholder">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2 group-hover:text-blue-500"></i>
+                            <p class="text-sm text-slate-500 dark:text-gray-400">Choisir une image</p>
+                        </div>
+                        <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-lg mx-auto">
+                        <p id="compressionInfo" class="hidden text-xs text-green-500 mt-2 font-bold"></p>
+                    </div>
+                    <input type="hidden" id="base64String">
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Titre</label>
+                        <input type="text" id="imgTitle" placeholder="Ex: Plan du site" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Catégorie</label>
+                        <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors appearance-none">
+                            <option value="Autre">Aucune</option>
+                            <option value="Travail">💼 Travail</option>
+                            <option value="Famille">🏠 Famille</option>
+                            <option value="Projet">🚀 Projet</option>
+                            <option value="Perso">🔒 Perso</option>
+                        </select>
+                    </div>
+                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">Publier</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 z-[70] hidden">
+        <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeEditModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Modifier</h2>
+                    <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                
+                <input type="hidden" id="editPhotoId">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouveau Titre</label>
+                        <input type="text" id="editTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouvelle Catégorie</label>
+                        <select id="editCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors appearance-none">
+                            <option value="Autre">Aucune</option>
+                            <option value="Travail">💼 Travail</option>
+                            <option value="Famille">🏠 Famille</option>
+                            <option value="Projet">🚀 Projet</option>
+                            <option value="Perso">🔒 Perso</option>
+                        </select>
+                    </div>
+
+                    <button onclick="submitEdit()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-yellow-500/30">
+                        Enregistrer les changements
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeLoginModal()"></div>
+        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-blue-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
+            <div class="mb-5 relative inline-block">
+                <div class="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
+                <i class="fa-solid fa-lock text-5xl text-transparent bg-clip-text bg-gradient-to-b from-blue-400 to-blue-600"></i>
+            </div>
+            <h3 class="text-slate-800 dark:text-white font-bold text-lg mb-1">Accès Admin</h3>
+            <div class="relative group mb-5 mt-4">
+                <input type="password" id="adminCodeInput" placeholder="Code secret" class="relative w-full bg-white/80 dark:bg-slate-900/80 text-center border border-slate-300 dark:border-slate-700 rounded-lg py-2 px-3 focus:outline-none focus:border-blue-500 transition-all text-sm tracking-widest">
+            </div>
+            <div class="flex gap-2 justify-center">
+                <button onclick="closeLoginModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800/50 transition">Annuler</button>
+                <button onclick="confirmLogin()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg hover:shadow-blue-500/50 transition transform hover:scale-105">Ouvrir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="successModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeSuccessModal()"></div>
+        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-green-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
+            <div class="mb-4 relative inline-block">
+                <div class="absolute inset-0 bg-green-500 blur-xl opacity-20 rounded-full"></div>
+                <i class="fa-solid fa-circle-check text-5xl text-transparent bg-clip-text bg-gradient-to-b from-green-400 to-green-600"></i>
+            </div>
+            <h3 id="successMessage" class="text-slate-800 dark:text-white font-bold text-lg mb-6">Succès !</h3>
+            <button onclick="closeSuccessModal()" class="w-full px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-green-700 shadow-lg hover:shadow-green-500/50 transition transform hover:scale-105">Super !</button>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeConfirmModal()"></div>
+        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-red-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
+            <div class="mb-4 relative inline-block">
+                <div class="absolute inset-0 bg-red-500 blur-xl opacity-20 rounded-full"></div>
+                <i class="fa-solid fa-circle-exclamation text-5xl text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-600"></i>
+            </div>
+            <h3 id="confirmMessage" class="text-slate-800 dark:text-white font-bold text-lg mb-2">Êtes-vous sûr ?</h3>
+            <div class="flex gap-2 justify-center mt-6">
+                <button onclick="closeConfirmModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800/50 transition">Annuler</button>
+                <button onclick="executeConfirm()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-600 to-red-500 shadow-lg hover:shadow-red-500/50 transition transform hover:scale-105">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreenModal" class="fixed inset-0 z-[200] hidden bg-black/95 backdrop-blur-md flex items-center justify-center">
+        <button onclick="closeFullscreen()" class="absolute top-4 right-4 z-[210] text-white/70 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-3 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        <button onclick="prevImage()" class="absolute left-2 z-[210] text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-4 transition"><i class="fa-solid fa-chevron-left text-3xl"></i></button>
+        <div class="relative w-full h-full flex items-center justify-center p-2">
+            <img id="fullscreenImage" src="" alt="Plein écran" class="max-h-[90vh] max-w-full object-contain drop-shadow-2xl rounded-sm">
+            <div class="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
+                <span id="fullscreenTitle" class="bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm"></span>
+            </div>
+        </div>
+        <button onclick="nextImage()" class="absolute right-2 z-[210] text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-4 transition"><i class="fa-solid fa-chevron-right text-3xl"></i></button>
+    </div>
+
+    <script src="script.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('Service Worker chargé !'));
+  }
+</script>
+
+</body>
+</html>

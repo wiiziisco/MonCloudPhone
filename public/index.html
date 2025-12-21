@@ -1,199 +1,257 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="/manifest.json">
-
-    <title>CloudPhone | Ma Galerie Pro V2</title>
-    <meta name="description" content="Ma galerie privée sécurisée dans le cloud.">
-
-    <meta property="og:title" content="CloudPhone Mali">
-    <meta property="og:description" content="Espace de stockage illimité et sécurisé.">
-    <meta property="og:image" content="https://moncloudphone-1.onrender.com/preview.jpg">
-    <meta property="og:url" content="https://moncloudphone-1.onrender.com">
-    <meta property="og:type" content="website">
-
-    <meta name="theme-color" content="#0f172a">
+    <title>F么MA DEV | Le Nexus du Code</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script> tailwind.config = { darkMode: 'media' } </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rajdhani', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        neonOrange: '#ff4d00',
+                        neonBlue: '#00f3ff',
+                        neonYellow: '#fcee0a',
+                        void: '#050505'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .break-inside-avoid { break-inside: avoid; }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
-        .hide-scroll::-webkit-scrollbar { display: none; }
+        body {
+            background-color: #050505;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        .glass-panel {
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-text-blue { text-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
+        .neon-text-orange { text-shadow: 0 0 10px #ff4d00, 0 0 20px #ff4d00; }
+        .neon-box:hover {
+            box-shadow: 0 0 20px var(--glow-color), inset 0 0 10px var(--glow-color);
+            border-color: var(--glow-color);
+        }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
+<body class="text-gray-300 overflow-x-hidden antialiased selection:bg-neonBlue selection:text-black">
 
-    <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50 px-4 py-3 flex justify-between items-center shadow-sm dark:shadow-lg transition-colors duration-300">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="filterGallery('all')">
-            <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-500 text-xl"></i>
-            <span class="font-bold text-xl tracking-wide">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></span>
+    <nav class="fixed top-0 w-full z-50 border-b border-white/10 glass-panel">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="font-display font-black text-2xl tracking-widest text-white">
+                <span class="text-neonBlue">&lt;</span>F么Ma DEV<span class="text-neonBlue">/&gt;</span>
+            </div>
+            
+            <div class="hidden md:flex gap-8 font-bold tracking-wider text-sm uppercase items-center">
+                <a href="#modules" class="hover:text-neonBlue transition duration-300">Modules</a>
+                <a href="#mission" class="hover:text-neonBlue transition duration-300">Protocole</a>
+                <button onclick="openVideo()" class="text-neonOrange border border-neonOrange px-4 py-1 rounded hover:bg-neonOrange hover:text-black transition duration-300 shadow-[0_0_10px_rgba(255,77,0,0.3)] animate-pulse">
+                    <i class="fa-solid fa-play mr-2"></i> DÉMO IA
+                </button>
+            </div>
+
+            <button onclick="toggleMenu()" class="md:hidden text-3xl hover:scale-110 transition z-50 relative">🤖</button>
         </div>
-        <div class="flex gap-2">
-            <button id="btnLogin" onclick="loginAdmin()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-lock"></i></button>
-            <button id="btnAdd" onclick="openModal()" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Ajouter</span></button>
-            <button id="btnLogout" onclick="logoutAdmin()" class="hidden bg-red-100 hover:bg-red-200 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 px-4 py-2 rounded-full text-sm font-bold transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+
+        <div id="mobileMenu" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-40 transform translate-x-full transition-transform duration-300 flex flex-col items-center justify-center space-y-8">
+            <a href="#modules" onclick="toggleMenu()" class="text-2xl font-display text-white hover:text-neonBlue">MODULES</a>
+            <a href="#mission" onclick="toggleMenu()" class="text-2xl font-display text-white hover:text-neonBlue">PROTOCOLE</a>
+            
+            <button onclick="openVideo(); toggleMenu()" class="mt-8 px-8 py-4 border-2 border-neonOrange text-neonOrange font-display font-bold text-xl rounded-lg shadow-[0_0_20px_rgba(255,77,0,0.4)] hover:bg-neonOrange hover:text-black transition">
+                <i class="fa-solid fa-microchip mr-2"></i> DÉMO IA
+            </button>
         </div>
     </nav>
 
-    <div class="fixed top-[60px] w-full z-40 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur py-2 border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 overflow-x-auto hide-scroll flex gap-2">
-            <button onclick="filterGallery('all')" id="filter-all" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-blue-600 text-white shadow-md transition">Tout</button>
-            <button onclick="filterGallery('Travail')" id="filter-Travail" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">💼 Travail</button>
-            <button onclick="filterGallery('Famille')" id="filter-Famille" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🏠 Famille</button>
-            <button onclick="filterGallery('Projet')" id="filter-Projet" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🚀 Projets</button>
-            <button onclick="filterGallery('Perso')" id="filter-Perso" class="filter-btn whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition">🔒 Perso</button>
+    <header class="relative min-h-screen flex items-center justify-center pt-20 px-4">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-neonBlue/20 rounded-full blur-[100px] animate-pulse-slow"></div>
+        
+        <div class="relative text-center max-w-4xl z-10">
+            <h2 class="text-neonBlue font-mono text-sm mb-4 tracking-[0.3em] uppercase">Initialisation du système...</h2>
+            <h1 class="font-display text-5xl md:text-8xl font-black text-white mb-6 leading-tight">
+                MAÎTRISEZ LE <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neonOrange via-neonYellow to-neonBlue animate-pulse">DIGITAL WEB</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Votre porte d'entrée vers l'architecture numérique. HTML pour la structure. CSS pour le style. JS pour la vie.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="app.html" class="px-8 py-4 bg-white text-black font-display font-bold text-lg uppercase tracking-wider hover:bg-neonBlue transition duration-300 clip-path-slant">
+                    📱 LANCER L'APP
+                </a>
+                <a href="#mission" class="px-8 py-4 border border-white/30 text-white font-display font-bold text-lg uppercase tracking-wider hover:bg-white/10 transition duration-300">
+                    En savoir plus
+                </a>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <main class="pt-32 pb-10 px-4 max-w-7xl mx-auto min-h-screen">
-        <div id="gallery" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-            <div class="text-center col-span-full text-gray-500 mt-10">Chargement...</div>
-        </div>
-    </main>
+    <section id="modules" class="py-20 px-4 max-w-7xl mx-auto">
+        <h3 class="font-display text-3xl text-white mb-12 flex items-center gap-4">
+            <span class="w-2 h-8 bg-neonBlue"></span>
+            SÉLECTIONNEZ VOTRE ARME
+        </h3>
 
-    <div id="uploadModal" class="fixed inset-0 z-[60] hidden">
-        <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-            <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Nouvelle Photo</h2>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <a href="https://grafikart.fr/tutoriels/html" target="_blank" class="group relative glass-panel p-8 rounded-xl transition duration-500 hover:-translate-y-2 neon-box" style="--glow-color: #ff4d00">
+                <div class="absolute -top-6 left-8 bg-black border border-[#ff4d00] p-4 rounded-lg shadow-[0_0_15px_#ff4d0040]">
+                    <i class="fa-brands fa-html5 text-4xl text-[#ff4d00]"></i>
                 </div>
-                <div class="space-y-4">
-                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition group cursor-pointer bg-slate-50 dark:bg-slate-900/50" onclick="document.getElementById('fileInput').click()">
-                        <input type="file" id="fileInput" accept="image/*" class="hidden">
-                        <div id="uploadPlaceholder">
-                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2 group-hover:text-blue-500"></i>
-                            <p class="text-sm text-slate-500 dark:text-gray-400">Choisir une image</p>
-                        </div>
-                        <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-lg mx-auto">
-                        <p id="compressionInfo" class="hidden text-xs text-green-500 mt-2 font-bold"></p>
+                <h4 class="mt-8 text-2xl font-display font-bold text-white group-hover:text-[#ff4d00] transition">HTML 5</h4>
+                <p class="mt-4 text-gray-400 text-sm leading-relaxed">L'ossature du web. Apprenez à structurer l'information dans le chaos numérique.</p>
+                <div class="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
+                    <span class="text-xs font-mono text-[#ff4d00]">STATUS: ESSENTIEL</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 text-white"></i>
+                </div>
+            </a>
+
+            <a href="https://grafikart.fr/tutoriels/css" target="_blank" class="group relative glass-panel p-8 rounded-xl transition duration-500 hover:-translate-y-2 neon-box" style="--glow-color: #00f3ff">
+                <div class="absolute -top-6 left-8 bg-black border border-[#00f3ff] p-4 rounded-lg shadow-[0_0_15px_#00f3ff40]">
+                    <i class="fa-brands fa-css3-alt text-4xl text-[#00f3ff]"></i>
+                </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-white group-hover:text-[#00f3ff] transition">CSS 3</h4>
+                <p class="mt-4 text-gray-400 text-sm leading-relaxed">L'art visuel. Manipulez la grille, les couleurs et les animations pour créer l'immersion.</p>
+                <div class="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
+                    <span class="text-xs font-mono text-[#00f3ff]">STATUS: CRÉATIF</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 text-white"></i>
+                </div>
+            </a>
+
+            <a href="https://grafikart.fr/tutoriels/javascript" target="_blank" class="group relative glass-panel p-8 rounded-xl transition duration-500 hover:-translate-y-2 neon-box" style="--glow-color: #fcee0a">
+                <div class="absolute -top-6 left-8 bg-black border border-[#fcee0a] p-4 rounded-lg shadow-[0_0_15px_#fcee0a40]">
+                    <i class="fa-brands fa-js text-4xl text-[#fcee0a]"></i>
+                </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-white group-hover:text-[#fcee0a] transition">JavaScript</h4>
+                <p class="mt-4 text-gray-400 text-sm leading-relaxed">L'étincelle de vie. Logique, interactivité et données. Le cœur battant de l'application.</p>
+                <div class="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
+                    <span class="text-xs font-mono text-[#fcee0a]">STATUS: LOGIQUE</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 text-white"></i>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section id="mission" class="py-20 relative overflow-hidden">
+        <div class="absolute inset-0 bg-neonBlue/5 skew-y-3 transform origin-bottom-right"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 relative z-10 flex flex-col md:flex-row gap-12 items-center">
+            <div class="w-full md:w-1/2">
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-neonOrange to-neonBlue rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                    <div class="relative glass-panel p-8 rounded-lg border border-white/10">
+                        <pre class="text-xs md:text-sm font-mono text-neonBlue overflow-x-auto">
+<span class="text-neonOrange">const mission = {
+    target: "Innovation Totale",  
+    accessibility: true,
+    community: "F么MA Clan",       
+    execute: function() {
+        return "Coder le futur, maintenant."; 
+    }
+};
+                        </pre>
                     </div>
-                    <input type="hidden" id="base64String">
-                    <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Titre</label>
-                        <input type="text" id="imgTitle" placeholder="Ex: Plan du site" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Catégorie</label>
-                        <select id="imgCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none transition-colors appearance-none">
-                            <option value="Autre">Aucune</option>
-                            <option value="Travail">💼 Travail</option>
-                            <option value="Famille">🏠 Famille</option>
-                            <option value="Projet">🚀 Projet</option>
-                            <option value="Perso">🔒 Perso</option>
-                        </select>
-                    </div>
-                    <button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-blue-500/30">Publier</button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="editModal" class="fixed inset-0 z-[70] hidden">
-        <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" onclick="closeEditModal()"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-            <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto transition-colors duration-300">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Modifier</h2>
-                    <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                
-                <input type="hidden" id="editPhotoId">
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouveau Titre</label>
-                        <input type="text" id="editTitle" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs text-slate-500 dark:text-gray-400 mb-1 uppercase font-bold">Nouvelle Catégorie</label>
-                        <select id="editCategory" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:outline-none transition-colors appearance-none">
-                            <option value="Autre">Aucune</option>
-                            <option value="Travail">💼 Travail</option>
-                            <option value="Famille">🏠 Famille</option>
-                            <option value="Projet">🚀 Projet</option>
-                            <option value="Perso">🔒 Perso</option>
-                        </select>
-                    </div>
-
-                    <button onclick="submitEdit()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl mt-2 transition shadow-lg shadow-yellow-500/30">
-                        Enregistrer les changements
-                    </button>
-                </div>
+            
+            <div class="w-full md:w-1/2">
+                <h3 class="font-display text-3xl text-white mb-6">NOTRE PROTOCOLE</h3>
+                <p class="text-gray-400 mb-6 leading-relaxed">
+                    Bienvenue sur F么MA DEV. Nous ne sommes pas une école, nous sommes une base de lancement. Que vous soyez un initié cherchant à approfondir le code ou un novice prêt à plonger dans le flux de données, nous avons les coordonnées.
+                </p>
+                <ul class="space-y-4 font-mono text-sm text-gray-300">
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-neonBlue"></i> Ressources Haute Qualité
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-neonBlue"></i> Liens d'affiliation certifiés
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check text-neonBlue"></i> Support Communautaire
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div id="loginModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeLoginModal()"></div>
-        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-blue-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
-            <div class="mb-5 relative inline-block">
-                <div class="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
-                <i class="fa-solid fa-lock text-5xl text-transparent bg-clip-text bg-gradient-to-b from-blue-400 to-blue-600"></i>
+    <footer class="border-t border-white/10 bg-black py-10 text-center">
+        <p class="text-gray-600 text-sm font-mono">
+            F么MA DEV // DESIGNED BY <span class="text-white">Ű丂乇千</span> // <span class="text-neonBlue">RENDERED</span>
+        </p>
+    </footer>
+
+    <div id="videoModal" class="fixed inset-0 z-[100] hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl bg-black border-2 border-neonBlue rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,243,255,0.3)]">
+            
+            <div class="bg-white/10 p-3 flex justify-between items-center border-b border-white/10">
+                <span class="text-neonBlue font-mono tracking-widest text-sm md:text-base">
+                    <i class="fa-solid fa-robot mr-2"></i>DÉMO_IA.exe
+                </span>
+                <button onclick="closeVideo()" class="text-white hover:text-red-500 font-bold px-2 text-xl transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <h3 class="text-slate-800 dark:text-white font-bold text-lg mb-1">Accès Admin</h3>
-            <div class="relative group mb-5 mt-4">
-                <input type="password" id="adminCodeInput" placeholder="Code secret" class="relative w-full bg-white/80 dark:bg-slate-900/80 text-center border border-slate-300 dark:border-slate-700 rounded-lg py-2 px-3 focus:outline-none focus:border-blue-500 transition-all text-sm tracking-widest">
-            </div>
-            <div class="flex gap-2 justify-center">
-                <button onclick="closeLoginModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800/50 transition">Annuler</button>
-                <button onclick="confirmLogin()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg hover:shadow-blue-500/50 transition transform hover:scale-105">Ouvrir</button>
+
+            <div class="aspect-video w-full bg-black">
+                <iframe class="w-full h-full" 
+                    src="https://www.youtube.com/embed/ad79nYk2keg?enablejsapi=1" 
+                    title="Demo IA" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
             </div>
         </div>
     </div>
 
-    <div id="successModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeSuccessModal()"></div>
-        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-green-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
-            <div class="mb-4 relative inline-block">
-                <div class="absolute inset-0 bg-green-500 blur-xl opacity-20 rounded-full"></div>
-                <i class="fa-solid fa-circle-check text-5xl text-transparent bg-clip-text bg-gradient-to-b from-green-400 to-green-600"></i>
-            </div>
-            <h3 id="successMessage" class="text-slate-800 dark:text-white font-bold text-lg mb-6">Succès !</h3>
-            <button onclick="closeSuccessModal()" class="w-full px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-green-700 shadow-lg hover:shadow-green-500/50 transition transform hover:scale-105">Super !</button>
-        </div>
-    </div>
+    <script>
+        // Gestion du Menu Robot
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            if (menu.classList.contains('translate-x-full')) {
+                menu.classList.remove('translate-x-full');
+                menu.classList.add('translate-x-0');
+            } else {
+                menu.classList.add('translate-x-full');
+                menu.classList.remove('translate-x-0');
+            }
+        }
 
-    <div id="confirmModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-slate-900/30 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeConfirmModal()"></div>
-        <div class="relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/50 dark:border-red-500/30 shadow-2xl rounded-3xl p-6 w-[85%] max-w-[280px] text-center">
-            <div class="mb-4 relative inline-block">
-                <div class="absolute inset-0 bg-red-500 blur-xl opacity-20 rounded-full"></div>
-                <i class="fa-solid fa-circle-exclamation text-5xl text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-600"></i>
-            </div>
-            <h3 id="confirmMessage" class="text-slate-800 dark:text-white font-bold text-lg mb-2">Êtes-vous sûr ?</h3>
-            <div class="flex gap-2 justify-center mt-6">
-                <button onclick="closeConfirmModal()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800/50 transition">Annuler</button>
-                <button onclick="executeConfirm()" class="flex-1 px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-600 to-red-500 shadow-lg hover:shadow-red-500/50 transition transform hover:scale-105">Confirmer</button>
-            </div>
-        </div>
-    </div>
+        // Gestion de la Vidéo
+        function openVideo() {
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
 
-    <div id="fullscreenModal" class="fixed inset-0 z-[200] hidden bg-black/95 backdrop-blur-md flex items-center justify-center">
-        <button onclick="closeFullscreen()" class="absolute top-4 right-4 z-[210] text-white/70 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-3 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
-        <button onclick="prevImage()" class="absolute left-2 z-[210] text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-4 transition"><i class="fa-solid fa-chevron-left text-3xl"></i></button>
-        <div class="relative w-full h-full flex items-center justify-center p-2">
-            <img id="fullscreenImage" src="" alt="Plein écran" class="max-h-[90vh] max-w-full object-contain drop-shadow-2xl rounded-sm">
-            <div class="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
-                <span id="fullscreenTitle" class="bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm"></span>
-            </div>
-        </div>
-        <button onclick="nextImage()" class="absolute right-2 z-[210] text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full p-4 transition"><i class="fa-solid fa-chevron-right text-3xl"></i></button>
-    </div>
-
-    <script src="script.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => console.log('Service Worker chargé !'));
-  }
-</script>
-
+        function closeVideo() {
+            const modal = document.getElementById('videoModal');
+            modal.classList.add('hidden');
+            // Stop la vidéo quand on ferme
+            const iframe = modal.querySelector('iframe');
+            const tempSrc = iframe.src;
+            iframe.src = tempSrc; 
+        }
+    </script>
 </body>
 </html>
