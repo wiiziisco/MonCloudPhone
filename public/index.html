@@ -14,18 +14,9 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Rajdhani', 'sans-serif'],
-                        display: ['Orbitron', 'sans-serif'],
-                    },
-                    colors: {
-                        cyberBlue: '#00f3ff',
-                        cyberRed: '#ff003c',
-                        cyberYellow: '#fcee0a',
-                    },
-                    animation: {
-                        'pulse-fast': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
+                    fontFamily: { sans: ['Rajdhani', 'sans-serif'], display: ['Orbitron', 'sans-serif'] },
+                    colors: { cyberBlue: '#00f3ff', cyberRed: '#ff003c', cyberYellow: '#fcee0a' },
+                    animation: { 'pulse-fast': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
                 }
             }
         }
@@ -33,36 +24,19 @@
     <style>
         html, body { height: 100%; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
         
-        /* THEME SOMBRE (Mode Hacker) */
+        /* THEME SOMBRE */
         html.dark body { background-color: #050505; color: #e2e8f0; }
-        html.dark .cyber-grid {
-            background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-        }
-        html.dark .glass-card {
-            background: rgba(10, 10, 16, 0.8);
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
-        }
+        html.dark .cyber-grid { background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px); }
+        html.dark .glass-card { background: rgba(10, 10, 16, 0.8); border: 1px solid rgba(0, 243, 255, 0.2); box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
 
-        /* THEME CLAIR (Mode Labo) */
+        /* THEME CLAIR */
         html:not(.dark) body { background-color: #f0f4f8; color: #1e293b; }
-        html:not(.dark) .cyber-grid {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-        }
-        html:not(.dark) .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+        html:not(.dark) .cyber-grid { background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px); }
+        html:not(.dark) .glass-card { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 
-        /* Elements Communs */
-        .cyber-grid {
-            position: fixed; inset: 0; z-index: -1;
-            background-size: 40px 40px;
-        }
-        .text-glow { text-shadow: 0 0 10px currentColor; }
+        .cyber-grid { position: fixed; inset: 0; z-index: -1; background-size: 40px 40px; }
+        .scan-line { width: 100%; height: 2px; background: #00f3ff; position: absolute; top: 0; left: 0; animation: scan 2s linear infinite; opacity: 0.5; }
+        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
     </style>
 </head>
 <body class="selection:bg-cyberBlue selection:text-black">
@@ -73,49 +47,36 @@
         <div class="text-2xl font-black tracking-widest font-display text-gray-900 dark:text-white">
             <span class="text-blue-600 dark:text-cyberBlue">&lt;</span>F4Ma<span class="text-blue-600 dark:text-cyberBlue">/&gt;</span>
         </div>
-        <a href="#contacts" class="text-2xl text-gray-400 hover:text-blue-500 dark:hover:text-cyberBlue transition animate-pulse-fast">
-            <i class="fa-solid fa-robot"></i>
-        </a>
+        
+        <button onclick="toggleRobotModal()" class="group relative flex items-center justify-center w-12 h-12 rounded-xl bg-gray-200/50 dark:bg-white/5 border border-gray-300 dark:border-white/10 hover:border-blue-500 dark:hover:border-cyberBlue hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] transition-all duration-300 overflow-hidden cursor-pointer">
+            <div class="absolute inset-0 bg-blue-500/10 dark:bg-cyberBlue/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <i class="fa-solid fa-robot text-xl text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-cyberBlue group-hover:scale-110 transition-all duration-300 z-10"></i>
+            <div class="absolute top-2 right-2 w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_#22c55e]"></div>
+        </button>
     </nav>
 
     <header class="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-20">
-        
         <div class="relative text-center max-w-4xl z-10">
-            <p class="font-mono text-blue-600 dark:text-cyberBlue text-xs md:text-sm mb-4 tracking-[0.3em] uppercase">
-                &gt; System_Ready...
-            </p>
-            
+            <p class="font-mono text-blue-600 dark:text-cyberBlue text-xs md:text-sm mb-4 tracking-[0.3em] uppercase">&gt; System_Ready...</p>
             <h1 class="font-display text-5xl md:text-8xl font-black mb-6 leading-none text-gray-900 dark:text-white uppercase">
                 L'Univers <br>
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-500 to-blue-600 dark:from-cyberRed dark:via-cyberYellow dark:to-cyberBlue">F4Ma DEV</span>
             </h1>
-            
             <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto font-bold tracking-wide">
                 [ Architecte Numérique & Développeur Fullstack ]
             </p>
-
             <div class="flex justify-center pb-12">
                 <a href="app.html" class="relative group px-10 py-5 bg-slate-900 overflow-hidden rounded-md border border-blue-500 dark:border-cyberBlue shadow-[0_0_20px_rgba(0,120,255,0.3)] dark:shadow-[0_0_20px_rgba(0,243,255,0.2)] hover:shadow-[0_0_50px_rgba(0,243,255,0.6)] transition-all duration-300 hover:scale-105">
-                    
                     <div class="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-400/10 to-blue-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
-                    
                     <div class="relative flex items-center gap-4">
                         <div class="relative flex items-center justify-center w-10 h-10 bg-blue-500/10 dark:bg-cyberBlue/10 rounded-full border border-blue-500/30 dark:border-cyberBlue/30 group-hover:bg-blue-500 group-hover:border-blue-500 dark:group-hover:bg-cyberBlue dark:group-hover:border-cyberBlue transition-all duration-300">
                             <i class="fa-solid fa-mobile-screen text-blue-500 dark:text-cyberBlue group-hover:text-black text-lg transition-colors duration-300"></i>
                         </div>
-                        
-                        <span class="font-display font-black text-xl tracking-[0.2em] uppercase text-white group-hover:text-blue-400 dark:group-hover:text-cyberBlue transition-colors duration-300">
-                            Lancer l'App
-                        </span>
-                        
+                        <span class="font-display font-black text-xl tracking-[0.2em] uppercase text-white group-hover:text-blue-400 dark:group-hover:text-cyberBlue transition-colors duration-300">Lancer l'App</span>
                         <i class="fa-solid fa-arrow-right text-blue-500 dark:text-cyberBlue opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
                     </div>
-                    
-                    <div class="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-blue-500 dark:border-cyberBlue opacity-50"></div>
-                    <div class="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-blue-500 dark:border-cyberBlue opacity-50"></div>
                 </a>
             </div>
-
         </div>
     </header>
 
@@ -123,41 +84,23 @@
         <div class="max-w-6xl mx-auto">
             <div class="flex items-center gap-4 mb-12">
                 <div class="h-8 w-1 bg-blue-600 dark:bg-cyberBlue shadow-[0_0_15px_currentColor]"></div>
-                <h2 class="text-3xl md:text-4xl font-black uppercase tracking-wider font-display text-gray-900 dark:text-white">
-                    Centre de Commande
-                </h2>
+                <h2 class="text-3xl md:text-4xl font-black uppercase tracking-wider font-display text-gray-900 dark:text-white">Centre de Commande</h2>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <a href="app.html" class="glass-card p-8 rounded-xl group hover:-translate-y-2 transition duration-300">
-                    <div class="flex justify-between items-start mb-6">
-                        <i class="fa-solid fa-cloud text-4xl text-orange-500 dark:text-cyberRed"></i>
-                        <span class="text-xs font-mono border border-orange-500/50 text-orange-500 px-2 py-1 rounded">PRIVATE</span>
-                    </div>
+                    <div class="flex justify-between items-start mb-6"><i class="fa-solid fa-cloud text-4xl text-orange-500 dark:text-cyberRed"></i><span class="text-xs font-mono border border-orange-500/50 text-orange-500 px-2 py-1 rounded">PRIVATE</span></div>
                     <h3 class="text-2xl font-display font-bold text-gray-900 dark:text-white mb-2 group-hover:text-orange-500 transition">CloudPhone</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Accès sécurisé à la base de données multimédia.</p>
-                    <div class="flex items-center gap-2 text-orange-500 text-sm font-bold uppercase tracking-widest">
-                        Accéder <i class="fa-solid fa-arrow-right"></i>
-                    </div>
+                    <div class="flex items-center gap-2 text-orange-500 text-sm font-bold uppercase tracking-widest">Accéder <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
-
                 <a href="mailto:wiizzardiisco@gmail.com" class="glass-card p-8 rounded-xl group hover:-translate-y-2 transition duration-300">
-                    <div class="flex justify-between items-start mb-6">
-                        <i class="fa-solid fa-envelope text-4xl text-blue-600 dark:text-cyberBlue"></i>
-                        <span class="text-xs font-mono border border-blue-600/50 text-blue-600 dark:border-cyberBlue/50 dark:text-cyberBlue px-2 py-1 rounded">MAIL</span>
-                    </div>
+                    <div class="flex justify-between items-start mb-6"><i class="fa-solid fa-envelope text-4xl text-blue-600 dark:text-cyberBlue"></i><span class="text-xs font-mono border border-blue-600/50 text-blue-600 dark:border-cyberBlue/50 dark:text-cyberBlue px-2 py-1 rounded">MAIL</span></div>
                     <h3 class="text-2xl font-display font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-cyberBlue transition">Contact Pro</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Initialiser une communication chiffrée.</p>
-                    <div class="flex items-center gap-2 text-blue-600 dark:text-cyberBlue text-sm font-bold uppercase tracking-widest">
-                        Envoyer <i class="fa-solid fa-arrow-right"></i>
-                    </div>
+                    <div class="flex items-center gap-2 text-blue-600 dark:text-cyberBlue text-sm font-bold uppercase tracking-widest">Envoyer <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
-
                 <div class="glass-card p-8 rounded-xl">
-                    <div class="flex justify-between items-start mb-6">
-                        <i class="fa-solid fa-share-nodes text-4xl text-yellow-500 dark:text-cyberYellow"></i>
-                        <span class="text-xs font-mono border border-yellow-500/50 text-yellow-500 dark:border-cyberYellow/50 dark:text-cyberYellow px-2 py-1 rounded">SOCIAL</span>
-                    </div>
+                    <div class="flex justify-between items-start mb-6"><i class="fa-solid fa-share-nodes text-4xl text-yellow-500 dark:text-cyberYellow"></i><span class="text-xs font-mono border border-yellow-500/50 text-yellow-500 dark:border-cyberYellow/50 dark:text-cyberYellow px-2 py-1 rounded">SOCIAL</span></div>
                     <h3 class="text-2xl font-display font-bold text-gray-900 dark:text-white mb-4">Réseaux</h3>
                     <div class="flex gap-4 text-3xl">
                         <a href="https://wa.me/qr/WRWJPGPKEFN2A1" class="text-gray-400 hover:text-green-500 transition hover:scale-110"><i class="fa-brands fa-whatsapp"></i></a>
@@ -169,21 +112,77 @@
         </div>
     </section>
 
+    <div id="robotModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity">
+        <div class="relative w-full max-w-sm glass-card p-0 overflow-hidden rounded-2xl transform scale-95 transition-transform duration-300" id="robotCard">
+            <div class="scan-line"></div>
+            
+            <div class="bg-gray-100 dark:bg-white/5 p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-blue-600 dark:text-cyberBlue"></i>
+                    <span class="font-mono text-xs font-bold text-gray-700 dark:text-white tracking-widest">SYSTEM_LOG</span>
+                </div>
+                <button onclick="toggleRobotModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-600/20 dark:bg-cyberBlue/20 flex items-center justify-center text-blue-600 dark:text-cyberBlue">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-mono">SERVER_STATUS</p>
+                            <p class="text-sm font-bold text-green-500">ONLINE ●</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-mono">PING</p>
+                        <p class="text-sm font-bold text-gray-700 dark:text-white">14ms</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-black/60 p-2 text-center">
+                <p class="text-[10px] font-mono text-gray-400 dark:text-gray-600">SECURE CONNECTION ESTABLISHED</p>
+            </div>
+        </div>
+    </div>
+
     <footer class="py-6 text-center text-xs font-mono text-gray-500 dark:text-gray-600 border-t border-gray-200 dark:border-white/5">
-        SYSTEM_ID: F4Ma_DEV // V.2.1
+        SYSTEM_ID: F4Ma_DEV // V.2.4
     </footer>
 
     <script>
+        // --- THEME AUTO ---
         const html = document.documentElement;
         function applySystemTheme() {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 html.classList.add('dark');
             } else {
                 html.classList.remove('dark');
             }
         }
         applySystemTheme();
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystemTheme);
+
+        // --- MODAL ROBOT ---
+        function toggleRobotModal() {
+            const modal = document.getElementById('robotModal');
+            const card = document.getElementById('robotCard');
+            
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { // Animation Entrée
+                    card.classList.remove('scale-95');
+                    card.classList.add('scale-100');
+                }, 10);
+            } else {
+                card.classList.remove('scale-100');
+                card.classList.add('scale-95');
+                setTimeout(() => { // Animation Sortie
+                    modal.classList.add('hidden');
+                }, 200);
+            }
+        }
     </script>
 </body>
 </html>
