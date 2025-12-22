@@ -15,8 +15,6 @@
     <style>
         .hide-scroll::-webkit-scrollbar { display: none; }
         html, body { height: 100%; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
-        
-        /* Gestion propre des couleurs de fond Body */
         html.dark body { background-color: #0f172a; color: white; }
         html:not(.dark) body { background-color: #f8fafc; color: #0f172a; }
     </style>
@@ -24,24 +22,18 @@
 <body class="overflow-hidden font-sans select-none">
 
     <div id="auth-screen" class="fixed inset-0 z-[9000] flex flex-col items-center justify-center p-6 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center transition-all duration-500">
-        
         <div class="absolute inset-0 bg-white/60 dark:bg-slate-900/90 backdrop-blur-sm transition-colors duration-500"></div>
-        
         <div class="relative z-10 w-full max-w-sm bg-white/80 dark:bg-black/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-8 rounded-3xl shadow-2xl transition-colors duration-500">
             <div class="text-center mb-8">
                 <i class="fa-solid fa-fingerprint text-5xl text-blue-600 dark:text-blue-500 mb-4 animate-pulse"></i>
                 <h1 class="text-3xl font-bold text-slate-800 dark:text-white">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></h1>
             </div>
-            
             <div class="space-y-4">
                 <input type="text" id="username" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl p-3 text-slate-900 dark:text-white text-center font-bold outline-none focus:border-blue-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500" placeholder="Pseudo">
                 <input type="password" id="password" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl p-3 text-slate-900 dark:text-white text-center font-bold outline-none focus:border-blue-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500" placeholder="Code secret">
                 <button onclick="handleAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95">ENTRER</button>
             </div>
-            
-            <p class="text-center text-xs text-slate-500 dark:text-gray-400 mt-6 cursor-pointer hover:text-blue-600 dark:hover:text-white transition" onclick="toggleAuthMode()">
-                <span id="auth-toggle-text">Première visite ? Créer un accès</span>
-            </p>
+            <p class="text-center text-xs text-slate-500 dark:text-gray-400 mt-6 cursor-pointer hover:text-blue-600 dark:hover:text-white transition" onclick="toggleAuthMode()"><span id="auth-toggle-text">Première visite ? Créer un accès</span></p>
         </div>
     </div>
 
@@ -75,9 +67,22 @@
     
     <div id="fullscreenModal" class="fixed inset-0 z-[200] hidden bg-black/95 backdrop-blur-md flex items-center justify-center"><button onclick="closeFullscreen()" class="absolute top-4 right-4 z-[210] text-white/70 text-2xl"><i class="fa-solid fa-xmark"></i></button><div id="fullscreenContent" class="w-full h-full flex items-center justify-center p-4"></div></div>
 
+    <div id="logoutModal" class="fixed inset-0 z-[11000] hidden flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-xs rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 text-center transform scale-100 transition-all">
+            <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-power-off text-3xl text-red-500"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Déconnexion</h3>
+            <p class="text-sm text-slate-500 dark:text-gray-400 mb-6">Voulez-vous vraiment fermer votre session sécurisée ?</p>
+            <div class="flex gap-3">
+                <button onclick="cancelLogout()" class="flex-1 py-3 rounded-xl font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition">Annuler</button>
+                <button onclick="confirmLogout()" class="flex-1 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-600 transition shadow-lg shadow-red-500/30">Quitter</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script>
-        // SCRIPT AUTO-THEME (Applique aussi au Login)
         const html = document.documentElement;
         function applySystemTheme() {
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {

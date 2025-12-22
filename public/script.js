@@ -54,11 +54,19 @@ function showApp() {
     loadGallery();
 }
 
+// --- NOUVELLE GESTION DÉCONNEXION ---
 function logoutUser() {
-    if(confirm("Déconnexion ?")) {
-        localStorage.removeItem('is_logged_in');
-        location.reload();
-    }
+    // Affiche la belle modal au lieu de confirm()
+    document.getElementById('logoutModal').classList.remove('hidden');
+}
+
+function confirmLogout() {
+    localStorage.removeItem('is_logged_in');
+    location.reload();
+}
+
+function cancelLogout() {
+    document.getElementById('logoutModal').classList.add('hidden');
 }
 
 // --- LOGIQUE FICHIERS ---
@@ -77,7 +85,6 @@ function setupFileInput() {
         document.getElementById('previewName').textContent = file.name;
         document.getElementById('imgTitle').value = file.name.split('.')[0];
         
-        // Détection type pour icône
         let type = 'doc';
         if (file.type.startsWith('image/')) type = 'image';
         else if (file.type.startsWith('video/')) type = 'video';
@@ -103,43 +110,42 @@ function loadGallery() {
     const currentFilter = localStorage.getItem('activeFilter') || 'Documents';
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
 
-    // Mise à jour visuelle des boutons (Style Actif/Inactif)
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const isActive = btn.id === `filter-${currentFilter}`;
-        btn.className = `filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-slate-800 text-gray-400 border-transparent hover:text-white'}`;
+        btn.className = `filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-gray-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'}`;
     });
 
     gallery.innerHTML = '';
     const filtered = photos.filter(p => p.category === currentFilter);
 
-    // 1. Bouton Ajout (Correctif icône vidéo)
+    // Bouton Ajout
     const addDiv = document.createElement('div');
-    addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-blue-500 transition flex flex-col items-center justify-center cursor-pointer group";
+    addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-blue-500 transition flex flex-col items-center justify-center cursor-pointer group";
     
     let addIcon = "fa-plus";
     let addLabel = "Ajouter";
     
     if (currentFilter === 'Photos') { addIcon = "fa-camera"; addLabel = "Photo"; }
     else if (currentFilter === 'Audio') { addIcon = "fa-microphone"; addLabel = "Audio"; }
-    else if (currentFilter === 'Video') { addIcon = "fa-film"; addLabel = "Vidéo"; } // ICI : fa-film (Gratuit)
+    else if (currentFilter === 'Video') { addIcon = "fa-film"; addLabel = "Vidéo"; }
     else { addIcon = "fa-file-circle-plus"; addLabel = "Fichier"; }
 
     addDiv.innerHTML = `
-        <div class="w-12 h-12 rounded-full bg-slate-700 group-hover:bg-blue-600 flex items-center justify-center mb-2 transition shadow-lg">
-            <i class="fa-solid ${addIcon} text-blue-400 group-hover:text-white text-xl"></i>
+        <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-blue-600 flex items-center justify-center mb-2 transition shadow-lg">
+            <i class="fa-solid ${addIcon} text-blue-500 dark:text-blue-400 group-hover:text-white text-xl"></i>
         </div>
-        <span class="text-[10px] font-bold text-gray-500 group-hover:text-white uppercase tracking-wider">${addLabel}</span>
+        <span class="text-[10px] font-bold text-slate-500 dark:text-gray-500 group-hover:text-slate-800 dark:group-hover:text-white uppercase tracking-wider">${addLabel}</span>
     `;
     addDiv.onclick = openModal;
     gallery.appendChild(addDiv);
 
-    // 2. Liste Fichiers
+    // Liste Fichiers
     filtered.forEach(p => {
         const div = document.createElement('div');
-        div.className = "relative group aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-slate-700 shadow-md";
+        div.className = "relative group aspect-square rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md";
         
         let visual = '';
-        if (p.type === 'image') visual = `<img src="${p.image}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition">`;
+        if (p.type === 'image') visual = `<img src="${p.image}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition">`;
         else {
             let icon = 'fa-file';
             let col = 'text-gray-500';
@@ -147,14 +153,14 @@ function loadGallery() {
             if (p.type === 'audio') { icon = 'fa-music'; col = 'text-pink-500'; }
             if (p.type === 'apk') { icon = 'fa-android'; col = 'text-green-500'; }
             if (p.type === 'zip') { icon = 'fa-file-zipper'; col = 'text-yellow-500'; }
-            visual = `<div class="w-full h-full flex items-center justify-center bg-slate-900"><i class="fa-solid ${icon} ${col} text-4xl"></i></div>`;
+            visual = `<div class="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900"><i class="fa-solid ${icon} ${col} text-4xl"></i></div>`;
         }
 
         div.innerHTML = `
             <div onclick="openFullscreen('${p.id}')" class="w-full h-full cursor-pointer">
                 ${visual}
-                <div class="absolute bottom-0 left-0 w-full bg-black/60 backdrop-blur-sm p-1.5 text-center">
-                    <p class="text-[10px] font-bold text-white truncate">${p.title}</p>
+                <div class="absolute bottom-0 left-0 w-full bg-white/90 dark:bg-black/60 backdrop-blur-sm p-1.5 text-center border-t border-slate-100 dark:border-transparent">
+                    <p class="text-[10px] font-bold text-slate-700 dark:text-white truncate">${p.title}</p>
                 </div>
             </div>
             <button onclick="deletePhoto(${p.id})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-[10px]"></i></button>
