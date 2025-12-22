@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark bg-[#020617]"> <head>
+<html lang="fr" class="dark">
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>F4Ma DEV | Accueil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F4Ma DEV | Accueil</title>
     <meta name="description" content="Développeur Fullstack & Architecte Numérique">
     <meta name="theme-color" content="#020617">
     
@@ -29,8 +31,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;800&family=Rajdhani:wght@500;700;900&display=swap');
         
-        /* CORRECTION : Fond noir forcé sur html et body */
-        html, body { background-color: #020617; color: white; overflow-x: hidden; height: 100%; }
+        body { background-color: #020617; color: white; overflow-x: hidden; }
         
         /* Effet Grille Arrière-plan */
         .cyber-grid {
@@ -38,7 +39,6 @@
             linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
             position: fixed; inset: 0; z-index: -1;
-            height: 100vh; /* Force la hauteur */
         }
         
         .cyan-glow { text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
@@ -57,9 +57,9 @@
         </div>
     </nav>
 
-    <header class="relative min-h-[100dvh] flex flex-col items-center justify-start px-4 pb-10">
+    <header class="relative min-h-screen flex flex-col items-center justify-start px-4">
         
-        <div class="relative mt-32 text-center max-w-4xl z-10 px-4 flex-grow flex flex-col justify-center">
+        <div class="relative mt-32 text-center max-w-4xl z-10 px-4">
             
             <h2 class="text-blue-500 font-bold tracking-[0.2em] text-xs md:text-sm mb-4 animate-pulse uppercase">
                 Initialisation du système...
@@ -76,7 +76,7 @@
                 Je transforme les idées complexes en interfaces simples et puissantes.
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center w-full pb-10">
+            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center w-full">
                 <a href="app.html" class="w-full sm:w-auto px-10 py-5 bg-white text-black font-black text-lg tracking-widest hover:bg-cyan-400 hover:scale-105 transition transform shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center justify-center gap-3 uppercase rounded-sm">
                     <i class="fa-solid fa-mobile-screen"></i> LANCER L'APP
                 </a>
