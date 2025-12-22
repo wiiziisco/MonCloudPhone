@@ -115,7 +115,6 @@
     <div id="robotModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity">
         <div class="relative w-full max-w-sm glass-card p-0 overflow-hidden rounded-2xl transform scale-95 transition-transform duration-300" id="robotCard">
             <div class="scan-line"></div>
-            
             <div class="bg-gray-100 dark:bg-white/5 p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-terminal text-blue-600 dark:text-cyberBlue"></i>
@@ -123,7 +122,6 @@
                 </div>
                 <button onclick="toggleRobotModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-
             <div class="p-6 space-y-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -141,7 +139,6 @@
                     </div>
                 </div>
             </div>
-            
             <div class="bg-gray-50 dark:bg-black/60 p-2 text-center">
                 <p class="text-[10px] font-mono text-gray-400 dark:text-gray-600">SECURE CONNECTION ESTABLISHED</p>
             </div>
@@ -149,38 +146,42 @@
     </div>
 
     <footer class="py-6 text-center text-xs font-mono text-gray-500 dark:text-gray-600 border-t border-gray-200 dark:border-white/5">
-        SYSTEM_ID: F4Ma_DEV // V.2.4
+        SYSTEM_ID: F4Ma_DEV // V.2.5
     </footer>
 
     <script>
-        // --- THEME AUTO ---
+        // --- SCRIPT AUTO THEME AVANCÉ ---
         const html = document.documentElement;
-        function applySystemTheme() {
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        
+        // 1. Détection du thème
+        function checkSystemTheme() {
+            // On ignore le localStorage car on n'a plus de bouton manuel
+            // On regarde directement la préférence du navigateur
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 html.classList.add('dark');
             } else {
                 html.classList.remove('dark');
             }
         }
-        applySystemTheme();
+
+        // 2. Appliquer au chargement
+        checkSystemTheme();
+
+        // 3. Écouter les changements en direct (si l'utilisateur change les réglages du téléphone pendant la visite)
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            checkSystemTheme();
+        });
 
         // --- MODAL ROBOT ---
         function toggleRobotModal() {
             const modal = document.getElementById('robotModal');
             const card = document.getElementById('robotCard');
-            
             if (modal.classList.contains('hidden')) {
                 modal.classList.remove('hidden');
-                setTimeout(() => { // Animation Entrée
-                    card.classList.remove('scale-95');
-                    card.classList.add('scale-100');
-                }, 10);
+                setTimeout(() => { card.classList.remove('scale-95'); card.classList.add('scale-100'); }, 10);
             } else {
-                card.classList.remove('scale-100');
-                card.classList.add('scale-95');
-                setTimeout(() => { // Animation Sortie
-                    modal.classList.add('hidden');
-                }, 200);
+                card.classList.remove('scale-100'); card.classList.add('scale-95');
+                setTimeout(() => { modal.classList.add('hidden'); }, 200);
             }
         }
     </script>
