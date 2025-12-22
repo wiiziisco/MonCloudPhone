@@ -8,41 +8,51 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
-            darkMode: 'class', // Important pour le script manuel
+            darkMode: 'class',
             theme: { extend: { colors: { cyan: '#00f3ff' } } }
         }
     </script>
     <style>
         .hide-scroll::-webkit-scrollbar { display: none; }
         html, body { height: 100%; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
-        /* Couleurs forcées via CSS pour éviter le flash blanc */
+        
+        /* Gestion propre des couleurs de fond Body */
         html.dark body { background-color: #0f172a; color: white; }
         html:not(.dark) body { background-color: #f8fafc; color: #0f172a; }
     </style>
 </head>
 <body class="overflow-hidden font-sans select-none">
 
-    <div id="auth-screen" class="fixed inset-0 z-[9000] bg-slate-900 flex flex-col items-center justify-center p-6 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center">
-        <div class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm"></div>
-        <div class="relative z-10 w-full max-w-sm bg-black/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
+    <div id="auth-screen" class="fixed inset-0 z-[9000] flex flex-col items-center justify-center p-6 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center transition-all duration-500">
+        
+        <div class="absolute inset-0 bg-white/60 dark:bg-slate-900/90 backdrop-blur-sm transition-colors duration-500"></div>
+        
+        <div class="relative z-10 w-full max-w-sm bg-white/80 dark:bg-black/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-8 rounded-3xl shadow-2xl transition-colors duration-500">
             <div class="text-center mb-8">
-                <i class="fa-solid fa-fingerprint text-5xl text-blue-500 mb-4 animate-pulse"></i>
-                <h1 class="text-3xl font-bold text-white">Cloud<span class="text-blue-500">Phone</span></h1>
+                <i class="fa-solid fa-fingerprint text-5xl text-blue-600 dark:text-blue-500 mb-4 animate-pulse"></i>
+                <h1 class="text-3xl font-bold text-slate-800 dark:text-white">Cloud<span class="text-blue-600 dark:text-blue-500">Phone</span></h1>
             </div>
+            
             <div class="space-y-4">
-                <input type="text" id="username" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 text-white text-center font-bold outline-none focus:border-blue-500" placeholder="Pseudo">
-                <input type="password" id="password" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 text-white text-center font-bold outline-none focus:border-blue-500" placeholder="Code secret">
+                <input type="text" id="username" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl p-3 text-slate-900 dark:text-white text-center font-bold outline-none focus:border-blue-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500" placeholder="Pseudo">
+                <input type="password" id="password" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl p-3 text-slate-900 dark:text-white text-center font-bold outline-none focus:border-blue-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500" placeholder="Code secret">
                 <button onclick="handleAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95">ENTRER</button>
             </div>
-            <p class="text-center text-xs text-gray-400 mt-6 cursor-pointer" onclick="toggleAuthMode()"><span id="auth-toggle-text">Première visite ? Créer un accès</span></p>
+            
+            <p class="text-center text-xs text-slate-500 dark:text-gray-400 mt-6 cursor-pointer hover:text-blue-600 dark:hover:text-white transition" onclick="toggleAuthMode()">
+                <span id="auth-toggle-text">Première visite ? Créer un accès</span>
+            </p>
         </div>
     </div>
 
     <div id="app-wrapper" class="hidden relative h-screen w-full">
         <nav class="fixed top-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 z-50 px-4 py-3 flex justify-end items-center h-[60px]">
-            <a href="index.html" class="absolute left-4 flex items-center gap-2 bg-black/10 dark:bg-black/40 text-slate-700 dark:text-cyan-400 border border-slate-300 dark:border-cyan-400/30 px-3 py-1.5 rounded-full text-xs font-bold"><span>⬅</span> Accueil</a>
-            <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2"><i class="fa-solid fa-cloud text-blue-600 text-lg"></i><span class="font-bold text-lg">Cloud<span class="text-blue-600">Phone</span></span></div>
-            <button onclick="logoutUser()" class="text-red-500 bg-red-500/10 p-2 rounded-full"><i class="fa-solid fa-power-off"></i></button>
+            <a href="index.html" class="absolute left-4 flex items-center gap-2 bg-black/5 dark:bg-black/40 text-slate-600 dark:text-cyan-400 border border-slate-200 dark:border-cyan-400/30 px-3 py-1.5 rounded-full text-xs font-bold hover:bg-slate-100 dark:hover:bg-black/60 transition"><span>⬅</span> Accueil</a>
+            <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                <i class="fa-solid fa-cloud text-blue-600 text-lg"></i>
+                <span class="font-bold text-lg text-slate-800 dark:text-white">Cloud<span class="text-blue-600">Phone</span></span>
+            </div>
+            <button onclick="logoutUser()" class="text-red-500 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-full transition"><i class="fa-solid fa-power-off"></i></button>
         </nav>
 
         <div class="fixed top-[60px] left-0 w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 z-40 py-2 h-[50px]">
@@ -59,15 +69,15 @@
         </main>
     </div>
 
-    <div id="customAlert" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"><div class="bg-slate-800 border border-slate-700 w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center"><div id="alertIconDiv" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-blue-500/10"><i id="alertIcon" class="fa-solid fa-info text-3xl text-blue-500"></i></div><h3 id="alertTitle" class="text-white font-bold text-lg mb-2">Info</h3><p id="alertMessage" class="text-gray-400 text-sm mb-6">Message</p><button onclick="closeCustomAlert()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl">OK</button></div></div>
+    <div id="customAlert" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"><div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center"><div id="alertIconDiv" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-blue-500/10"><i id="alertIcon" class="fa-solid fa-info text-3xl text-blue-500"></i></div><h3 id="alertTitle" class="text-slate-900 dark:text-white font-bold text-lg mb-2">Info</h3><p id="alertMessage" class="text-slate-500 dark:text-gray-400 text-sm mb-6">Message</p><button onclick="closeCustomAlert()" class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white font-bold py-3 rounded-xl transition">OK</button></div></div>
     
-    <div id="uploadModal" class="fixed inset-0 z-[60] hidden"><div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div><div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none"><div class="bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 p-6 pointer-events-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-white">Ajouter</h2><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="space-y-4"><div class="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer bg-slate-900/50" onclick="document.getElementById('fileInput').click()"><input type="file" id="fileInput" class="hidden"><div id="uploadPlaceholder"><i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-2"></i><p id="uploadInstruction" class="text-sm text-gray-300 font-bold">Choisir</p></div><div id="filePreviewInfo" class="hidden"><i id="previewIcon" class="fa-solid fa-file text-3xl text-blue-500 mb-2"></i><p id="previewName" class="text-xs text-white truncate"></p></div></div><input type="hidden" id="base64String"><input type="hidden" id="fileType"><input type="text" id="imgTitle" placeholder="Nom du fichier" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white outline-none"><select id="imgCategory" disabled class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-gray-500 font-bold opacity-70"><option value="Documents">Documents</option><option value="Photos">Photos</option><option value="Audio">Audio</option><option value="Video">Vidéo</option></select><button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg">Sauvegarder</button></div></div></div></div>
+    <div id="uploadModal" class="fixed inset-0 z-[60] hidden"><div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div><div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none"><div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 pointer-events-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-900 dark:text-white">Ajouter</h2><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="space-y-4"><div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 dark:bg-slate-900/50" onclick="document.getElementById('fileInput').click()"><input type="file" id="fileInput" class="hidden"><div id="uploadPlaceholder"><i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 dark:text-slate-500 mb-2"></i><p id="uploadInstruction" class="text-sm text-slate-600 dark:text-gray-300 font-bold">Choisir</p></div><div id="filePreviewInfo" class="hidden"><i id="previewIcon" class="fa-solid fa-file text-3xl text-blue-500 mb-2"></i><p id="previewName" class="text-xs text-slate-700 dark:text-white truncate"></p></div></div><input type="hidden" id="base64String"><input type="hidden" id="fileType"><input type="text" id="imgTitle" placeholder="Nom du fichier" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-white outline-none"><select id="imgCategory" disabled class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 text-slate-500 dark:text-gray-500 font-bold opacity-70"><option value="Documents">Documents</option><option value="Photos">Photos</option><option value="Audio">Audio</option><option value="Video">Vidéo</option></select><button onclick="processAndUpload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg">Sauvegarder</button></div></div></div></div>
     
     <div id="fullscreenModal" class="fixed inset-0 z-[200] hidden bg-black/95 backdrop-blur-md flex items-center justify-center"><button onclick="closeFullscreen()" class="absolute top-4 right-4 z-[210] text-white/70 text-2xl"><i class="fa-solid fa-xmark"></i></button><div id="fullscreenContent" class="w-full h-full flex items-center justify-center p-4"></div></div>
 
     <script src="script.js"></script>
     <script>
-        // SCRIPT AUTO-THEME POUR L'APP
+        // SCRIPT AUTO-THEME (Applique aussi au Login)
         const html = document.documentElement;
         function applySystemTheme() {
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
