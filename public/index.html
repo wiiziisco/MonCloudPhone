@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F4Ma DEV | Accueil</title>
-    <meta name="description" content="Développeur Fullstack & Architecte Numérique">
-    <meta name="theme-color" content="#020617">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -15,106 +12,108 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Rajdhani', 'sans-serif'],
-                    },
-                    colors: {
-                        neonBlue: '#00f3ff',
-                        neonOrange: '#ff003c',
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Rajdhani', 'sans-serif'] },
+                    colors: { neonBlue: '#00f3ff', neonOrange: '#ff003c' }
                 }
             }
         }
     </script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;800&family=Rajdhani:wght@500;700;900&display=swap');
-        
-        body { background-color: #020617; color: white; overflow-x: hidden; }
-        
-        /* Effet Grille Arrière-plan */
+        body { transition: background-color 0.3s, color 0.3s; }
         .cyber-grid {
-            background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
             position: fixed; inset: 0; z-index: -1;
+            background-size: 40px 40px;
+            transition: background 0.3s;
         }
-        
-        .cyan-glow { text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        /* Mode Sombre (Défaut système) */
+        html.dark body { background-color: #020617; color: white; }
+        html.dark .cyber-grid {
+            background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        }
+        /* Mode Clair */
+        html:not(.dark) body { background-color: #f3f4f6; color: #111827; }
+        html:not(.dark) .cyber-grid {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        }
     </style>
 </head>
-<body class="selection:bg-cyan-500 selection:text-black">
+<body class="selection:bg-cyan-500 selection:text-white">
 
     <div class="cyber-grid"></div>
 
-    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border-b border-white/5">
-        <div class="text-2xl font-bold tracking-tighter cyan-glow font-display">
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 transition-colors">
+        <div class="text-2xl font-bold tracking-tighter font-display text-slate-900 dark:text-white">
             &lt;F4Ma DEV/&gt;
         </div>
-        <div>
-            <i class="fa-solid fa-robot text-2xl text-gray-400 hover:text-cyan-400 transition animate-pulse"></i>
-        </div>
+        <button onclick="toggleMenu()" class="text-2xl text-gray-600 dark:text-gray-400 hover:text-cyan-500 transition animate-pulse z-50">
+            <i class="fa-solid fa-robot"></i>
+        </button>
     </nav>
 
-    <header class="relative min-h-screen flex flex-col items-center justify-start px-4">
-        
-        <div class="relative mt-32 text-center max-w-4xl z-10 px-4">
+    <div id="mobileMenu" class="fixed inset-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl transform translate-x-full transition-transform duration-300 flex flex-col items-center justify-center space-y-8">
+        <a href="app.html" class="text-2xl font-bold font-display hover:text-cyan-500 transition">LANCER L'APP</a>
+        <a href="mailto:wiizzardiisco@gmail.com" class="text-xl font-bold text-gray-500 hover:text-cyan-500 transition">CONTACT</a>
+        <div class="flex gap-6 text-3xl mt-4">
+            <a href="#" class="text-blue-500"><i class="fa-brands fa-telegram"></i></a>
+            <a href="#" class="text-green-500"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+        <button onclick="toggleMenu()" class="absolute top-6 right-6 text-2xl text-red-500"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <header class="relative min-h-screen flex flex-col items-center justify-start px-4 pt-32">
+        <div class="relative text-center max-w-4xl z-10 px-4">
+            <h2 class="text-blue-500 font-bold tracking-[0.2em] text-xs md:text-sm mb-4 animate-pulse uppercase">Initialisation...</h2>
             
-            <h2 class="text-blue-500 font-bold tracking-[0.2em] text-xs md:text-sm mb-4 animate-pulse uppercase">
-                Initialisation du système...
-            </h2>
-            
-            <h1 class="font-display text-6xl md:text-8xl font-black mb-6 leading-none">
-                L'UNIVERS <br>
-                DE <br>
+            <h1 class="font-display text-6xl md:text-8xl font-black mb-6 leading-none text-slate-900 dark:text-white">
+                L'UNIVERS <br> DE <br>
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-500 to-emerald-400">F4Ma DEV</span>
             </h1>
             
-            <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Développeur Fullstack & Architecte Numérique.<br>
-                Je transforme les idées complexes en interfaces simples et puissantes.
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Développeur Fullstack & Architecte Numérique.
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center w-full">
-                <a href="app.html" class="w-full sm:w-auto px-10 py-5 bg-white text-black font-black text-lg tracking-widest hover:bg-cyan-400 hover:scale-105 transition transform shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center justify-center gap-3 uppercase rounded-sm">
+            <div class="flex justify-center w-full">
+                <a href="app.html" class="px-10 py-5 bg-slate-900 dark:bg-white text-white dark:text-black font-black text-lg tracking-widest hover:bg-cyan-500 dark:hover:bg-cyan-400 hover:text-white transition transform shadow-lg rounded-sm uppercase flex gap-2 items-center">
                     <i class="fa-solid fa-mobile-screen"></i> LANCER L'APP
                 </a>
             </div>
-
         </div>
     </header>
 
-    <section class="relative py-20 px-4 z-10 bg-slate-950/50 border-t border-white/5">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex items-center gap-4 mb-12">
-                <div class="h-10 w-2 bg-cyan-400 shadow-[0_0_15px_#00f3ff]"></div>
-                <h2 class="text-3xl md:text-5xl font-black uppercase tracking-wider font-display">CONTACTS</h2>
-            </div>
+    <script>
+        // 1. GESTION AUTOMATIQUE DU THÈME (Auto-détection)
+        const html = document.documentElement;
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="group relative bg-slate-900/50 border border-white/10 p-8 hover:border-orange-500/50 transition duration-500 rounded-2xl">
-                    <div class="h-16 w-16 border border-orange-500/30 rounded-2xl flex items-center justify-center mb-6 text-orange-500 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-mobile-screen text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 font-display">CloudPhone</h3>
-                    <p class="text-gray-400 mb-6">Mon application phare. Une galerie privée sécurisée et intelligente.</p>
-                    <div class="flex justify-between items-center border-t border-white/5 pt-6">
-                        <span class="text-xs font-bold text-orange-500 uppercase tracking-widest">Status: Online</span>
-                        <a href="app.html" class="h-10 w-10 bg-white/5 hover:bg-orange-500 hover:text-black flex items-center justify-center rounded-full transition"><i class="fa-solid fa-arrow-right"></i></a>
-                    </div>
-                </div>
+        function applySystemTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+        }
 
-                <div class="group relative bg-slate-900/50 border border-white/10 p-8 hover:border-cyan-500/50 transition duration-500 rounded-2xl">
-                    <div class="h-16 w-16 border border-cyan-500/30 rounded-2xl flex items-center justify-center mb-6 text-cyan-500 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-envelope text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 font-display">Contact Pro</h3>
-                    <p class="text-gray-400 mb-6">Un projet ? Écrivez-moi directement :<br><span class="text-blue-400 font-bold">wiizzardiisco@gmail.com</span></p>
-                </div>
-            </div>
-        </div>
-    </section>
+        // Appliquer au chargement
+        applySystemTheme();
 
+        // Écouter les changements du système en direct
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            applySystemTheme();
+        });
+
+        // 2. GESTION DU MENU ROBOT
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            // Bascule la classe translate-x-full (caché) vers translate-x-0 (visible)
+            if (menu.classList.contains('translate-x-full')) {
+                menu.classList.remove('translate-x-full');
+                menu.classList.add('translate-x-0');
+            } else {
+                menu.classList.add('translate-x-full');
+                menu.classList.remove('translate-x-0');
+            }
+        }
+    </script>
 </body>
 </html>
