@@ -1,120 +1,246 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr" class="scroll-smooth dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F么Ma DEV | Accueil</title>
-    <meta name="description" content="Développeur Fullstack & Architecte Numérique">
-    <meta name="theme-color" content="#020617">
-    
+    <title>F么MA DEV | Digital Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Rajdhani', 'sans-serif'],
+                        sans: ['Rajdhani', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
                     },
                     colors: {
+                        neonOrange: '#ff4d00',
                         neonBlue: '#00f3ff',
-                        neonOrange: '#ff003c',
+                        neonYellow: '#fcee0a',
+                        darkBg: '#050505',
+                        lightBg: '#f3f4f6'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
         }
     </script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;800&family=Rajdhani:wght@500;700;900&display=swap');
+        body { transition: background-color 0.3s, color 0.3s; }
         
-        body { background-color: #020617; color: white; overflow-x: hidden; }
-        
-        /* Effet Grille Arrière-plan */
+        /* Grille de fond dynamique */
         .cyber-grid {
-            background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            position: fixed; inset: 0; z-index: -1;
+            background-size: 30px 30px; position: fixed; inset: 0; z-index: -1; transition: opacity 0.3s;
         }
-        
-        .cyan-glow { text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        /* Style grille mode sombre */
+        .dark .cyber-grid {
+            background-color: #050505;
+            background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        }
+        /* Style grille mode clair */
+        .light-grid {
+            background-color: #f3f4f6;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        }
+
+        /* Effet de verre */
+        .glass-panel { backdrop-filter: blur(10px); transition: all 0.3s; }
+        .dark .glass-panel { background: rgba(10, 10, 15, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); }
+        html:not(.dark) .glass-panel { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+        /* Effets de survol néon */
+        .neon-box:hover { transform: translateY(-5px); }
+        .dark .neon-box:hover { box-shadow: 0 0 20px var(--glow-color), inset 0 0 10px var(--glow-color); border-color: var(--glow-color); }
+        html:not(.dark) .neon-box:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: var(--glow-color-light); }
     </style>
 </head>
-<body class="selection:bg-cyan-500 selection:text-black">
+<body class="text-gray-800 dark:text-gray-300 overflow-x-hidden antialiased selection:bg-neonBlue selection:text-black">
 
-    <div class="cyber-grid"></div>
+    <div class="cyber-grid" id="bgGrid"></div>
 
-    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border-b border-white/5">
-        <div class="text-2xl font-bold tracking-tighter cyan-glow font-display">
-            &lt;F么Ma DEV/&gt;
+    <nav class="fixed top-0 w-full z-50 border-b dark:border-white/10 border-black/5 glass-panel">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="font-display font-black text-2xl tracking-widest dark:text-white text-gray-900">
+                <span class="text-blue-600 dark:text-neonBlue">&lt;</span>F么Ma DEV<span class="text-blue-600 dark:text-neonBlue">/&gt;</span>
+            </div>
+            
+            <div class="hidden md:flex gap-8 font-bold tracking-wider text-sm uppercase items-center">
+                <a href="#projets" class="hover:text-blue-600 dark:hover:text-neonBlue transition duration-300">Projets</a>
+                <a href="https://wa.me/qr/WRWJPGPKEFN2A1" target="_blank" class="hover:text-green-500 transition duration-300"><i class="fa-brands fa-whatsapp text-lg"></i></a>
+                
+                <button onclick="openVideo()" class="text-orange-600 dark:text-neonOrange border border-orange-600 dark:border-neonOrange px-4 py-1 rounded hover:bg-orange-600 dark:hover:bg-neonOrange hover:text-white dark:hover:text-black transition duration-300 shadow-lg">
+                    <i class="fa-solid fa-play mr-2"></i> DÉMO IA
+                </button>
+                
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center hover:scale-110 transition">
+                    <i id="themeIcon" class="fa-solid fa-sun text-yellow-500 dark:text-white"></i>
+                </button>
+            </div>
+
+            <button onclick="toggleMenu()" class="md:hidden text-3xl hover:scale-110 transition z-50 relative">🤖</button>
         </div>
-        <div>
-            <i class="fa-solid fa-robot text-2xl text-gray-400 hover:text-cyan-400 transition animate-pulse"></i>
+
+        <div id="mobileMenu" class="fixed inset-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl z-40 transform translate-x-full transition-transform duration-300 flex flex-col items-center justify-center space-y-6">
+            <a href="#projets" onclick="toggleMenu()" class="text-2xl font-display dark:text-white hover:text-blue-600 dark:hover:text-neonBlue">PROJETS</a>
+            
+            <div class="flex gap-6 text-4xl">
+                <a href="https://wa.me/qr/WRWJPGPKEFN2A1" target="_blank" class="text-green-500 hover:scale-110 transition"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="https://t.me/wiizername" target="_blank" class="text-blue-400 hover:scale-110 transition"><i class="fa-brands fa-telegram"></i></a>
+                <a href="https://x.com/wiizername" target="_blank" class="text-black dark:text-white hover:scale-110 transition"><i class="fa-brands fa-x-twitter"></i></a>
+            </div>
+
+            <div class="flex gap-4 mt-4">
+                <button onclick="toggleTheme()" class="px-6 py-3 rounded-full bg-gray-200 dark:bg-white/10">
+                    <i class="fa-solid fa-lightbulb text-yellow-500"></i> Mode
+                </button>
+            </div>
+            
+            <button onclick="openVideo(); toggleMenu()" class="px-8 py-4 border-2 border-orange-600 dark:border-neonOrange text-orange-600 dark:text-neonOrange font-display font-bold text-xl rounded-lg hover:bg-orange-600 dark:hover:bg-neonOrange hover:text-white dark:hover:text-black transition">
+                <i class="fa-solid fa-microchip mr-2"></i> DÉMO IA
+            </button>
         </div>
     </nav>
 
-    <header class="relative min-h-screen flex flex-col items-center justify-start px-4">
+    <header class="relative min-h-screen flex items-center justify-center pt-20 px-4">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-neonBlue/20 rounded-full blur-[100px] animate-pulse-slow hidden dark:block"></div>
         
-        <div class="relative mt-32 text-center max-w-4xl z-10 px-4">
-            
-            <h2 class="text-blue-500 font-bold tracking-[0.2em] text-xs md:text-sm mb-4 animate-pulse uppercase">
-                Initialisation du système...
-            </h2>
-            
-            <h1 class="font-display text-6xl md:text-8xl font-black mb-6 leading-none">
-                L'UNIVERS <br>
-                DE <br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-500 to-emerald-400">F么Ma DEV</span>
+        <div class="relative text-center max-w-4xl z-10">
+            <h2 class="text-blue-600 dark:text-neonBlue font-mono text-sm mb-4 tracking-[0.3em] uppercase">Initialisation du système...</h2>
+            <h1 class="font-display text-5xl md:text-8xl font-black text-gray-900 dark:text-white mb-6 leading-tight">
+                L'UNIVERS DE <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-500 to-blue-500 dark:from-neonOrange dark:via-neonYellow dark:to-neonBlue animate-pulse">F么Ma DEV</span>
             </h1>
-            
-            <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Développeur Fullstack & Architecte Numérique.<br>
+            <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Développeur Fullstack & Architecte Numérique.
                 Je transforme les idées complexes en interfaces simples et puissantes.
             </p>
-
-            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center w-full">
-                <a href="app.html" class="w-full sm:w-auto px-10 py-5 bg-white text-black font-black text-lg tracking-widest hover:bg-cyan-400 hover:scale-105 transition transform shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center justify-center gap-3 uppercase rounded-sm">
-                    <i class="fa-solid fa-mobile-screen"></i> LANCER L'APP
+            
+            <div class="flex justify-center">
+                <a href="app.html" class="px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-black font-display font-bold text-xl uppercase tracking-wider hover:bg-blue-600 dark:hover:bg-neonBlue hover:text-white transition duration-300 clip-path-slant shadow-lg hover:scale-105 transform">
+                    📱 LANCER L'APP
                 </a>
             </div>
-
         </div>
     </header>
 
-    <section class="relative py-20 px-4 z-10 bg-slate-950/50 border-t border-white/5">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex items-center gap-4 mb-12">
-                <div class="h-10 w-2 bg-cyan-400 shadow-[0_0_15px_#00f3ff]"></div>
-                <h2 class="text-3xl md:text-5xl font-black uppercase tracking-wider font-display">CONTACTS</h2>
-            </div>
+    <section id="projets" class="py-20 px-4 max-w-7xl mx-auto">
+        <h3 class="font-display text-3xl text-gray-900 dark:text-white mb-12 flex items-center gap-4">
+            <span class="w-2 h-8 bg-blue-600 dark:bg-neonBlue"></span>
+            MES MODULES
+        </h3>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="group relative bg-slate-900/50 border border-white/10 p-8 hover:border-orange-500/50 transition duration-500 rounded-2xl">
-                    <div class="h-16 w-16 border border-orange-500/30 rounded-2xl flex items-center justify-center mb-6 text-orange-500 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-mobile-screen text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 font-display">CloudPhone</h3>
-                    <p class="text-gray-400 mb-6">Mon application phare. Une galerie privée sécurisée et intelligente.</p>
-                    <div class="flex justify-between items-center border-t border-white/5 pt-6">
-                        <span class="text-xs font-bold text-orange-500 uppercase tracking-widest">Status: Online</span>
-                        <a href="app.html" class="h-10 w-10 bg-white/5 hover:bg-orange-500 hover:text-black flex items-center justify-center rounded-full transition"><i class="fa-solid fa-arrow-right"></i></a>
-                    </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <a href="app.html" class="group relative glass-panel p-8 rounded-xl transition duration-500 neon-box" style="--glow-color: #ff4d00; --glow-color-light: #ea580c">
+                <div class="absolute -top-6 left-8 bg-white dark:bg-black border border-orange-500 dark:border-[#ff4d00] p-4 rounded-lg shadow-md">
+                    <i class="fa-solid fa-mobile-screen text-4xl text-orange-500 dark:text-[#ff4d00]"></i>
                 </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-gray-900 dark:text-white group-hover:text-orange-500 dark:group-hover:text-[#ff4d00] transition">CloudPhone</h4>
+                <p class="mt-4 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Mon application phare. Une galerie privée sécurisée et intelligente.</p>
+                <div class="mt-6 flex justify-between items-center border-t border-gray-200 dark:border-white/10 pt-4">
+                    <span class="text-xs font-mono text-orange-600 dark:text-[#ff4d00]">STATUS: ONLINE</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 dark:text-white"></i>
+                </div>
+            </a>
 
-                <div class="group relative bg-slate-900/50 border border-white/10 p-8 hover:border-cyan-500/50 transition duration-500 rounded-2xl">
-                    <div class="h-16 w-16 border border-cyan-500/30 rounded-2xl flex items-center justify-center mb-6 text-cyan-500 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-envelope text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 font-display">Contact Pro</h3>
-                    <p class="text-gray-400 mb-6">Un projet ? Écrivez-moi directement :<br><span class="text-blue-400 font-bold">wiizzardiisco@gmail.com</span></p>
+            <a href="mailto:wiizzardiisco@gmail.com" class="group relative glass-panel p-8 rounded-xl transition duration-500 neon-box" style="--glow-color: #00f3ff; --glow-color-light: #2563eb">
+                <div class="absolute -top-6 left-8 bg-white dark:bg-black border border-blue-500 dark:border-[#00f3ff] p-4 rounded-lg shadow-md">
+                    <i class="fa-solid fa-envelope text-4xl text-blue-500 dark:text-[#00f3ff]"></i>
                 </div>
-            </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-[#00f3ff] transition">Contact Pro</h4>
+                <p class="mt-4 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Un projet ? Écrivez-moi directement : <br><span class="text-blue-500">wiizzardiisco@gmail.com</span></p>
+                <div class="mt-6 flex justify-between items-center border-t border-gray-200 dark:border-white/10 pt-4">
+                    <span class="text-xs font-mono text-blue-600 dark:text-[#00f3ff]">STATUS: DISPO</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 dark:text-white"></i>
+                </div>
+            </a>
+
+            <a href="https://x.com/wiizername" target="_blank" class="group relative glass-panel p-8 rounded-xl transition duration-500 neon-box" style="--glow-color: #fcee0a; --glow-color-light: #ca8a04">
+                <div class="absolute -top-6 left-8 bg-white dark:bg-black border border-yellow-500 dark:border-[#fcee0a] p-4 rounded-lg shadow-md">
+                    <i class="fa-brands fa-x-twitter text-4xl text-yellow-500 dark:text-[#fcee0a]"></i>
+                </div>
+                <h4 class="mt-8 text-2xl font-display font-bold text-gray-900 dark:text-white group-hover:text-yellow-500 dark:group-hover:text-[#fcee0a] transition">Réseau Social</h4>
+                <p class="mt-4 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Suivez mes actualités sur X. <br>Aussi dispo sur Telegram : @wiizername</p>
+                <div class="mt-6 flex justify-between items-center border-t border-gray-200 dark:border-white/10 pt-4">
+                    <span class="text-xs font-mono text-yellow-600 dark:text-[#fcee0a]">STATUS: PUBLIC</span>
+                    <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition duration-300 dark:text-white"></i>
+                </div>
+            </a>
         </div>
     </section>
 
+    <footer class="border-t dark:border-white/10 border-black/10 bg-gray-100 dark:bg-black py-10 text-center transition-colors duration-300">
+        <div class="flex justify-center gap-6 mb-4 text-2xl">
+            <a href="https://wa.me/qr/WRWJPGPKEFN2A1" target="_blank" class="text-gray-500 hover:text-green-500 transition"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="https://t.me/wiizername" target="_blank" class="text-gray-500 hover:text-blue-400 transition"><i class="fa-brands fa-telegram"></i></a>
+            <a href="https://x.com/wiizername" target="_blank" class="text-gray-500 hover:text-white transition"><i class="fa-brands fa-x-twitter"></i></a>
+        </div>
+        <p class="text-gray-500 dark:text-gray-600 text-sm font-mono">
+            F么MA DEV // <span class="text-blue-600 dark:text-neonBlue">RENDERED</span>
+        </p>
+    </footer>
+
+    <div id="videoModal" class="fixed inset-0 z-[100] hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl bg-black border-2 border-neonBlue rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,243,255,0.3)]">
+            <div class="bg-white/10 p-3 flex justify-between items-center border-b border-white/10">
+                <span class="text-neonBlue font-mono tracking-widest text-sm md:text-base">🤖 DÉMO_IA.exe</span>
+                <button onclick="closeVideo()" class="text-white hover:text-red-500 font-bold px-2 text-xl transition">✕</button>
+            </div>
+            <div class="aspect-video w-full bg-black">
+                <iframe class="w-full h-full" src="https://www.youtube.com/embed/ad79nYk2keg?enablejsapi=1" title="Demo IA" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const html = document.querySelector('html');
+        const themeIcon = document.getElementById('themeIcon');
+        const bgGrid = document.getElementById('bgGrid');
+
+        // Initialisation du thème au chargement
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            enableDark();
+        } else { enableLight(); }
+
+        // Fonction de bascule
+        function toggleTheme() {
+            if (html.classList.contains('dark')) { enableLight(); } else { enableDark(); }
+        }
+
+        // Activer mode sombre
+        function enableDark() {
+            html.classList.add('dark'); localStorage.theme = 'dark';
+            themeIcon.classList.remove('fa-moon'); themeIcon.classList.add('fa-sun');
+            bgGrid.classList.remove('light-grid');
+        }
+
+        // Activer mode clair
+        function enableLight() {
+            html.classList.remove('dark'); localStorage.theme = 'light';
+            themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon');
+            bgGrid.classList.add('light-grid');
+        }
+
+        // Menu Mobile
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('translate-x-full'); menu.classList.toggle('translate-x-0');
+        }
+
+        // Vidéo Modal
+        function openVideo() { document.getElementById('videoModal').classList.remove('hidden'); }
+        function closeVideo() { 
+            const modal = document.getElementById('videoModal'); modal.classList.add('hidden');
+            const iframe = modal.querySelector('iframe'); iframe.src = iframe.src; 
+        }
+    </script>
 </body>
 </html>
