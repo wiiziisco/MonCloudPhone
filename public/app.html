@@ -16,17 +16,27 @@
     </script>
 
     <script>
-        // 1. Appliquer le thème (Jour/Nuit) tout de suite
         const html = document.documentElement;
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.classList.add('dark');
-        } else {
-            html.classList.remove('dark');
+        const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+        // Fonction qui applique le thème
+        function applyTheme(e) {
+            if (e.matches) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
         }
 
-        // 2. Vérifier la connexion tout de suite (Anti-Flash)
+        // 1. Appliquer immédiatement au chargement (Anti-Flash)
+        applyTheme(darkModeQuery);
+
+        // 2. Surveiller les changements en direct (Si tu changes ton tél de mode pendant que l'app est ouverte)
+        darkModeQuery.addEventListener('change', applyTheme);
+
+        // 3. Vérifier la connexion tout de suite (Anti-Flash Login)
         if (localStorage.getItem('is_logged_in') === 'true') {
-            html.classList.add('logged-in'); // Ajoute une classe spéciale si connecté
+            html.classList.add('logged-in'); 
         }
     </script>
 
@@ -39,8 +49,6 @@
         html:not(.dark) body { background-color: #f8fafc; color: #0f172a; }
 
         /* --- LOGIQUE ANTI-FLASH CSS --- */
-        /* Si la classe 'logged-in' est présente sur html (ajoutée par le script ci-dessus) */
-        /* On force le masquage du login et l'affichage de l'app AVANT le chargement du reste */
         html.logged-in #auth-screen { display: none !important; }
         html.logged-in #app-wrapper { display: block !important; }
     </style>
@@ -108,13 +116,6 @@
     </div>
 
     <script src="script.js"></script>
-    <script>
-        // Surveillance changement de thème en direct
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            const h = document.documentElement;
-            if (event.matches) h.classList.add('dark');
-            else h.classList.remove('dark');
-        });
-    </script>
 </body>
 </html>
+
