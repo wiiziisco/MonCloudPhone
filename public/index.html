@@ -40,17 +40,12 @@
 
     <style>
         html, body { height: 100%; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
-        
-        /* THEME SOMBRE */
         html.dark body { background-color: #050505; color: #e2e8f0; }
         html.dark .cyber-grid { background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px); }
         html.dark .glass-card { background: rgba(10, 10, 16, 0.8); border: 1px solid rgba(0, 243, 255, 0.2); box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
-
-        /* THEME CLAIR */
         html:not(.dark) body { background-color: #f0f4f8; color: #1e293b; }
         html:not(.dark) .cyber-grid { background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px); }
         html:not(.dark) .glass-card { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-
         .cyber-grid { position: fixed; inset: 0; z-index: -1; background-size: 40px 40px; }
         .scan-line { width: 100%; height: 2px; background: #00f3ff; position: absolute; top: 0; left: 0; animation: scan 2s linear infinite; opacity: 0.5; }
         @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
@@ -64,7 +59,6 @@
         <div class="text-2xl font-black tracking-widest font-display text-gray-900 dark:text-white">
             <span class="text-blue-600 dark:text-cyberBlue">&lt;</span>F4Ma<span class="text-blue-600 dark:text-cyberBlue">/&gt;</span>
         </div>
-        
         <button onclick="toggleRobotModal()" class="group relative flex items-center justify-center w-12 h-12 rounded-xl bg-gray-200/50 dark:bg-white/5 border border-gray-300 dark:border-white/10 hover:border-blue-500 dark:hover:border-cyberBlue hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] transition-all duration-300 overflow-hidden cursor-pointer">
             <div class="absolute inset-0 bg-blue-500/10 dark:bg-cyberBlue/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <i class="fa-solid fa-robot text-xl text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-cyberBlue group-hover:scale-110 transition-all duration-300 z-10"></i>
@@ -106,7 +100,6 @@
             </div>
 
             <div class="p-6 space-y-6">
-                
                 <div class="flex items-center justify-between pb-4 border-b border-dashed border-gray-300 dark:border-white/10">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -115,8 +108,8 @@
                     <span class="text-xs font-mono text-blue-600 dark:text-cyberBlue">PING: 14ms</span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="app.html" class="col-span-2 group relative p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:border-blue-500 dark:hover:border-cyberBlue hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex items-center justify-between">
+                <div class="grid grid-cols-3 gap-3">
+                    <a href="app.html" class="col-span-3 group relative p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:border-blue-500 dark:hover:border-cyberBlue hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex items-center justify-between">
                         <div class="flex items-center gap-4">
                             <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-cyberBlue">
                                 <i class="fa-solid fa-cloud text-lg"></i>
@@ -129,18 +122,21 @@
                         <i class="fa-solid fa-chevron-right text-xs text-gray-400 group-hover:text-blue-500 dark:group-hover:text-cyberBlue transition"></i>
                     </a>
 
-                    <a href="mailto:wiizzardiisco@gmail.com" class="p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:border-blue-500 dark:hover:border-cyberBlue hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex flex-col items-center justify-center gap-2 text-center">
-                        <i class="fa-solid fa-envelope text-xl text-gray-400 group-hover:text-white"></i>
-                        <span class="font-bold text-xs text-gray-700 dark:text-gray-300">MAIL_LINK</span>
+                    <a href="mailto:wiizzardiisco@gmail.com" class="aspect-square bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:border-blue-500 dark:hover:border-cyberBlue hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex flex-col items-center justify-center gap-1 group">
+                        <i class="fa-solid fa-envelope text-xl text-gray-400 group-hover:text-blue-500 dark:group-hover:text-cyberBlue transition-colors"></i>
+                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 font-mono uppercase">Mail</span>
                     </a>
 
-                    <div class="p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl flex items-center justify-center gap-4">
-                        <a href="https://wa.me/qr/WRWJPGPKEFN2A1" class="text-gray-400 hover:text-green-500 transition hover:scale-110"><i class="fa-brands fa-whatsapp text-xl"></i></a>
-                        <a href="https://t.me/wiizername" class="text-gray-400 hover:text-blue-400 transition hover:scale-110"><i class="fa-brands fa-telegram text-xl"></i></a>
-                        <a href="https://x.com/wiizername" class="text-gray-400 hover:text-white transition hover:scale-110"><i class="fa-brands fa-x-twitter text-xl"></i></a>
-                    </div>
-                </div>
+                    <a href="https://wa.me/qr/WRWJPGPKEFN2A1" class="aspect-square bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all flex flex-col items-center justify-center gap-1 group">
+                        <i class="fa-brands fa-whatsapp text-xl text-gray-400 group-hover:text-green-500 transition-colors"></i>
+                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 font-mono uppercase">WA</span>
+                    </a>
 
+                    <a href="https://t.me/wiizername" class="aspect-square bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex flex-col items-center justify-center gap-1 group">
+                        <i class="fa-brands fa-telegram text-xl text-gray-400 group-hover:text-blue-400 transition-colors"></i>
+                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400 font-mono uppercase">TG</span>
+                    </a>
+                </div>
             </div>
             
             <div class="bg-gray-50 dark:bg-black/60 p-2 text-center border-t border-gray-200 dark:border-white/10">
@@ -150,11 +146,10 @@
     </div>
 
     <footer class="absolute bottom-4 w-full text-center text-[10px] font-mono text-gray-400/50">
-        SYSTEM_VER: 3.1 // SECURE_MODE
+        SYSTEM_VER: 3.2 // SECURE_MODE
     </footer>
 
     <script>
-        // Surveillance changement de thème
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
             const h = document.documentElement;
             if (event.matches) h.classList.add('dark');
