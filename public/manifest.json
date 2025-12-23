@@ -1,23 +1,16 @@
 {
   "name": "CloudPhone",
-  "short_name": "CP",
-  "start_url": "/",
+  "short_name": "CloudPhone",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#1a1a2e",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "preview.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "preview.jpg",
+      "src": "https://cdn-icons-png.flaticon.com/512/2933/2933116.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

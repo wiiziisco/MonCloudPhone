@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>F4Ma DEV | Cyber Space</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2933/2933116.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
@@ -21,6 +27,20 @@
             }
         }
     </script>
+
+    <script>
+        const html = document.documentElement;
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+        // ENREGISTREMENT PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+
     <style>
         html, body { height: 100%; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
         
@@ -146,33 +166,17 @@
     </div>
 
     <footer class="py-6 text-center text-xs font-mono text-gray-500 dark:text-gray-600 border-t border-gray-200 dark:border-white/5">
-        SYSTEM_ID: F4Ma_DEV // V.2.5
+        SYSTEM_ID: F4Ma_DEV // V.3.0
     </footer>
 
     <script>
-        // --- SCRIPT AUTO THEME AVANCÉ ---
-        const html = document.documentElement;
-        
-        // 1. Détection du thème
-        function checkSystemTheme() {
-            // On ignore le localStorage car on n'a plus de bouton manuel
-            // On regarde directement la préférence du navigateur
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
-        }
-
-        // 2. Appliquer au chargement
-        checkSystemTheme();
-
-        // 3. Écouter les changements en direct (si l'utilisateur change les réglages du téléphone pendant la visite)
+        // Surveillance changement de thème en direct
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            checkSystemTheme();
+            const h = document.documentElement;
+            if (event.matches) h.classList.add('dark');
+            else h.classList.remove('dark');
         });
 
-        // --- MODAL ROBOT ---
         function toggleRobotModal() {
             const modal = document.getElementById('robotModal');
             const card = document.getElementById('robotCard');

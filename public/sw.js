@@ -3,5 +3,6 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Ce code vide est obligatoire pour la PWA
+  // Simple pass-through (nécessaire pour la PWA)
+  e.respondWith(fetch(e.request));
 });
