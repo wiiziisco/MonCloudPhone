@@ -28,8 +28,6 @@
         applyTheme(darkModeQuery);
         darkModeQuery.addEventListener('change', applyTheme);
         if (localStorage.getItem('is_logged_in') === 'true') html.classList.add('logged-in'); 
-
-        // SERVICE WORKER
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 
@@ -61,13 +59,20 @@
     </div>
 
     <div id="app-wrapper" class="hidden relative h-screen w-full">
-        <nav class="fixed top-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 z-50 px-4 py-3 flex justify-end items-center h-[60px]">
-            <a href="index.html" class="absolute left-4 flex items-center gap-2 bg-black/5 dark:bg-black/40 text-slate-600 dark:text-cyan-400 border border-slate-200 dark:border-cyan-400/30 px-3 py-1.5 rounded-full text-xs font-bold hover:bg-slate-100 dark:hover:bg-black/60 transition"><span>⬅</span> Accueil</a>
-            <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <nav class="fixed top-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 z-50 px-4 py-3 flex justify-between items-center h-[60px]">
+            <a href="index.html" class="flex items-center justify-center bg-black/5 dark:bg-black/40 text-slate-600 dark:text-cyan-400 border border-slate-200 dark:border-cyan-400/30 w-8 h-8 rounded-full text-xs font-bold hover:bg-slate-100 dark:hover:bg-black/60 transition"><i class="fa-solid fa-chevron-left"></i></a>
+            
+            <div id="headerTitle" class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 transition-all duration-300 opacity-100 scale-100">
                 <i class="fa-solid fa-cloud text-blue-600 text-lg"></i>
                 <span class="font-bold text-lg text-slate-800 dark:text-white">Cloud<span class="text-blue-600">Phone</span></span>
             </div>
-            <button onclick="logoutUser()" class="text-red-500 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-full transition"><i class="fa-solid fa-power-off"></i></button>
+
+            <input type="text" id="searchInput" oninput="handleSearch(this.value)" class="absolute left-1/2 -translate-x-1/2 w-[60%] bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-white rounded-full py-1.5 px-4 text-center text-sm font-bold focus:outline-none focus:border-blue-500 opacity-0 pointer-events-none scale-95 transition-all duration-300 shadow-inner" placeholder="Rechercher...">
+
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSearchBar()" class="text-slate-500 dark:text-cyan-400 hover:text-blue-600 dark:hover:text-white transition"><i id="searchIcon" class="fa-solid fa-magnifying-glass text-lg"></i></button>
+                <button onclick="logoutUser()" class="text-red-500 bg-red-500/10 hover:bg-red-500/20 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-power-off text-sm"></i></button>
+            </div>
         </nav>
 
         <div class="fixed top-[60px] left-0 w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 z-40 py-2 h-[50px]">
