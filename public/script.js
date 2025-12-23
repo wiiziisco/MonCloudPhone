@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VARIABLES GLOBALES ---
-let searchTerm = ""; // Nouveau: stocke la recherche
+let searchTerm = "";
+let confirmAction = null; // Stocke l'action à exécuter après confirmation
 
-// --- NOTIFICATIONS ---
+// --- NOTIFICATIONS & MODALES ---
 function showNotification(msg, type = 'success') {
     const m = document.getElementById('customAlert');
     document.getElementById('alertMessage').textContent = msg;
@@ -16,6 +17,22 @@ function showNotification(msg, type = 'success') {
     m.classList.remove('hidden');
 }
 function closeCustomAlert() { document.getElementById('customAlert').classList.add('hidden'); }
+
+function showConfirmModal(title, message, action, iconClass = 'fa-trash') {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmIcon').className = `fa-solid ${iconClass} text-3xl text-red-500`;
+    confirmAction = action;
+    document.getElementById('customConfirmModal').classList.remove('hidden');
+}
+function closeConfirmModal() {
+    document.getElementById('customConfirmModal').classList.add('hidden');
+    confirmAction = null;
+}
+document.getElementById('confirmBtn').addEventListener('click', () => {
+    if (confirmAction) confirmAction();
+    closeConfirmModal();
+});
 
 // --- AUTHENTIFICATION ---
 let isRegistering = false;
@@ -68,42 +85,30 @@ function logoutUser() { document.getElementById('logoutModal').classList.remove(
 function confirmLogout() { localStorage.removeItem('is_logged_in'); location.reload(); }
 function cancelLogout() { document.getElementById('logoutModal').classList.add('hidden'); }
 
-// --- RECHERCHE (Nouveau) ---
+// --- RECHERCHE ---
 function toggleSearchBar() {
     const title = document.getElementById('headerTitle');
     const input = document.getElementById('searchInput');
     const icon = document.getElementById('searchIcon');
-    
-    // Si l'input est caché (opacity-0)
     if (input.classList.contains('opacity-0')) {
-        // Affiche l'input
         input.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
         input.classList.add('opacity-100', 'scale-100');
         input.focus();
-        
-        // Cache le titre
         title.classList.remove('opacity-100', 'scale-100');
         title.classList.add('opacity-0', 'scale-95');
-        
-        icon.className = "fa-solid fa-xmark text-lg"; // Change icône loupe en croix
+        icon.className = "fa-solid fa-xmark text-lg";
     } else {
-        // Cache l'input
         input.classList.remove('opacity-100', 'scale-100');
         input.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
-        input.value = ""; // Vide la recherche
-        handleSearch(""); // Reset le filtre
-        
-        // Affiche le titre
+        input.value = ""; handleSearch("");
         title.classList.remove('opacity-0', 'scale-95');
         title.classList.add('opacity-100', 'scale-100');
-        
-        icon.className = "fa-solid fa-magnifying-glass text-lg"; // Remet la loupe
+        icon.className = "fa-solid fa-magnifying-glass text-lg";
     }
 }
-
 function handleSearch(val) {
     searchTerm = val.toLowerCase();
-    loadGallery(); // Recharge la galerie avec le filtre de recherche
+    loadGallery();
 }
 
 // --- LOGIQUE FICHIERS & DRAG DROP ---
@@ -159,13 +164,19 @@ let isSelectionMode = false;
 let selectedItems = new Set();
 function toggleSelectionMode() { isSelectionMode = !isSelectionMode; selectedItems.clear(); loadGallery(); }
 function toggleItemSelection(id) { if (selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id); loadGallery(); }
+
 function deleteSelectedItems() {
     if (selectedItems.size === 0) return;
-    if (!confirm(`Supprimer ces ${selectedItems.size} éléments ?`)) return;
-    let photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
-    photos = photos.filter(p => !selectedItems.has(p.id));
-    localStorage.setItem('my_gallery_data', JSON.stringify(photos));
-    toggleSelectionMode(); showNotification("Éléments supprimés", "success");
+    showConfirmModal(
+        "Supprimer ?",
+        `Voulez-vous vraiment supprimer ces ${selectedItems.size} éléments ?`,
+        () => {
+            let photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+            photos = photos.filter(p => !selectedItems.has(p.id));
+            localStorage.setItem('my_gallery_data', JSON.stringify(photos));
+            toggleSelectionMode(); showNotification("Éléments supprimés", "success");
+        }
+    );
 }
 
 function loadGallery() {
@@ -199,10 +210,8 @@ function loadGallery() {
     });
 
     gallery.innerHTML = '';
-    // Filtre combiné : Catégorie ET Recherche
     const filtered = photos.filter(p => p.category === currentFilter && p.title.toLowerCase().includes(searchTerm));
 
-    // Bouton Ajout (Seulement si pas de recherche et pas de mode sélection)
     if (!isSelectionMode && searchTerm === "") {
         const addDiv = document.createElement('div');
         addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-blue-500 transition flex flex-col items-center justify-center cursor-pointer group";
@@ -240,7 +249,7 @@ function loadGallery() {
     });
 }
 
-// --- MODALES & LECTEUR (Inchangé) ---
+// --- MODALES & LECTEUR ---
 function openModal(isDrop = false) {
     const modal = document.getElementById('uploadModal');
     const cat = localStorage.getItem('activeFilter') || 'Documents';
@@ -260,7 +269,20 @@ function processAndUpload() {
     localStorage.setItem('my_gallery_data', JSON.stringify(photos));
     closeModal(); document.getElementById('uploadPlaceholder').classList.remove('hidden'); document.getElementById('filePreviewInfo').classList.add('hidden'); document.getElementById('fileInput').value = ""; document.getElementById('imgTitle').value = ""; showNotification("Fichier ajouté !", "success"); loadGallery();
 }
-function deletePhoto(id) { if(!confirm("Supprimer ?")) return; const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]'); const newPhotos = photos.filter(p => p.id !== id); localStorage.setItem('my_gallery_data', JSON.stringify(newPhotos)); loadGallery(); }
+
+function deletePhoto(id) {
+    showConfirmModal(
+        "Supprimer ?",
+        "Voulez-vous vraiment supprimer cet élément ?",
+        () => {
+            const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+            const newPhotos = photos.filter(p => p.id !== id);
+            localStorage.setItem('my_gallery_data', JSON.stringify(newPhotos));
+            loadGallery();
+            showNotification("Élément supprimé", "success");
+        }
+    );
+}
 function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
 let mediaInterval;
 function openFullscreen(id) {
