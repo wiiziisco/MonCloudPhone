@@ -15,7 +15,12 @@ function closeCustomAlert() { document.getElementById('customAlert').classList.a
 
 // --- AUTHENTIFICATION ---
 let isRegistering = false;
-function checkAuth() { if (localStorage.getItem('is_logged_in') === 'true') showApp(); }
+function checkAuth() { 
+    if (localStorage.getItem('is_logged_in') === 'true') {
+        document.documentElement.classList.add('logged-in'); // Sécurité visuelle
+        showApp(); 
+    }
+}
 
 function toggleAuthMode() {
     isRegistering = !isRegistering;
@@ -54,20 +59,10 @@ function showApp() {
     loadGallery();
 }
 
-// --- NOUVELLE GESTION DÉCONNEXION ---
-function logoutUser() {
-    // Affiche la belle modal au lieu de confirm()
-    document.getElementById('logoutModal').classList.remove('hidden');
-}
-
-function confirmLogout() {
-    localStorage.removeItem('is_logged_in');
-    location.reload();
-}
-
-function cancelLogout() {
-    document.getElementById('logoutModal').classList.add('hidden');
-}
+// --- DÉCONNEXION ---
+function logoutUser() { document.getElementById('logoutModal').classList.remove('hidden'); }
+function confirmLogout() { localStorage.removeItem('is_logged_in'); location.reload(); }
+function cancelLogout() { document.getElementById('logoutModal').classList.add('hidden'); }
 
 // --- LOGIQUE FICHIERS ---
 function setupFileInput() {
@@ -100,10 +95,7 @@ function setupFileInput() {
     });
 }
 
-function filterGallery(cat) {
-    localStorage.setItem('activeFilter', cat);
-    loadGallery();
-}
+function filterGallery(cat) { localStorage.setItem('activeFilter', cat); loadGallery(); }
 
 function loadGallery() {
     const gallery = document.getElementById('gallery');
@@ -122,20 +114,13 @@ function loadGallery() {
     const addDiv = document.createElement('div');
     addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-blue-500 transition flex flex-col items-center justify-center cursor-pointer group";
     
-    let addIcon = "fa-plus";
-    let addLabel = "Ajouter";
-    
+    let addIcon = "fa-plus"; let addLabel = "Ajouter";
     if (currentFilter === 'Photos') { addIcon = "fa-camera"; addLabel = "Photo"; }
     else if (currentFilter === 'Audio') { addIcon = "fa-microphone"; addLabel = "Audio"; }
     else if (currentFilter === 'Video') { addIcon = "fa-film"; addLabel = "Vidéo"; }
     else { addIcon = "fa-file-circle-plus"; addLabel = "Fichier"; }
 
-    addDiv.innerHTML = `
-        <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-blue-600 flex items-center justify-center mb-2 transition shadow-lg">
-            <i class="fa-solid ${addIcon} text-blue-500 dark:text-blue-400 group-hover:text-white text-xl"></i>
-        </div>
-        <span class="text-[10px] font-bold text-slate-500 dark:text-gray-500 group-hover:text-slate-800 dark:group-hover:text-white uppercase tracking-wider">${addLabel}</span>
-    `;
+    addDiv.innerHTML = `<div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-blue-600 flex items-center justify-center mb-2 transition shadow-lg"><i class="fa-solid ${addIcon} text-blue-500 dark:text-blue-400 group-hover:text-white text-xl"></i></div><span class="text-[10px] font-bold text-slate-500 dark:text-gray-500 group-hover:text-slate-800 dark:group-hover:text-white uppercase tracking-wider">${addLabel}</span>`;
     addDiv.onclick = openModal;
     gallery.appendChild(addDiv);
 
@@ -147,8 +132,7 @@ function loadGallery() {
         let visual = '';
         if (p.type === 'image') visual = `<img src="${p.image}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition">`;
         else {
-            let icon = 'fa-file';
-            let col = 'text-gray-500';
+            let icon = 'fa-file'; let col = 'text-gray-500';
             if (p.type === 'video') { icon = 'fa-video'; col = 'text-red-500'; }
             if (p.type === 'audio') { icon = 'fa-music'; col = 'text-pink-500'; }
             if (p.type === 'apk') { icon = 'fa-android'; col = 'text-green-500'; }
@@ -169,19 +153,17 @@ function loadGallery() {
     });
 }
 
+// --- MODALES & UPLOAD ---
 function openModal() {
     const modal = document.getElementById('uploadModal');
     const cat = localStorage.getItem('activeFilter') || 'Documents';
     const input = document.getElementById('fileInput');
     const instr = document.getElementById('uploadInstruction');
-    
     document.getElementById('imgCategory').value = cat;
-    
     if (cat === 'Photos') { input.accept = "image/*"; instr.textContent = "Ajouter PHOTO"; }
     else if (cat === 'Video') { input.accept = "video/*"; instr.textContent = "Ajouter VIDÉO"; }
     else if (cat === 'Audio') { input.accept = "audio/*"; instr.textContent = "Ajouter AUDIO"; }
     else { input.accept = "*"; instr.textContent = "Ajouter DOC"; }
-    
     modal.classList.remove('hidden');
 }
 
@@ -190,7 +172,6 @@ function processAndUpload() {
     const title = document.getElementById('imgTitle').value || 'Sans titre';
     const cat = document.getElementById('imgCategory').value;
     const type = document.getElementById('fileType').value;
-    
     if(!file) return showNotification("Fichier manquant", "error");
     
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
@@ -202,7 +183,6 @@ function processAndUpload() {
     document.getElementById('filePreviewInfo').classList.add('hidden');
     document.getElementById('fileInput').value = "";
     document.getElementById('imgTitle').value = "";
-    
     showNotification("Fichier ajouté !", "success");
     loadGallery();
 }
@@ -215,18 +195,125 @@ function deletePhoto(id) {
     loadGallery();
 }
 
+function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+
+// --- LECTEUR MULTIMÉDIA CYBERPUNK ---
+let mediaInterval;
+
 function openFullscreen(id) {
     const p = JSON.parse(localStorage.getItem('my_gallery_data') || '[]').find(x => x.id == id);
     if(!p) return;
+    
     const c = document.getElementById('fullscreenContent');
     const m = document.getElementById('fullscreenModal');
     m.classList.remove('hidden');
-    
-    if (p.type === 'image') c.innerHTML = `<img src="${p.image}" class="max-h-full max-w-full rounded-lg">`;
-    else if (p.type === 'video') c.innerHTML = `<video controls autoplay src="${p.image}" class="max-h-full max-w-full rounded-lg"></video>`;
-    else if (p.type === 'audio') c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center"><i class="fa-solid fa-music text-6xl text-pink-500 mb-4 animate-pulse"></i><h3 class="text-white text-xl font-bold mb-4">${p.title}</h3><audio controls autoplay src="${p.image}" class="w-full"></audio></div>`;
-    else c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center"><i class="fa-solid fa-download text-6xl text-blue-500 mb-4"></i><h3 class="text-white text-xl font-bold mb-4">${p.title}</h3><a href="${p.image}" download="${p.title}" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Télécharger</a></div>`;
+
+    // -- IMAGE --
+    if (p.type === 'image') {
+        c.innerHTML = `<img src="${p.image}" class="max-h-full max-w-full rounded-lg shadow-2xl">`;
+    } 
+    // -- VIDEO & AUDIO (Custom Player) --
+    else if (p.type === 'video' || p.type === 'audio') {
+        const isVideo = p.type === 'video';
+        const tag = isVideo ? 'video' : 'audio';
+        // Icone pour l'audio si pas de vidéo
+        const audioVisual = isVideo ? '' : `<div class="text-center mb-8"><i class="fa-solid fa-music text-6xl text-cyan-400 animate-pulse"></i><h3 class="text-white text-xl mt-4 font-bold tracking-widest">${p.title}</h3></div>`;
+        
+        c.innerHTML = `
+            <div class="relative w-full max-w-4xl group">
+                ${audioVisual}
+                <${tag} id="customPlayer" src="${p.image}" class="w-full rounded-lg shadow-[0_0_30px_rgba(0,243,255,0.2)] bg-black" ${isVideo ? 'playsinline' : ''}></${tag}>
+                
+                <div class="absolute bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-md p-4 rounded-xl border border-cyan-500/30 flex flex-col gap-2 shadow-2xl transition-opacity duration-300 ${isVideo ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}">
+                    
+                    <input type="range" id="progressBar" value="0" step="0.1" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400 hover:h-2 transition-all" oninput="seekMedia()">
+                    
+                    <div class="flex items-center justify-between mt-1">
+                        <div class="flex items-center gap-4">
+                            <button onclick="togglePlay()" class="text-cyan-400 hover:text-white transition text-xl w-8"><i id="playIcon" class="fa-solid fa-play"></i></button>
+                            <span id="timeDisplay" class="text-xs font-mono text-cyan-400/80">00:00 / 00:00</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleMute()" class="text-slate-400 hover:text-white transition"><i id="volIcon" class="fa-solid fa-volume-high"></i></button>
+                            ${isVideo ? '<button onclick="toggleFS()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-expand"></i></button>' : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Initialisation Player
+        const player = document.getElementById('customPlayer');
+        const progressBar = document.getElementById('progressBar');
+        
+        player.onloadedmetadata = () => {
+            progressBar.max = player.duration;
+            updateTimeDisplay();
+        };
+
+        player.ontimeupdate = () => {
+            if (!document.getElementById('progressBar').matches(':active')) {
+                progressBar.value = player.currentTime;
+            }
+            updateTimeDisplay();
+        };
+        
+        player.onended = () => {
+            document.getElementById('playIcon').className = "fa-solid fa-rotate-right";
+        };
+
+        // Auto-play
+        player.play().then(() => {
+             document.getElementById('playIcon').className = "fa-solid fa-pause";
+        }).catch(e => console.log("Autoplay bloqué par le navigateur"));
+
+    } 
+    // -- AUTRES FICHIERS --
+    else {
+        c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center border border-slate-700"><i class="fa-solid fa-download text-6xl text-blue-500 mb-4"></i><h3 class="text-white text-xl font-bold mb-4">${p.title}</h3><a href="${p.image}" download="${p.title}" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-500 transition">Télécharger</a></div>`;
+    }
 }
 
-function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-function closeFullscreen() { document.getElementById('fullscreenModal').classList.add('hidden'); document.getElementById('fullscreenContent').innerHTML = ''; }
+function closeFullscreen() { 
+    const player = document.getElementById('customPlayer');
+    if(player) player.pause();
+    document.getElementById('fullscreenModal').classList.add('hidden'); 
+    document.getElementById('fullscreenContent').innerHTML = ''; 
+}
+
+// --- CONTROLS PLAYER ---
+function togglePlay() {
+    const p = document.getElementById('customPlayer');
+    const i = document.getElementById('playIcon');
+    if (p.paused) { p.play(); i.className = "fa-solid fa-pause"; } 
+    else { p.pause(); i.className = "fa-solid fa-play"; }
+}
+
+function seekMedia() {
+    const p = document.getElementById('customPlayer');
+    const bar = document.getElementById('progressBar');
+    p.currentTime = bar.value;
+}
+
+function updateTimeDisplay() {
+    const p = document.getElementById('customPlayer');
+    const display = document.getElementById('timeDisplay');
+    const fmt = (s) => {
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    };
+    if(p.duration) display.textContent = `${fmt(p.currentTime)} / ${fmt(p.duration)}`;
+}
+
+function toggleMute() {
+    const p = document.getElementById('customPlayer');
+    const i = document.getElementById('volIcon');
+    p.muted = !p.muted;
+    i.className = p.muted ? "fa-solid fa-volume-xmark text-red-500" : "fa-solid fa-volume-high";
+}
+
+function toggleFS() {
+    const p = document.getElementById('customPlayer');
+    if (p.requestFullscreen) p.requestFullscreen();
+}
