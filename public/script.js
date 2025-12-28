@@ -1,109 +1,68 @@
-// --- IMPORTS FIREBASE (Version CDN compatible navigateur) ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    setupFileInput();
+    setupDragAndDrop();
+});
 
-// --- TA CONFIGURATION FIREBASE ---
-const firebaseConfig = {
-  apiKey: "AIzaSyCBKA5SJYRJFnvpkDvGBnBYkf9eLFhhHwY",
-  authDomain: "cloud-phone-8388.firebaseapp.com",
-  projectId: "cloud-phone-8388",
-  storageBucket: "cloud-phone-8388.firebasestorage.app",
-  messagingSenderId: "65413864450",
-  appId: "1:65413864450:web:af3809c0b330f23f125b1b"
-};
-
-// --- INITIALISATION ---
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// --- VARIABLES GLOBALES ---
-let currentUser = null;
 let searchTerm = "";
 let confirmAction = null;
 let isRegistering = false;
 
-// --- SURVEILLANCE AUTHENTIFICATION ---
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        // Si l'utilisateur est connecté, on lance l'interface App
-        launchApp(true); 
-    } else {
-        currentUser = null;
-        // Si déconnecté, on remet l'interface Hero (Accueil)
-        const hero = document.getElementById('hero-section');
-        const appUI = document.getElementById('app-interface');
-        
-        if(hero && appUI) {
-            hero.classList.remove('blur-out');
-            hero.classList.add('active-view');
-            appUI.classList.add('blur-out');
-            appUI.classList.remove('active-view');
-        }
-        
-        const navSearch = document.getElementById('nav-search-container');
-        if(navSearch) navSearch.classList.add('hidden');
-        
-        const logoutBtn = document.getElementById('logout-btn');
-        if(logoutBtn) logoutBtn.classList.add('hidden');
+// --- AUTH (LOCAL STORAGE) ---
+function checkAuth() {
+    if (localStorage.getItem('is_logged_in') === 'true') {
+        launchApp(true);
     }
-});
+}
 
-// --- FONCTIONS EXPOSÉES À WINDOW (HTML) ---
-
-window.handleAuth = () => {
+function handleAuth() {
     document.getElementById('auth-screen').classList.remove('hidden');
     document.getElementById('auth-screen').classList.add('flex');
-};
+}
 
-window.toggleAuthMode = () => {
+function toggleAuthMode() {
     isRegistering = !isRegistering;
-    document.getElementById('auth-toggle-text').innerText = isRegistering ? "Retour à la connexion" : "Pas de compte ? S'inscrire";
-    document.querySelector('#auth-screen button').innerText = isRegistering ? "S'INSCRIRE" : "CONNEXION";
-};
+    document.getElementById('auth-btn').innerText = isRegistering ? "S'INSCRIRE" : "ENTRER";
+    document.getElementById('auth-toggle-text').innerText = isRegistering ? "Retour à la connexion" : "Première visite ? Créer un accès";
+}
 
-window.processLogin = async () => {
-    const email = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
-    
-    if (!email || !pass) return showNotification("Champs vides", "error");
+function processLogin() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    if (!u || !p) return showNotification("Champs vides !", "error");
 
-    try {
-        if (isRegistering) {
-            await createUserWithEmailAndPassword(auth, email, pass);
-            showNotification("Compte créé ! Bienvenue.", "success");
+    if (isRegistering) {
+        if (localStorage.getItem('user_account')) return showNotification("Compte déjà existant.", "error");
+        localStorage.setItem('user_account', JSON.stringify({ u, p }));
+        localStorage.setItem('is_logged_in', 'true');
+        showNotification("Compte créé !", "success");
+        completeLogin();
+    } else {
+        const acc = JSON.parse(localStorage.getItem('user_account'));
+        if (acc && u === acc.u && p === acc.p) {
+            localStorage.setItem('is_logged_in', 'true');
+            completeLogin();
         } else {
-            await signInWithEmailAndPassword(auth, email, pass);
-            showNotification("Connexion établie.", "success");
+            showNotification("Erreur d'identification", "error");
         }
-        // Fermer la modale de login
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('auth-screen').classList.remove('flex');
-    } catch (error) {
-        console.error(error);
-        let msg = "Erreur de connexion";
-        if(error.code === 'auth/wrong-password') msg = "Mot de passe incorrect";
-        if(error.code === 'auth/user-not-found') msg = "Utilisateur inconnu";
-        if(error.code === 'auth/email-already-in-use') msg = "Cet email est déjà pris";
-        if(error.code === 'auth/invalid-email') msg = "Email invalide";
-        if(error.code === 'auth/weak-password') msg = "Mot de passe trop faible (6 car. min)";
-        showNotification(msg, "error");
     }
-};
+}
 
-window.logoutUser = () => {
-    showConfirmModal("Déconnexion", "Fermer la session sécurisée ?", async () => {
-        await signOut(auth);
+function completeLogin() {
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('flex');
+    launchApp();
+}
+
+function logoutUser() {
+    showConfirmModal("Déconnexion", "Fermer la session locale ?", () => {
+        localStorage.removeItem('is_logged_in');
         location.reload();
     }, 'fa-power-off');
-};
+}
 
-// --- LOGIQUE D'INTERFACE APP ---
-window.launchApp = (skipAnim = false) => {
+// --- TRANSITION HERO -> APP ---
+function launchApp(skipAnim = false) {
     const hero = document.getElementById('hero-section');
     const appUI = document.getElementById('app-interface');
     const navSearch = document.getElementById('nav-search-container');
@@ -119,272 +78,180 @@ window.launchApp = (skipAnim = false) => {
         appUI.classList.add('active-view');
         navSearch.classList.remove('hidden', 'opacity-0', 'translate-y-[-10px]');
         logoutBtn.classList.remove('hidden');
-        
-        // Charger la galerie une fois l'interface prête
-        loadGalleryFirestore(); 
+        if (!localStorage.getItem('activeFilter') || localStorage.getItem('activeFilter') === 'all') {
+            localStorage.setItem('activeFilter', 'Documents');
+        }
+        loadGallery();
     }, skipAnim ? 0 : 500);
-};
+}
 
-// --- GESTION FICHIERS (UPLOAD) ---
-window.setupFileInput = () => { 
-    const input = document.getElementById('fileInput');
-    if(input) input.addEventListener('change', (e) => handleFileSelect(e.target.files[0])); 
-};
+// --- LOGIQUE FICHIERS (LOCAL STORAGE) ---
+function setupFileInput() { document.getElementById('fileInput').addEventListener('change', function(e) { handleFileSelect(e.target.files[0]); }); }
+function setupDragAndDrop() {
+    const dropZone = document.body;
+    const overlay = document.createElement('div'); overlay.id = 'drag-overlay'; overlay.className = 'fixed inset-0 z-[9999] bg-blue-600/90 backdrop-blur-sm hidden flex-col items-center justify-center text-white'; overlay.innerHTML = `<div class="border-4 border-dashed border-white/50 rounded-3xl p-12 flex flex-col items-center animate-pulse"><i class="fa-solid fa-cloud-arrow-up text-8xl mb-4"></i><h2 class="text-4xl font-bold font-display">DÉPOSEZ ICI</h2></div>`; document.body.appendChild(overlay);
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, (ev)=>{ev.preventDefault();ev.stopPropagation()}, false));
+    dropZone.addEventListener('dragenter', () => overlay.classList.remove('hidden'));
+    overlay.addEventListener('dragleave', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
+    dropZone.addEventListener('drop', (e) => { overlay.classList.add('hidden'); const files = e.dataTransfer.files; if (files.length > 0) handleFileSelect(files[0]); });
+}
 
-window.setupDragAndDrop = () => {
-    const dz = document.body; 
-    const ol = document.createElement('div'); 
-    ol.id = 'drag-overlay'; 
-    ol.className = 'fixed inset-0 z-[9999] bg-blue-600/90 backdrop-blur-sm hidden flex-col items-center justify-center text-white'; 
-    ol.innerHTML = `<div class="border-4 border-dashed border-white/50 rounded-3xl p-12 flex flex-col items-center animate-pulse"><i class="fa-solid fa-cloud-arrow-up text-8xl mb-4"></i><h2 class="text-4xl font-bold font-display">DÉPOSEZ ICI</h2></div>`; 
-    document.body.appendChild(ol);
-    
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => dz.addEventListener(e, (ev)=>{ev.preventDefault();ev.stopPropagation()}, false));
-    dz.addEventListener('dragenter', () => ol.classList.remove('hidden'));
-    ol.addEventListener('dragleave', (e) => { if (e.target === ol) ol.classList.add('hidden'); });
-    dz.addEventListener('drop', (e) => { ol.classList.add('hidden'); if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]); });
-};
-
-window.handleFileSelect = (file) => {
+function handleFileSelect(file) {
     if (!file) return;
-    let cat = 'Documents';
-    if (file.type.startsWith('image/')) cat = 'Photos';
-    else if (file.type.startsWith('video/')) cat = 'Video';
-    else if (file.type.startsWith('audio/')) cat = 'Audio';
-    
-    window.openModal(true);
-    document.getElementById('imgCategory').value = cat;
-    document.getElementById('uploadPlaceholder').classList.add('hidden');
-    document.getElementById('filePreviewInfo').classList.remove('hidden');
-    document.getElementById('previewName').textContent = file.name;
-    document.getElementById('imgTitle').value = file.name.split('.')[0];
-    
-    // On attache le fichier à l'input pour le récupérer plus tard
-    document.getElementById('fileInput').fileObj = file; 
-};
+    const cat = localStorage.getItem('activeFilter') || 'Documents';
+    let autoCat = cat; if (file.type.startsWith('image/')) autoCat = 'Photos'; else if (file.type.startsWith('video/')) autoCat = 'Video'; else if (file.type.startsWith('audio/')) autoCat = 'Audio'; else autoCat = 'Documents';
+    openModal(true);
+    document.getElementById('uploadPlaceholder').classList.add('hidden'); document.getElementById('filePreviewInfo').classList.remove('hidden'); document.getElementById('previewName').textContent = file.name; document.getElementById('imgTitle').value = file.name.split('.')[0]; document.getElementById('imgCategory').value = autoCat;
+    let type = 'doc'; if (file.type.startsWith('image/')) type = 'image'; else if (file.type.startsWith('video/')) type = 'video'; else if (file.type.startsWith('audio/')) type = 'audio'; else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) type = 'text'; else if (file.name.endsWith('.apk')) type = 'apk'; else if (file.name.endsWith('.zip')) type = 'zip';
+    document.getElementById('fileType').value = type;
+    const reader = new FileReader();
+    reader.onload = (ev) => document.getElementById('base64String').value = ev.target.result;
+    if (type === 'text') reader.readAsText(file); else reader.readAsDataURL(file);
+}
 
-window.processAndUpload = async () => {
-    const file = document.getElementById('fileInput').fileObj;
+function processAndUpload() {
+    const file = document.getElementById('base64String').value;
     const title = document.getElementById('imgTitle').value || 'Sans titre';
     const cat = document.getElementById('imgCategory').value;
+    const type = document.getElementById('fileType').value;
+    if(!file) return showNotification("Fichier manquant", "error");
+    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+    photos.unshift({ id: Date.now(), image: file, title, category: cat, type, date: new Date().toLocaleDateString() });
+    localStorage.setItem('my_gallery_data', JSON.stringify(photos));
+    closeModal(); document.getElementById('uploadPlaceholder').classList.remove('hidden'); document.getElementById('filePreviewInfo').classList.add('hidden'); document.getElementById('fileInput').value = ""; document.getElementById('imgTitle').value = ""; showNotification("Fichier stocké localement !", "success"); loadGallery();
+}
+
+// --- GALERIE ---
+function filterGallery(cat) { localStorage.setItem('activeFilter', cat); loadGallery(); }
+function handleSearch(val) { searchTerm = val.toLowerCase(); loadGallery(); }
+function loadGallery() {
+    const gallery = document.getElementById('gallery');
+    const currentFilter = localStorage.getItem('activeFilter') || 'Documents';
+    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
     
-    if(!file) return showNotification("Aucun fichier sélectionné", "error");
-    if(!currentUser) return showNotification("Non connecté", "error");
+    // UI Filtres
+    document.querySelectorAll('.filter-btn').forEach(btn => { 
+        const isActive = btn.id === `filter-${currentFilter}`; 
+        btn.className = `filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-gray-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'}`; 
+    });
 
-    showNotification("Upload en cours...", "info");
-    window.closeModal(); // Ferme la modale pour voir le toast
-
-    try {
-        // 1. Upload vers Firebase Storage
-        // Chemin : users/UID/Categorie/Timestamp_NomFichier
-        const storageRef = ref(storage, `users/${currentUser.uid}/${cat}/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(snapshot.ref);
-
-        // 2. Définir le type pour l'affichage
-        let type = 'doc';
-        if (file.type.startsWith('image/')) type = 'image';
-        else if (file.type.startsWith('video/')) type = 'video';
-        else if (file.type.startsWith('audio/')) type = 'audio';
-        else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) type = 'text';
-
-        // 3. Enregistrer les infos dans Firestore
-        await addDoc(collection(db, "files"), {
-            uid: currentUser.uid,
-            title: title,
-            category: cat,
-            type: type,
-            url: url,
-            storagePath: snapshot.metadata.fullPath,
-            createdAt: new Date().toISOString()
-        });
-
-        showNotification("Fichier sécurisé dans le Cloud", "success");
-        
-        // Reset du formulaire
-        document.getElementById('fileInput').value = "";
-        document.getElementById('fileInput').fileObj = null;
-        document.getElementById('uploadPlaceholder').classList.remove('hidden');
-        document.getElementById('filePreviewInfo').classList.add('hidden');
-
-    } catch (e) {
-        console.error(e);
-        showNotification("Echec de l'upload: " + e.message, "error");
+    // Select & Delete Logic
+    const filterContainer = document.querySelector('.hide-scroll');
+    if(!document.getElementById('btn-select-mode')) {
+        const selBtn = document.createElement('button'); selBtn.id = 'btn-select-mode';
+        selBtn.className = "px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ml-2 bg-slate-800 border-slate-700 text-gray-400";
+        selBtn.onclick = toggleSelectionMode; filterContainer.appendChild(selBtn);
     }
-};
-
-// --- AFFICHAGE GALERIE (LECTURE FIRESTORE) ---
-function loadGalleryFirestore() {
-    if (!currentUser) return;
+    const selBtn = document.getElementById('btn-select-mode');
+    selBtn.innerHTML = isSelectionMode ? '<i class="fa-solid fa-xmark mr-1"></i> Annuler' : '<i class="fa-regular fa-square-check mr-1"></i> Sélect.';
     
-    // Requête : récupérer les fichiers triés par date
-    const q = query(collection(db, "files"), orderBy("createdAt", "desc"));
-    
-    // Écoute en temps réel (onSnapshot) : met à jour l'écran dès qu'un fichier change
-    onSnapshot(q, (snapshot) => {
-        const gallery = document.getElementById('gallery');
-        const cat = localStorage.getItem('activeFilter') || 'Documents';
-        const term = searchTerm.toLowerCase();
-        
-        // Mise à jour visuelle des boutons filtres
-        document.querySelectorAll('.filter-btn').forEach(btn => { 
-            const isActive = btn.id === `filter-${cat}`; 
-            btn.className = `filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-gray-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'}`; 
-        });
+    const existingDel = document.getElementById('btn-delete-selected'); if(existingDel) existingDel.remove();
+    if(isSelectionMode && selectedItems.size > 0) {
+        const delBtn = document.createElement('button'); delBtn.id = 'btn-delete-selected'; delBtn.className = "px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ml-2 bg-red-600 text-white border-red-600 animate-pulse"; delBtn.innerHTML = `<i class="fa-solid fa-trash mr-1"></i> (${selectedItems.size})`; delBtn.onclick = deleteSelectedItems; filterContainer.appendChild(delBtn);
+    }
 
-        gallery.innerHTML = '';
+    gallery.innerHTML = '';
+    const filtered = photos.filter(p => p.category === currentFilter && p.title.toLowerCase().includes(searchTerm));
 
-        // Bouton "Ajouter" toujours présent
+    // Bouton Ajouter
+    if (!isSelectionMode && searchTerm === "") {
         const addDiv = document.createElement('div');
         addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-blue-500 transition flex flex-col items-center justify-center cursor-pointer group";
         addDiv.innerHTML = `<div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-blue-600 flex items-center justify-center mb-2 transition shadow-lg"><i class="fa-solid fa-plus text-blue-500 dark:text-blue-400 group-hover:text-white text-xl"></i></div><span class="text-[10px] font-bold text-slate-500 dark:text-gray-500 group-hover:text-slate-800 dark:group-hover:text-white uppercase tracking-wider">Ajouter</span>`;
-        addDiv.onclick = () => window.openModal(false);
+        addDiv.onclick = () => openModal(false);
         gallery.appendChild(addDiv);
+    }
 
-        snapshot.forEach((doc) => {
-            const p = doc.data();
-            
-            // FILTRAGE LOCAL (Sécurité visuelle, la sécurité réelle est dans les règles Firestore)
-            // On vérifie que le fichier appartient bien à l'utilisateur connecté
-            if (p.uid === currentUser.uid && p.category === cat && p.title.toLowerCase().includes(term)) {
-                
-                const div = document.createElement('div');
-                div.className = "relative group aspect-square rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md";
-                
-                let visual = '';
-                if(p.type === 'image') visual = `<img src="${p.url}" class="w-full h-full object-cover transition opacity-90 group-hover:opacity-100">`;
-                else {
-                    let icon = 'fa-file'; let col = 'text-gray-500';
-                    if (p.type === 'video') { icon = 'fa-video'; col = 'text-red-500'; }
-                    if (p.type === 'audio') { icon = 'fa-music'; col = 'text-pink-500'; }
-                    if (p.type === 'text') { icon = 'fa-file-code'; col = 'text-green-500'; }
-                    visual = `<div class="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900"><i class="fa-solid ${icon} ${col} text-4xl"></i></div>`;
-                }
+    filtered.forEach(p => {
+        const div = document.createElement('div');
+        const isSel = selectedItems.has(p.id);
+        div.className = `relative group aspect-square rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border transition-all shadow-md ${isSel ? 'border-blue-500 ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700'}`;
+        
+        let visual = '';
+        if(p.type === 'image') visual = `<img src="${p.image}" class="w-full h-full object-cover transition ${isSelectionMode ? 'opacity-70' : 'opacity-90 group-hover:opacity-100'}">`;
+        else {
+            let icon = 'fa-file'; let col = 'text-gray-500';
+            if (p.type === 'video') { icon = 'fa-video'; col = 'text-red-500'; }
+            if (p.type === 'audio') { icon = 'fa-music'; col = 'text-pink-500'; }
+            if (p.type === 'text') { icon = 'fa-file-code'; col = 'text-green-500'; }
+            visual = `<div class="w-full h-full flex items-center justify-center ${isSel ? 'bg-transparent' : 'bg-slate-50 dark:bg-slate-900'}"><i class="fa-solid ${icon} ${col} text-4xl"></i></div>`;
+        }
 
-                div.innerHTML = `
-                    <div class="w-full h-full cursor-pointer item-click-zone">
-                        ${visual}
-                        <div class="absolute bottom-0 left-0 w-full bg-white/90 dark:bg-black/60 backdrop-blur-sm p-1.5 text-center border-t border-slate-100 dark:border-transparent">
-                            <p class="text-[10px] font-bold text-slate-700 dark:text-white truncate">${p.title}</p>
-                        </div>
-                    </div>
-                    <button onclick="deletePhoto('${doc.id}', '${p.storagePath || ''}')" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-[10px]"></i></button>
-                `;
-                
-                // On passe les données complètes au viewer
-                div.querySelector('.item-click-zone').addEventListener('click', () => window.openFullscreen(p));
-                gallery.appendChild(div);
-            }
-        });
+        const clickAction = isSelectionMode ? `toggleItemSelection(${p.id})` : `openFullscreen('${p.id}')`;
+        div.innerHTML = `<div onclick="${clickAction}" class="w-full h-full cursor-pointer">${visual}<div class="absolute bottom-0 left-0 w-full bg-white/90 dark:bg-black/60 backdrop-blur-sm p-1.5 text-center border-t border-slate-100 dark:border-transparent"><p class="text-[10px] font-bold text-slate-700 dark:text-white truncate">${p.title}</p></div>${isSelectionMode ? `<div class="absolute top-2 right-2 w-6 h-6 rounded-full border-2 ${isSel ? 'bg-blue-500 border-blue-500' : 'bg-white/20 border-white'} flex items-center justify-center transition-colors">${isSel ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}</div>` : ''}</div>${!isSelectionMode ? `<button onclick="deletePhoto(${p.id})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-[10px]"></i></button>` : ''}`;
+        gallery.appendChild(div);
     });
 }
 
-// --- SUPPRESSION ---
-window.deletePhoto = (docId, storagePath) => {
-    showConfirmModal("Supprimer ?", "Action irréversible.", async () => {
-        try {
-            // 1. Supprimer du Storage (si chemin existe)
-            if (storagePath) {
-                const fileRef = ref(storage, storagePath);
-                await deleteObject(fileRef).catch(e => console.log("Fichier déjà absent ou erreur storage"));
-            }
-            // 2. Supprimer la fiche Firestore
-            await deleteDoc(doc(db, "files", docId));
-            showNotification("Fichier supprimé", "success");
-        } catch (e) {
-            console.error(e);
-            showNotification("Erreur suppression", "error");
-        }
+function deletePhoto(id) {
+    showConfirmModal("Supprimer ?", "Voulez-vous vraiment supprimer cet élément ?", () => {
+        const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+        const newPhotos = photos.filter(p => p.id !== id);
+        localStorage.setItem('my_gallery_data', JSON.stringify(newPhotos));
+        loadGallery();
+        showNotification("Élément supprimé", "success");
     });
-};
+}
 
-// --- HACKPAD (Modifié pour Firestore) ---
-window.saveNote = async () => {
+// --- UTILS (MODALS, ETC) ---
+let isSelectionMode = false; let selectedItems = new Set();
+function toggleSelectionMode() { isSelectionMode = !isSelectionMode; selectedItems.clear(); loadGallery(); }
+function toggleItemSelection(id) { if (selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id); loadGallery(); }
+function deleteSelectedItems() {
+    if (selectedItems.size === 0) return;
+    showConfirmModal("Supprimer ?", `Supprimer ${selectedItems.size} éléments ?`, () => {
+        let photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+        photos = photos.filter(p => !selectedItems.has(p.id));
+        localStorage.setItem('my_gallery_data', JSON.stringify(photos));
+        toggleSelectionMode(); showNotification("Nettoyage terminé", "success");
+    });
+}
+
+function openModal(isDrop = false) { document.getElementById('uploadModal').classList.remove('hidden'); }
+function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+function openNoteModal() { closeModal(); document.getElementById('noteModal').classList.remove('hidden'); document.getElementById('noteTitle').value=""; document.getElementById('noteContent').value=""; }
+function closeNoteModal() { document.getElementById('noteModal').classList.add('hidden'); }
+function saveNote() {
     const content = document.getElementById('noteContent').value;
     let title = document.getElementById('noteTitle').value.trim() || `Note_${Date.now()}.txt`;
     if (!title.endsWith('.txt')) title += '.txt';
     if (!content) return showNotification("Note vide !", "error");
+    const base64 = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(content)));
+    const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
+    photos.unshift({ id: Date.now(), image: base64, title: title.replace('.txt',''), category: 'Documents', type: 'text', date: new Date().toLocaleDateString() });
+    localStorage.setItem('my_gallery_data', JSON.stringify(photos));
+    closeNoteModal(); showNotification("Note sauvegardée !", "success"); localStorage.setItem('activeFilter', 'Documents'); loadGallery();
+}
 
-    try {
-        await addDoc(collection(db, "files"), {
-            uid: currentUser.uid,
-            title: title.replace('.txt',''),
-            category: 'Documents',
-            type: 'text',
-            textContent: content, // Le texte est stocké direct dans la base
-            url: null, 
-            createdAt: new Date().toISOString()
-        });
-        window.closeNoteModal();
-        showNotification("Note cryptée sauvegardée !", "success");
-        localStorage.setItem('activeFilter', 'Documents'); 
-    } catch (e) {
-        console.error(e);
-        showNotification("Erreur sauvegarde note", "error");
-    }
-};
-
-// --- FULLSCREEN VIEWER ---
-window.openFullscreen = (data) => {
-    const c = document.getElementById('fullscreenContent');
-    const m = document.getElementById('fullscreenModal');
-    m.classList.remove('hidden');
-
-    if (data.type === 'image') {
-        c.innerHTML = `<img src="${data.url}" class="max-h-full max-w-full rounded-lg shadow-2xl">`;
-    } 
-    else if (data.type === 'text') {
-        c.innerHTML = `<div class="w-full max-w-2xl bg-slate-900 border border-green-500/30 rounded-lg p-6 shadow-2xl h-[70vh] flex flex-col"><div class="flex justify-between items-center mb-4 border-b border-green-500/30 pb-2"><h2 class="text-green-500 font-mono font-bold"><i class="fa-solid fa-file-code mr-2"></i>${data.title}</h2></div><div class="flex-1 overflow-auto font-mono text-sm text-green-400 whitespace-pre-wrap">${data.textContent || "Erreur de lecture"}</div></div>`;
-    }
-    else if (data.type === 'video' || data.type === 'audio') {
-        const isVideo = data.type === 'video';
-        const tag = isVideo ? 'video' : 'audio';
-        c.innerHTML = `<div class="relative w-full max-w-4xl group">${isVideo?'':`<div class="text-center mb-8"><i class="fa-solid fa-music text-6xl text-cyan-400 animate-pulse"></i><h3 class="text-white text-xl mt-4 font-bold tracking-widest">${data.title}</h3></div>`}<${tag} controls src="${data.url}" class="w-full rounded-lg shadow-[0_0_30px_rgba(0,243,255,0.2)] bg-black" ${isVideo ? 'playsinline' : ''}></${tag}></div>`;
-    }
-    else {
-        c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center border border-slate-700"><i class="fa-solid fa-download text-6xl text-blue-500 mb-4"></i><h3 class="text-white text-xl font-bold mb-4">${data.title}</h3><a href="${data.url}" target="_blank" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-500 transition">Télécharger</a></div>`;
-    }
-};
-
-// --- UTILS UI ---
-window.toggleRobotModal = () => { const m=document.getElementById('robotModal'); const c=document.getElementById('robotCard'); if(m.classList.contains('hidden')){ m.classList.remove('hidden'); setTimeout(()=>c.classList.remove('scale-95'),10); }else{ c.classList.add('scale-95'); setTimeout(()=>m.classList.add('hidden'),200); } };
-window.filterGallery = (cat) => { localStorage.setItem('activeFilter', cat); loadGalleryFirestore(); };
-window.handleSearch = (val) => { searchTerm = val; loadGalleryFirestore(); };
-window.toggleSearchBar = () => { const s = document.getElementById('searchInput'); if(s.classList.contains('opacity-0')) { s.classList.remove('opacity-0','pointer-events-none','scale-95'); s.focus(); } else { s.classList.add('opacity-0','pointer-events-none','scale-95'); } };
-window.openModal = (isDrop) => document.getElementById('uploadModal').classList.remove('hidden');
-window.closeModal = () => document.getElementById('uploadModal').classList.add('hidden');
-window.openNoteModal = () => { window.closeModal(); document.getElementById('noteModal').classList.remove('hidden'); document.getElementById('noteTitle').value=""; document.getElementById('noteContent').value=""; };
-window.closeNoteModal = () => document.getElementById('noteModal').classList.add('hidden');
-window.closeFullscreen = () => { document.getElementById('fullscreenModal').classList.add('hidden'); document.getElementById('fullscreenContent').innerHTML=''; };
-
-// TOASTS
-window.showNotification = (msg, type = 'success') => {
+function showNotification(msg, type = 'success') {
     const container = document.getElementById('toast-container');
-    let bgCol, borderCol, icon, textCol;
-    if (type === 'success') { bgCol = 'bg-slate-900/90'; borderCol = 'border-green-500'; textCol = 'text-green-500'; icon = 'fa-check'; }
-    else if (type === 'error') { bgCol = 'bg-slate-900/90'; borderCol = 'border-red-500'; textCol = 'text-red-500'; icon = 'fa-triangle-exclamation'; }
-    else { bgCol = 'bg-slate-900/90'; borderCol = 'border-blue-500'; textCol = 'text-blue-500'; icon = 'fa-info-circle'; }
+    let bgCol = 'bg-slate-900/90', borderCol = type==='success'?'border-green-500':(type==='error'?'border-red-500':'border-blue-500'), textCol = type==='success'?'text-green-500':(type==='error'?'text-red-500':'text-blue-500'), icon = type==='success'?'fa-check':(type==='error'?'fa-triangle-exclamation':'fa-info-circle');
     const toast = document.createElement('div');
     toast.className = `w-full ${bgCol} backdrop-blur-md border-l-4 ${borderCol} text-white p-4 rounded-lg shadow-2xl flex items-center justify-between gap-4 animate-slide-in relative overflow-hidden pointer-events-auto`;
     toast.innerHTML = `<div class="flex items-center gap-3"><i class="fa-solid ${icon} ${textCol} text-xl"></i><span class="font-bold text-sm">${msg}</span></div><div class="absolute bottom-0 left-0 h-1 ${bgCol} w-full"><div class="h-full ${textCol.replace('text', 'bg')} transition-all duration-[3000ms] ease-linear w-full" id="progress-${Date.now()}"></div></div>`;
     container.appendChild(toast);
     setTimeout(() => { const bar = toast.querySelector('div[id^="progress-"]'); if(bar) bar.style.width = '0%'; }, 10);
     setTimeout(() => { toast.classList.remove('animate-slide-in'); toast.classList.add('animate-fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
-};
+}
 
-// CONFIRM MODAL
-window.showConfirmModal = (title, message, action, iconClass = 'fa-trash') => {
+function showConfirmModal(title, message, action, iconClass = 'fa-trash') {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMessage').textContent = message;
     document.getElementById('confirmIcon').className = `fa-solid ${iconClass} text-3xl text-red-500`;
     confirmAction = action;
     document.getElementById('customConfirmModal').classList.remove('hidden');
-};
-window.closeConfirmModal = () => { document.getElementById('customConfirmModal').classList.add('hidden'); confirmAction = null; };
-document.getElementById('confirmBtn').addEventListener('click', () => { if (confirmAction) confirmAction(); window.closeConfirmModal(); });
+}
+function closeConfirmModal() { document.getElementById('customConfirmModal').classList.add('hidden'); confirmAction = null; }
+document.getElementById('confirmBtn').addEventListener('click', () => { if (confirmAction) confirmAction(); closeConfirmModal(); });
 
-// INIT
-document.addEventListener('DOMContentLoaded', () => {
-    window.setupFileInput();
-    window.setupDragAndDrop();
-});
+function openFullscreen(id) {
+    const p = JSON.parse(localStorage.getItem('my_gallery_data') || '[]').find(x => x.id == id); if(!p) return;
+    const c = document.getElementById('fullscreenContent'); const m = document.getElementById('fullscreenModal'); m.classList.remove('hidden');
+    if (p.type === 'image') { c.innerHTML = `<img src="${p.image}" class="max-h-full max-w-full rounded-lg shadow-2xl">`; }
+    else if (p.type === 'text') { const t = decodeURIComponent(escape(atob(p.image.split(',')[1]))); c.innerHTML = `<div class="w-full max-w-2xl bg-slate-900 border border-green-500/30 rounded-lg p-6 shadow-2xl h-[70vh] flex flex-col"><div class="flex justify-between items-center mb-4 border-b border-green-500/30 pb-2"><h2 class="text-green-500 font-mono font-bold"><i class="fa-solid fa-file-code mr-2"></i>${p.title}</h2></div><div class="flex-1 overflow-auto font-mono text-sm text-green-400 whitespace-pre-wrap">${t}</div></div>`; }
+    else if (p.type === 'video' || p.type === 'audio') { const isV = p.type === 'video'; const tag = isV ? 'video' : 'audio'; c.innerHTML = `<div class="relative w-full max-w-4xl group">${isV?'':`<div class="text-center mb-8"><i class="fa-solid fa-music text-6xl text-cyan-400 animate-pulse"></i><h3 class="text-white text-xl mt-4 font-bold tracking-widest">${p.title}</h3></div>`}<${tag} controls src="${p.image}" class="w-full rounded-lg shadow-[0_0_30px_rgba(0,243,255,0.2)] bg-black" ${isV ? 'playsinline' : ''}></${tag}></div>`; }
+    else { c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center border border-slate-700"><i class="fa-solid fa-download text-6xl text-blue-500 mb-4"></i><h3 class="text-white text-xl font-bold mb-4">${p.title}</h3><a href="${p.image}" download="${p.title}" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-500 transition">Télécharger</a></div>`; }
+}
+function closeFullscreen() { document.getElementById('fullscreenModal').classList.add('hidden'); document.getElementById('fullscreenContent').innerHTML = ''; }
+function toggleRobotModal() { const m=document.getElementById('robotModal'); const c=document.getElementById('robotCard'); if(m.classList.contains('hidden')){ m.classList.remove('hidden'); setTimeout(()=>c.classList.remove('scale-95'),10); }else{ c.classList.add('scale-95'); setTimeout(()=>m.classList.add('hidden'),200); } }
+function toggleSearchBar() { const s = document.getElementById('searchInput'); if(s.classList.contains('opacity-0')) { s.classList.remove('opacity-0','pointer-events-none','scale-95'); s.focus(); } else { s.classList.add('opacity-0','pointer-events-none','scale-95'); } }
