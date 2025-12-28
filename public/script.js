@@ -7,15 +7,46 @@ document.addEventListener('DOMContentLoaded', () => {
 let searchTerm = "";
 let confirmAction = null;
 
-// --- NOTIFS & CONFIRM ---
+// --- ADVANCED NOTIFICATION SYSTEM (TOASTS) ---
 function showNotification(msg, type = 'success') {
-    const m = document.getElementById('customAlert');
-    document.getElementById('alertMessage').textContent = msg;
-    document.getElementById('alertTitle').textContent = type === 'error' ? 'Erreur' : (type === 'success' ? 'Succès' : 'Info');
-    document.getElementById('alertIcon').className = `fa-solid ${type === 'error' ? 'fa-xmark text-red-500' : (type === 'success' ? 'fa-check text-green-500' : 'fa-info text-blue-500')} text-3xl`;
-    m.classList.remove('hidden');
+    const container = document.getElementById('toast-container');
+    
+    // Config Colors & Icons
+    let bgCol, borderCol, icon, textCol;
+    if (type === 'success') { bgCol = 'bg-slate-900/90'; borderCol = 'border-green-500'; textCol = 'text-green-500'; icon = 'fa-check'; }
+    else if (type === 'error') { bgCol = 'bg-slate-900/90'; borderCol = 'border-red-500'; textCol = 'text-red-500'; icon = 'fa-triangle-exclamation'; }
+    else { bgCol = 'bg-slate-900/90'; borderCol = 'border-blue-500'; textCol = 'text-blue-500'; icon = 'fa-info-circle'; }
+
+    // Create Toast Element
+    const toast = document.createElement('div');
+    toast.className = `w-full max-w-sm ${bgCol} backdrop-blur-md border-l-4 ${borderCol} text-white p-4 rounded-lg shadow-2xl flex items-center justify-between gap-4 animate-slide-in relative overflow-hidden pointer-events-auto`;
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <i class="fa-solid ${icon} ${textCol} text-xl"></i>
+            <span class="font-bold text-sm">${msg}</span>
+        </div>
+        <div class="absolute bottom-0 left-0 h-1 ${bgCol} w-full">
+            <div class="h-full ${textCol.replace('text', 'bg')} transition-all duration-[3000ms] ease-linear w-full" id="progress-${Date.now()}"></div>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Animation Barre Progression
+    setTimeout(() => {
+        const bar = toast.querySelector('div[id^="progress-"]');
+        if(bar) bar.style.width = '0%';
+    }, 10);
+
+    // Auto Remove
+    setTimeout(() => {
+        toast.classList.remove('animate-slide-in');
+        toast.classList.add('animate-fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
-function closeCustomAlert() { document.getElementById('customAlert').classList.add('hidden'); }
+
+// --- CONFIRM MODAL ---
 function showConfirmModal(title, message, action, iconClass = 'fa-trash') {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMessage').textContent = message;
@@ -80,31 +111,18 @@ function handleFileSelect(file) {
 }
 
 // --- HACKPAD LOGIC ---
-function openNoteModal() {
-    closeModal(); // Ferme upload modal
-    document.getElementById('noteModal').classList.remove('hidden');
-    document.getElementById('noteTitle').value = "";
-    document.getElementById('noteContent').value = "";
-}
+function openNoteModal() { closeModal(); document.getElementById('noteModal').classList.remove('hidden'); document.getElementById('noteTitle').value = ""; document.getElementById('noteContent').value = ""; }
 function closeNoteModal() { document.getElementById('noteModal').classList.add('hidden'); }
 function saveNote() {
     const content = document.getElementById('noteContent').value;
     let title = document.getElementById('noteTitle').value.trim() || `Note_${Date.now()}.txt`;
     if (!title.endsWith('.txt')) title += '.txt';
     if (!content) return showNotification("Note vide !", "error");
-
-    // Création d'un dataURL pour le texte (simulation fichier)
     const base64 = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(content)));
-    
     const photos = JSON.parse(localStorage.getItem('my_gallery_data') || '[]');
     photos.unshift({ id: Date.now(), image: base64, title: title.replace('.txt',''), category: 'Documents', type: 'text', date: new Date().toLocaleDateString() });
     localStorage.setItem('my_gallery_data', JSON.stringify(photos));
-    
-    closeNoteModal();
-    showNotification("Note cryptée sauvegardée !", "success");
-    // Force switch to Documents filter
-    localStorage.setItem('activeFilter', 'Documents');
-    loadGallery();
+    closeNoteModal(); showNotification("Note cryptée sauvegardée !", "success"); localStorage.setItem('activeFilter', 'Documents'); loadGallery();
 }
 
 // --- GALLERY ---
@@ -175,7 +193,6 @@ function openFullscreen(id) {
     const c = document.getElementById('fullscreenContent'); const m = document.getElementById('fullscreenModal'); m.classList.remove('hidden');
     if (p.type === 'image') { c.innerHTML = `<img src="${p.image}" class="max-h-full max-w-full rounded-lg shadow-2xl">`; }
     else if (p.type === 'text') {
-        // Décodage base64 pour afficher le texte
         const textContent = decodeURIComponent(escape(atob(p.image.split(',')[1])));
         c.innerHTML = `<div class="w-full max-w-2xl bg-slate-900 border border-green-500/30 rounded-lg p-6 shadow-2xl h-[70vh] flex flex-col"><div class="flex justify-between items-center mb-4 border-b border-green-500/30 pb-2"><h2 class="text-green-500 font-mono font-bold"><i class="fa-solid fa-file-code mr-2"></i>${p.title}</h2></div><div class="flex-1 overflow-auto font-mono text-sm text-green-400 whitespace-pre-wrap">${textContent}</div></div>`;
     }
