@@ -25,13 +25,11 @@
                     animation: { 
                         'pulse-fast': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'slide-in': 'slideIn 0.3s ease-out forwards', 
-                        'fade-out': 'fadeOut 0.3s ease-in forwards',
-                        'fade-in': 'fadeIn 0.5s ease-out forwards'
+                        'fade-out': 'fadeOut 0.3s ease-in forwards'
                     }, 
                     keyframes: { 
                         slideIn: { '0%': { transform: 'translateY(-20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }, 
-                        fadeOut: { '0%': { opacity: '1' }, '100%': { opacity: '0' } },
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }
+                        fadeOut: { '0%': { opacity: '1' }, '100%': { opacity: '0' } }
                     }
                 }
             }
@@ -39,28 +37,44 @@
     </script>
     
     <script>
-        const html = document.documentElement;
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.classList.add('dark');
+        // Détection immédiate pour éviter le flash blanc
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
         } else {
-            html.classList.remove('dark');
+            document.documentElement.classList.remove('dark');
         }
+        
+        // Écouteur de changement (si tu changes les réglages pendant que le site est ouvert)
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+        });
+
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 
     <style>
         html, body { height: 100%; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
+        
+        /* THEME DARK */
         html.dark body { background-color: #050505; color: #e2e8f0; }
+        html.dark .glass-card { background: rgba(10, 10, 16, 0.8); border: 1px solid rgba(0, 243, 255, 0.2); }
         html.dark .cyber-grid { background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px); }
+
+        /* THEME LIGHT */
         html:not(.dark) body { background-color: #f0f4f8; color: #1e293b; }
+        html:not(.dark) .glass-card { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0, 0, 0, 0.1); }
         html:not(.dark) .cyber-grid { background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px); }
+
         .cyber-grid { position: fixed; inset: 0; z-index: -1; background-size: 40px 40px; }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        html:not(.dark) .glass-panel { background: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+        
         .scan-line { width: 100%; height: 2px; background: #00f3ff; position: absolute; top: 0; left: 0; animation: scan 2s linear infinite; opacity: 0.5; }
-        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .hide-scroll::-webkit-scrollbar { display: none; }
         @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
         
-        /* Transition états */
+        /* TRANSITIONS ENTRE VUES */
         #hero-section, #app-interface { transition: all 0.5s ease-in-out; }
         .blur-out { opacity: 0; filter: blur(10px); pointer-events: none; }
         .active-view { opacity: 1; filter: blur(0); pointer-events: auto; }
@@ -70,14 +84,14 @@
 
     <div class="cyber-grid"></div>
 
-    <nav class="fixed top-0 w-full z-50 px-4 py-3 flex justify-between items-center glass-panel border-b-0 border-b-gray-800">
+    <nav class="fixed top-0 w-full z-50 px-4 py-3 flex justify-between items-center glass-panel">
         <div class="flex items-center gap-3">
             <div class="text-xl font-black tracking-widest font-display text-gray-900 dark:text-white">
                 <span class="text-blue-600 dark:text-cyberBlue">&lt;</span>F4Ma<span class="text-blue-600 dark:text-cyberBlue">/&gt;</span>
             </div>
             <div id="nav-search-container" class="hidden opacity-0 transition-all duration-300 transform translate-y-[-10px]">
                 <div class="relative">
-                    <input type="text" id="searchInput" oninput="handleSearch(this.value)" class="bg-slate-800/50 border border-slate-600 text-white rounded-full py-1 pl-8 pr-4 text-xs font-mono focus:outline-none focus:border-cyberBlue w-32 focus:w-48 transition-all" placeholder="Rechercher...">
+                    <input type="text" id="searchInput" oninput="handleSearch(this.value)" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-white rounded-full py-1 pl-8 pr-4 text-xs font-mono focus:outline-none focus:border-blue-500 dark:focus:border-cyberBlue w-32 focus:w-48 transition-all" placeholder="Rechercher...">
                     <i class="fa-solid fa-search absolute left-2.5 top-1.5 text-gray-400 text-xs"></i>
                 </div>
             </div>
@@ -120,7 +134,7 @@
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto hide-scroll relative rounded-2xl bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-sm border border-white/20 dark:border-white/5 p-4 transition-colors">
+        <div class="flex-1 overflow-y-auto hide-scroll relative rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-white/5 p-4 transition-colors">
             <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pb-20"></div>
         </div>
     </section>
@@ -165,14 +179,14 @@
     </div>
 
     <div id="auth-screen" class="fixed inset-0 z-[9000] flex flex-col items-center justify-center p-6 bg-black/90 backdrop-blur-xl hidden">
-        <div class="relative z-10 w-full max-w-sm bg-slate-900 border border-white/10 p-8 rounded-3xl shadow-2xl">
-            <div class="text-center mb-8"><i class="fa-solid fa-fingerprint text-5xl text-cyberBlue mb-4 animate-pulse"></i><h1 class="text-3xl font-bold text-white">IDENTIFICATION</h1></div>
+        <div class="relative z-10 w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-8 rounded-3xl shadow-2xl">
+            <div class="text-center mb-8"><i class="fa-solid fa-fingerprint text-5xl text-blue-600 dark:text-blue-500 mb-4 animate-pulse"></i><h1 class="text-3xl font-bold text-slate-800 dark:text-white">IDENTIFICATION</h1></div>
             <div class="space-y-4">
-                <input type="text" id="username" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 text-white text-center font-bold outline-none focus:border-cyberBlue transition-colors" placeholder="Pseudo">
-                <input type="password" id="password" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 text-white text-center font-bold outline-none focus:border-cyberBlue transition-colors" placeholder="Code secret">
+                <input type="text" id="username" class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl p-3 text-slate-800 dark:text-white text-center font-bold outline-none focus:border-blue-500 dark:focus:border-cyberBlue transition-colors" placeholder="Pseudo">
+                <input type="password" id="password" class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl p-3 text-slate-800 dark:text-white text-center font-bold outline-none focus:border-blue-500 dark:focus:border-cyberBlue transition-colors" placeholder="Code secret">
                 <button onclick="processLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95">ENTRER</button>
             </div>
-            <p class="text-center text-xs text-gray-400 mt-6 cursor-pointer hover:text-white" onclick="toggleAuthMode()"><span id="auth-toggle-text">Créer un accès</span></p>
+            <p class="text-center text-xs text-slate-500 dark:text-gray-400 mt-6 cursor-pointer hover:text-blue-600 dark:hover:text-white" onclick="toggleAuthMode()"><span id="auth-toggle-text">Créer un accès</span></p>
         </div>
     </div>
 
