@@ -16,10 +16,9 @@ let negotiatingId = null;
 document.addEventListener('DOMContentLoaded', () => {
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
     
-    // MIGRATION : On s'assure que tous les produits ont la propriété "totalInput" (mémoire des entrées)
+    // MIGRATION : On s'assure que tout le monde a un totalInput
     products.forEach(p => {
         if (p.totalInput === undefined) {
-            // Si c'est un ancien produit, on suppose que le total entré = stock actuel (approximation de départ)
             p.totalInput = p.stock;
         }
     });
@@ -236,7 +235,6 @@ window.processSale = () => {
         const p = products.find(x => x.id == id);
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
         p.stock -= qty;
-        // NOTE: On ne touche pas au 'totalInput' ici, car la vente ne change pas ce qu'on a acheté à l'origine.
         saleItems.push({ name: p.name, qty: qty, price: sellingPrice });
     }
     
@@ -280,21 +278,18 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK (BUDGET CUMULÉ) ---
+// --- GESTION STOCK (RISTOURNE CUMULÉE SUR ACHATS) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
     const currentYear = new Date().getFullYear();
 
-    // 1. Calcul du POTENTIEL ACTUEL (Ce qui reste en stock)
     const annualProducts = products.filter(p => new Date(p.id).getFullYear() === currentYear);
     const currentStockValue = annualProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
-    
-    // 2. Calcul du BUDGET TOTAL CUMULÉ (Tout ce qui est entré cette année)
     const totalBudgetValue = annualProducts.reduce((sum, p) => sum + (p.price * (p.totalInput || 0)), 0);
 
-    // 3. Ristourne (Sur ce qui reste en stock, comme demandé)
-    const ristourne = Math.round(currentStockValue * 0.09);
+    // RISTOURNE : Basée sur le TOTAL ENTRÉES (Budget) -> Ne baisse jamais !
+    const ristourne = Math.round(totalBudgetValue * 0.09);
 
     let html = `
     <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-slate-700 relative overflow-hidden">
@@ -316,7 +311,8 @@ function updateStockUI() {
                 </div>
                 
                 <div class="text-right">
-                    <div class="inline-flex items-center gap-2 bg-orange-500/10 px-2 py-1 rounded">
+                    <p class="text-[8px] uppercase text-orange-400/80 font-bold mb-1">Ristourne (Sur Achats)</p>
+                    <div class="inline-flex items-center gap-2 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
                         <span class="text-orange-400 text-xs font-bold">9%</span>
                         <span class="text-orange-400 font-mono font-bold text-sm">${ristourne.toLocaleString()} F</span>
                     </div>
@@ -353,11 +349,10 @@ window.adjustStock = (id, amount) => {
     const p = products.find(x => x.id === id);
     p.stock += amount;
     
-    // LOGIQUE IMPORTANTE : Si on ajoute du stock (+), on augmente aussi le Total des Entrées (Budget)
+    // Si ajout, on augmente le compteur TOTAL (pour le calcul ristourne)
     if (amount > 0) {
         p.totalInput = (p.totalInput || 0) + amount;
     }
-    // Si on enlève du stock (-), on ne touche pas au Budget (car on l'avait bien acheté à la base)
     
     if (p.stock < 0) p.stock = 0;
     saveData();
@@ -397,16 +392,14 @@ window.saveNewProduct = () => {
             p.name = name;
             p.price = price;
             p.stock = stock || 0;
-            // Note: En modification, on ne change pas le totalInput sauf si on change le stock via adjustStock
             p.category = cat;
         } else {
-            // NOUVEAU PRODUIT : totalInput commence égal au stock initial
             products.push({ 
                 id: Date.now(), 
                 name, 
                 price, 
                 stock: stock || 0, 
-                totalInput: stock || 0, // Initialisation de la mémoire
+                totalInput: stock || 0, 
                 category: cat 
             });
         }
