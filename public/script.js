@@ -15,6 +15,16 @@ let negotiatingId = null;
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
+    
+    // MIGRATION : On s'assure que tous les produits ont la propriété "totalInput" (mémoire des entrées)
+    products.forEach(p => {
+        if (p.totalInput === undefined) {
+            // Si c'est un ancien produit, on suppose que le total entré = stock actuel (approximation de départ)
+            p.totalInput = p.stock;
+        }
+    });
+    saveData();
+
     sortProducts(); 
     renderProducts();
     updateStockUI();
@@ -226,6 +236,7 @@ window.processSale = () => {
         const p = products.find(x => x.id == id);
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
         p.stock -= qty;
+        // NOTE: On ne touche pas au 'totalInput' ici, car la vente ne change pas ce qu'on a acheté à l'origine.
         saleItems.push({ name: p.name, qty: qty, price: sellingPrice });
     }
     
@@ -269,43 +280,49 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK (HAUSSE + RISTOURNE) ---
+// --- GESTION STOCK (BUDGET CUMULÉ) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
     const currentYear = new Date().getFullYear();
 
-    // Calculs Stock
+    // 1. Calcul du POTENTIEL ACTUEL (Ce qui reste en stock)
     const annualProducts = products.filter(p => new Date(p.id).getFullYear() === currentYear);
-    const annualStockValue = annualProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
+    const currentStockValue = annualProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
     
-    const totalStockValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
-    const ristourne = Math.round(totalStockValue * 0.09); // RISTOURNE SUR STOCK (MAINTENUE)
-    
-    const totalItems = products.reduce((sum, p) => sum + p.stock, 0);
+    // 2. Calcul du BUDGET TOTAL CUMULÉ (Tout ce qui est entré cette année)
+    const totalBudgetValue = annualProducts.reduce((sum, p) => sum + (p.price * (p.totalInput || 0)), 0);
+
+    // 3. Ristourne (Sur ce qui reste en stock, comme demandé)
+    const ristourne = Math.round(currentStockValue * 0.09);
 
     let html = `
-    <div class="bg-gradient-to-r from-cyan-800 to-blue-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-cyan-700 relative overflow-hidden">
+    <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-slate-700 relative overflow-hidden">
         <div class="relative z-10">
-            <div class="flex justify-between items-start">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/10">
                 <div>
-                    <p class="text-[10px] uppercase font-bold text-cyan-300 tracking-wider">Potentiel Stock (${currentYear})</p>
-                    <p class="text-3xl font-mono font-bold text-white mb-1">${annualStockValue.toLocaleString()} <span class="text-sm text-cyan-200">F</span></p>
+                    <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Entrées (${currentYear})</p>
+                    <p class="text-2xl font-mono font-bold text-white">${totalBudgetValue.toLocaleString()} <span class="text-xs text-slate-500">F</span></p>
                 </div>
-                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-                    <i class="fa-solid fa-cubes-stacked text-2xl text-cyan-300"></i>
+                <div class="bg-white/5 p-2 rounded-lg">
+                   <i class="fa-solid fa-truck-ramp-box text-xl text-slate-400"></i>
                 </div>
             </div>
-            
-            <div class="mt-3 flex items-center gap-3 bg-black/20 p-2 rounded-lg border border-white/5">
-                <div class="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xs">9%</div>
+
+            <div class="flex justify-between items-end">
                 <div>
-                    <p class="text-[8px] uppercase text-slate-300 font-bold">Ristourne Potentielle (En Stock)</p>
-                    <p class="text-sm font-bold text-orange-400 font-mono">${ristourne.toLocaleString()} F</p>
+                    <p class="text-[9px] uppercase font-bold text-cyan-400 tracking-wider">Valeur Restante</p>
+                    <p class="text-xl font-mono font-bold text-cyan-400">${currentStockValue.toLocaleString()} <span class="text-xs text-cyan-600">F</span></p>
+                </div>
+                
+                <div class="text-right">
+                    <div class="inline-flex items-center gap-2 bg-orange-500/10 px-2 py-1 rounded">
+                        <span class="text-orange-400 text-xs font-bold">9%</span>
+                        <span class="text-orange-400 font-mono font-bold text-sm">${ristourne.toLocaleString()} F</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <i class="fa-solid fa-boxes-stacked absolute -bottom-4 -right-4 text-8xl text-white/5 rotate-12"></i>
     </div>
     `;
 
@@ -335,6 +352,13 @@ function updateStockUI() {
 window.adjustStock = (id, amount) => {
     const p = products.find(x => x.id === id);
     p.stock += amount;
+    
+    // LOGIQUE IMPORTANTE : Si on ajoute du stock (+), on augmente aussi le Total des Entrées (Budget)
+    if (amount > 0) {
+        p.totalInput = (p.totalInput || 0) + amount;
+    }
+    // Si on enlève du stock (-), on ne touche pas au Budget (car on l'avait bien acheté à la base)
+    
     if (p.stock < 0) p.stock = 0;
     saveData();
     renderProducts();
@@ -373,9 +397,18 @@ window.saveNewProduct = () => {
             p.name = name;
             p.price = price;
             p.stock = stock || 0;
+            // Note: En modification, on ne change pas le totalInput sauf si on change le stock via adjustStock
             p.category = cat;
         } else {
-            products.push({ id: Date.now(), name, price, stock: stock || 0, category: cat });
+            // NOUVEAU PRODUIT : totalInput commence égal au stock initial
+            products.push({ 
+                id: Date.now(), 
+                name, 
+                price, 
+                stock: stock || 0, 
+                totalInput: stock || 0, // Initialisation de la mémoire
+                category: cat 
+            });
         }
         saveData();
         document.getElementById('productModal').classList.add('hidden');
@@ -384,7 +417,7 @@ window.saveNewProduct = () => {
     }
 };
 
-// --- HISTORIQUE (RESTRICTION: PAS DE RISTOURNE ICI) ---
+// --- HISTORIQUE (SIMPLE) ---
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
     const currentYear = new Date().getFullYear();
@@ -392,8 +425,6 @@ function updateHistoryUI() {
     const totalYear = sales
         .filter(s => new Date(s.id).getFullYear() === currentYear)
         .reduce((sum, s) => sum + s.total, 0);
-    
-    // NOTE: Ristourne supprimée ici à la demande du client.
 
     let html = `
     <div class="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-blue-700 relative overflow-hidden">
