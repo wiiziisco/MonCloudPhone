@@ -8,24 +8,13 @@ let products = JSON.parse(localStorage.getItem('shop_products')) || [
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 let cart = {}; 
 let currentFilter = 'Tout';
+let editingId = null; // Variable pour savoir si on MODIFIE ou si on CRÉE
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // NETTOYAGE AUTOMATIQUE : On supprime les Draps s'ils existent encore
-    const beforeCount = products.length;
+    // Nettoyage éventuel des draps (code de sécurité conservé)
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
     
-    // Si on a supprimé quelque chose ou si les noms sont anciens, on sauvegarde
-    if (products.length !== beforeCount || (products.length > 0 && products[0].name === "Matelas Ortho 2pl")) {
-        products.forEach(p => {
-            // On force aussi les bons noms au cas où
-            if (p.id === 1) p.name = "Matelas ortho 3plcs ph2";
-            if (p.id === 2) p.name = "Matelas ortho 2plcs ph2";
-            if (p.id === 3) p.name = "Oreillers ortho";
-        });
-        saveData(); 
-    }
-
     sortProducts(); 
     renderProducts();
     updateStockUI();
@@ -131,7 +120,7 @@ window.toggleCart = () => {
     const panel = document.getElementById('cart-panel');
     const chevron = document.getElementById('cart-chevron');
     if (panel.style.transform === 'translateY(0px)') {
-        panel.style.transform = 'translateY(88%)'; // Ajusté pour mobile
+        panel.style.transform = 'translateY(88%)';
         chevron.style.transform = 'rotate(0deg)';
     } else {
         panel.style.transform = 'translateY(0px)';
@@ -241,7 +230,7 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK ---
+// --- GESTION STOCK (MODIFIÉE POUR ÉDITION) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
@@ -253,8 +242,11 @@ function updateStockUI() {
 
     list.innerHTML = products.map(p => `
         <div class="bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : ''}">
-            <div>
-                <p class="font-bold dark:text-white ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
+            <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <p class="font-bold dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
+                    <button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
+                </div>
                 <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
                 ${p.stock === 0 ? '<span class="text-[10px] font-bold text-red-500 uppercase">Rupture de stock</span>' : ''}
             </div>
@@ -276,7 +268,30 @@ window.adjustStock = (id, amount) => {
     updateStockUI();
 };
 
-window.openProductModal = () => document.getElementById('productModal').classList.remove('hidden');
+// --- MODAL DYNAMIQUE (CRÉATION OU ÉDITION) ---
+window.openProductModal = (id = null) => {
+    const modal = document.getElementById('productModal');
+    const title = modal.querySelector('h3');
+    
+    if (id) {
+        // MODE ÉDITION
+        const p = products.find(x => x.id === id);
+        editingId = id;
+        title.textContent = "Modifier Produit";
+        document.getElementById('new-prod-name').value = p.name;
+        document.getElementById('new-prod-price').value = p.price;
+        document.getElementById('new-prod-stock').value = p.stock;
+        document.getElementById('new-prod-cat').value = p.category;
+    } else {
+        // MODE CRÉATION
+        editingId = null;
+        title.textContent = "Nouveau Produit";
+        document.getElementById('new-prod-name').value = "";
+        document.getElementById('new-prod-price').value = "";
+        document.getElementById('new-prod-stock').value = "";
+    }
+    modal.classList.remove('hidden');
+};
 
 window.saveNewProduct = () => {
     const name = document.getElementById('new-prod-name').value;
@@ -285,12 +300,20 @@ window.saveNewProduct = () => {
     const cat = document.getElementById('new-prod-cat').value;
     
     if (name && price >= 0) {
-        products.push({ id: Date.now(), name, price, stock: stock || 0, category: cat });
+        if (editingId) {
+            // SAUVEGARDE MODIFICATION
+            const p = products.find(x => x.id === editingId);
+            p.name = name;
+            p.price = price;
+            p.stock = stock || 0;
+            p.category = cat;
+        } else {
+            // SAUVEGARDE CRÉATION
+            products.push({ id: Date.now(), name, price, stock: stock || 0, category: cat });
+        }
+        
         saveData();
         document.getElementById('productModal').classList.add('hidden');
-        document.getElementById('new-prod-name').value = "";
-        document.getElementById('new-prod-price').value = "";
-        document.getElementById('new-prod-stock').value = "";
         renderProducts();
         updateStockUI();
     }
