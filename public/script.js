@@ -11,16 +11,14 @@ let cartPrices = {};
 let currentFilter = 'Tout';
 let editingId = null;
 let negotiatingId = null;
+let tempImageBase64 = null; // Variable temporaire pour l'image
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
     
-    // MIGRATION : On s'assure que tout le monde a un totalInput
     products.forEach(p => {
-        if (p.totalInput === undefined) {
-            p.totalInput = p.stock;
-        }
+        if (p.totalInput === undefined) p.totalInput = p.stock;
     });
     saveData();
 
@@ -38,6 +36,41 @@ function sortProducts() {
         if (a.stock > 0 && b.stock === 0) return -1;
         return b.id - a.id;
     });
+}
+
+// --- GESTION IMAGE (COMPRESSION) ---
+window.handleImageUpload = (input) => {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            // Création d'une image pour redimensionnement
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // On fixe une taille max de 200px pour ne pas saturer le stockage
+                const MAX_WIDTH = 200;
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Compression JPEG 0.7
+                tempImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                
+                // Affichage Preview
+                const preview = document.getElementById('image-preview');
+                preview.src = tempImageBase64;
+                preview.classList.remove('hidden');
+                document.getElementById('image-preview-container').classList.add('opacity-0');
+            }
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 // --- NAVIGATION ---
@@ -70,7 +103,7 @@ window.switchTab = (tabName) => {
     }
 };
 
-// --- LOGIQUE CAISSE ---
+// --- LOGIQUE CAISSE (AVEC IMAGES) ---
 function renderProducts() {
     sortProducts(); 
     const grid = document.getElementById('product-grid');
@@ -90,15 +123,37 @@ function renderProducts() {
         .map(p => {
             const qtyInCart = cart[p.id] || 0;
             const isOutOfStock = p.stock === 0;
+            // IMAGE OU PLACEHOLDER PAR DÉFAUT
+            const imgHtml = p.image 
+                ? `<img src="${p.image}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-110 transition duration-500">`
+                : `<div class="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center"><i class="fa-solid fa-box-open text-4xl text-slate-600"></i></div>`;
+            
+            // COUCHE SOMBRE POUR LISIBILITÉ TEXTE
+            const overlay = `<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>`;
+
             return `
-            <div onclick="${isOutOfStock ? '' : `addToCart(${p.id})`}" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border ${isOutOfStock ? 'border-red-200 bg-red-50 dark:bg-red-900/10 opacity-60 grayscale-[50%]' : 'border-slate-200 dark:border-white/5 active:scale-95'} transition relative overflow-hidden group">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">${p.category}</span>
-                    <span class="text-[10px] font-bold ${p.stock < 3 ? 'text-red-500' : 'text-green-500'}">${isOutOfStock ? 'RUPTURE' : 'Stock: ' + p.stock}</span>
+            <div onclick="${isOutOfStock ? '' : `addToCart(${p.id})`}" class="aspect-[4/5] relative rounded-2xl shadow-sm overflow-hidden group border border-white/5 active:scale-95 transition">
+                
+                ${imgHtml}
+                ${overlay}
+                
+                <div class="absolute top-2 right-2 z-10">
+                    ${qtyInCart > 0 ? `<div class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-lg">${qtyInCart}</div>` : ''}
                 </div>
-                <h3 class="font-bold text-slate-800 dark:text-white leading-tight mb-1">${p.name}</h3>
-                <p class="text-blue-600 dark:text-cyberBlue font-mono font-bold">${p.price.toLocaleString()} F</p>
-                ${qtyInCart > 0 ? `<div class="absolute top-0 right-0 bg-blue-600 text-white w-6 h-6 rounded-bl-xl flex items-center justify-center text-xs font-bold shadow-lg">${qtyInCart}</div>` : ''}
+                
+                <div class="absolute top-2 left-2 z-10">
+                    <span class="text-[9px] font-bold px-2 py-1 rounded bg-black/50 text-white backdrop-blur-sm border border-white/10 uppercase tracking-wider">${p.category}</span>
+                </div>
+
+                <div class="absolute bottom-0 w-full p-3 z-10">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h3 class="font-bold text-white text-sm leading-tight mb-1 shadow-black drop-shadow-md">${p.name}</h3>
+                            <p class="text-cyberBlue font-mono font-bold text-lg drop-shadow-md">${p.price.toLocaleString()} <span class="text-xs">F</span></p>
+                        </div>
+                    </div>
+                    ${isOutOfStock ? '<div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center"><span class="text-red-500 font-bold border border-red-500 px-3 py-1 rounded rotate-12">RUPTURE</span></div>' : ''}
+                </div>
             </div>`;
         }).join('');
 }
@@ -126,7 +181,6 @@ window.removeFromCart = (id) => {
     }
 };
 
-// --- NÉGOCIATION (MODAL) ---
 window.editCartPrice = (id) => {
     const p = products.find(x => x.id === id);
     const currentPrice = cartPrices[id] || p.price;
@@ -219,7 +273,6 @@ function updateCartUI() {
     }
 }
 
-// --- VALIDATION VENTE ---
 window.processSale = () => {
     const total = Object.entries(cart).reduce((sum, [id, qty]) => {
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : products.find(x => x.id == id).price;
@@ -278,7 +331,7 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK (RISTOURNE CUMULÉE SUR ACHATS) ---
+// --- GESTION STOCK (AFFICHAGE AVEC THUMBNAIL) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
@@ -287,8 +340,6 @@ function updateStockUI() {
     const annualProducts = products.filter(p => new Date(p.id).getFullYear() === currentYear);
     const currentStockValue = annualProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
     const totalBudgetValue = annualProducts.reduce((sum, p) => sum + (p.price * (p.totalInput || 0)), 0);
-
-    // RISTOURNE : Basée sur le TOTAL ENTRÉES (Budget) -> Ne baisse jamais !
     const ristourne = Math.round(totalBudgetValue * 0.09);
 
     let html = `
@@ -299,17 +350,13 @@ function updateStockUI() {
                     <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Entrées (${currentYear})</p>
                     <p class="text-2xl font-mono font-bold text-white">${totalBudgetValue.toLocaleString()} <span class="text-xs text-slate-500">F</span></p>
                 </div>
-                <div class="bg-white/5 p-2 rounded-lg">
-                   <i class="fa-solid fa-truck-ramp-box text-xl text-slate-400"></i>
-                </div>
+                <div class="bg-white/5 p-2 rounded-lg"><i class="fa-solid fa-truck-ramp-box text-xl text-slate-400"></i></div>
             </div>
-
             <div class="flex justify-between items-end">
                 <div>
                     <p class="text-[9px] uppercase font-bold text-cyan-400 tracking-wider">Valeur Restante</p>
                     <p class="text-xl font-mono font-bold text-cyan-400">${currentStockValue.toLocaleString()} <span class="text-xs text-cyan-600">F</span></p>
                 </div>
-                
                 <div class="text-right">
                     <p class="text-[8px] uppercase text-orange-400/80 font-bold mb-1">Ristourne (Sur Achats)</p>
                     <div class="inline-flex items-center gap-2 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
@@ -326,17 +373,23 @@ function updateStockUI() {
         html += `<p class="text-center text-slate-400 mt-4">Inventaire vide.</p>`;
     } else {
         html += products.map(p => `
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : 'mb-3'}">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <p class="font-bold dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
-                        <button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : 'mb-3'}">
+                <div class="flex items-center gap-3 flex-1">
+                    <div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden flex-none">
+                         ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div>'}
                     </div>
-                    <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
+                    
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <p class="font-bold dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
+                            <button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                        <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 ml-2">
                     <button onclick="adjustStock(${p.id}, -1)" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
-                    <span class="font-mono font-bold w-8 text-center dark:text-white">${p.stock}</span>
+                    <span class="font-mono font-bold w-6 text-center dark:text-white text-sm">${p.stock}</span>
                     <button onclick="adjustStock(${p.id}, 1)" class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
@@ -348,12 +401,7 @@ function updateStockUI() {
 window.adjustStock = (id, amount) => {
     const p = products.find(x => x.id === id);
     p.stock += amount;
-    
-    // Si ajout, on augmente le compteur TOTAL (pour le calcul ristourne)
-    if (amount > 0) {
-        p.totalInput = (p.totalInput || 0) + amount;
-    }
-    
+    if (amount > 0) p.totalInput = (p.totalInput || 0) + amount;
     if (p.stock < 0) p.stock = 0;
     saveData();
     renderProducts();
@@ -363,6 +411,15 @@ window.adjustStock = (id, amount) => {
 window.openProductModal = (id = null) => {
     const modal = document.getElementById('productModal');
     const title = modal.querySelector('h3');
+    const preview = document.getElementById('image-preview');
+    const container = document.getElementById('image-preview-container');
+    
+    // Reset Image
+    tempImageBase64 = null;
+    preview.src = "";
+    preview.classList.add('hidden');
+    container.classList.remove('opacity-0');
+
     if (id) {
         const p = products.find(x => x.id === id);
         editingId = id;
@@ -371,6 +428,13 @@ window.openProductModal = (id = null) => {
         document.getElementById('new-prod-price').value = p.price;
         document.getElementById('new-prod-stock').value = p.stock;
         document.getElementById('new-prod-cat').value = p.category;
+        
+        if (p.image) {
+            tempImageBase64 = p.image;
+            preview.src = p.image;
+            preview.classList.remove('hidden');
+            container.classList.add('opacity-0');
+        }
     } else {
         editingId = null;
         title.textContent = "Nouveau Produit";
@@ -386,6 +450,7 @@ window.saveNewProduct = () => {
     const price = parseInt(document.getElementById('new-prod-price').value);
     const stock = parseInt(document.getElementById('new-prod-stock').value);
     const cat = document.getElementById('new-prod-cat').value;
+    
     if (name && price >= 0) {
         if (editingId) {
             const p = products.find(x => x.id === editingId);
@@ -393,6 +458,7 @@ window.saveNewProduct = () => {
             p.price = price;
             p.stock = stock || 0;
             p.category = cat;
+            if (tempImageBase64) p.image = tempImageBase64;
         } else {
             products.push({ 
                 id: Date.now(), 
@@ -400,7 +466,8 @@ window.saveNewProduct = () => {
                 price, 
                 stock: stock || 0, 
                 totalInput: stock || 0, 
-                category: cat 
+                category: cat,
+                image: tempImageBase64 
             });
         }
         saveData();
@@ -410,14 +477,12 @@ window.saveNewProduct = () => {
     }
 };
 
-// --- HISTORIQUE (SIMPLE) ---
 function updateHistoryUI() {
+    // (Pas de changement ici, code identique à la version précédente sans ristourne affichée)
     const list = document.getElementById('sales-history');
     const currentYear = new Date().getFullYear();
     const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
-    const totalYear = sales
-        .filter(s => new Date(s.id).getFullYear() === currentYear)
-        .reduce((sum, s) => sum + s.total, 0);
+    const totalYear = sales.filter(s => new Date(s.id).getFullYear() === currentYear).reduce((sum, s) => sum + s.total, 0);
 
     let html = `
     <div class="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-blue-700 relative overflow-hidden">
@@ -427,47 +492,34 @@ function updateHistoryUI() {
                     <p class="text-[10px] uppercase font-bold text-blue-300 tracking-wider">CA Annuel (${currentYear})</p>
                     <p class="text-3xl font-mono font-bold text-white mb-1">${totalYear.toLocaleString()} <span class="text-sm text-blue-200">F</span></p>
                 </div>
-                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-                    <i class="fa-solid fa-chart-line text-2xl text-blue-300"></i>
-                </div>
+                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm"><i class="fa-solid fa-chart-line text-2xl text-blue-300"></i></div>
             </div>
         </div>
         <i class="fa-solid fa-coins absolute -bottom-4 -right-4 text-8xl text-white/5 rotate-12"></i>
     </div>
-
     <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700 mb-4">
         <span class="text-xs text-slate-400 font-bold uppercase">Total Global (Historique)</span>
         <span class="font-mono font-bold text-slate-200">${totalAllTime.toLocaleString()} F</span>
-    </div>
-    `;
+    </div>`;
 
     if (sales.length === 0) {
         html += `<p class="text-center text-slate-400 mt-10">Aucune vente enregistrée.</p>`;
     } else {
         html += sales.map(s => `
             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500 mb-3">
-                <div class="flex justify-between mb-2">
-                    <span class="font-bold text-sm text-slate-600 dark:text-slate-400">${s.date.split(',')[0]}</span>
-                    <span class="font-bold text-green-600">${s.total.toLocaleString()} F</span>
-                </div>
-                <div class="text-sm dark:text-white">
-                    <span class="font-bold">${s.client}</span> a acheté ${s.items.length} article(s).
-                </div>
-            </div>
-        `).join('');
+                <div class="flex justify-between mb-2"><span class="font-bold text-sm text-slate-600 dark:text-slate-400">${s.date.split(',')[0]}</span><span class="font-bold text-green-600">${s.total.toLocaleString()} F</span></div>
+                <div class="text-sm dark:text-white"><span class="font-bold">${s.client}</span> a acheté ${s.items.length} article(s).</div>
+            </div>`).join('');
     }
     list.innerHTML = html;
 }
 
 function updateDailyTotal() {
     const today = new Date().toLocaleDateString();
-    const total = sales
-        .filter(s => new Date(s.id).toLocaleDateString() === today)
-        .reduce((sum, s) => sum + s.total, 0);
+    const total = sales.filter(s => new Date(s.id).toLocaleDateString() === today).reduce((sum, s) => sum + s.total, 0);
     document.getElementById('daily-total').innerText = total.toLocaleString() + ' F';
 }
 
-// --- PERSISTANCE ---
 function saveData() {
     sortProducts(); 
     localStorage.setItem('shop_products', JSON.stringify(products));
