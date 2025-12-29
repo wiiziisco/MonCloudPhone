@@ -8,13 +8,11 @@ let products = JSON.parse(localStorage.getItem('shop_products')) || [
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 let cart = {}; 
 let currentFilter = 'Tout';
-let editingId = null; // Variable pour savoir si on MODIFIE ou si on CRÉE
+let editingId = null;
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Nettoyage éventuel des draps (code de sécurité conservé)
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
-    
     sortProducts(); 
     renderProducts();
     updateStockUI();
@@ -170,7 +168,7 @@ function updateCartUI() {
     }
 }
 
-// --- VALIDATION VENTE ---
+// --- VALIDATION VENTE (RÈGLE DE SOUSTRACTION) ---
 window.processSale = () => {
     const total = Object.entries(cart).reduce((sum, [id, qty]) => {
         return sum + (products.find(x => x.id == id).price * qty);
@@ -181,9 +179,10 @@ window.processSale = () => {
     const clientName = document.getElementById('client-name').value || "Client";
     const saleItems = [];
     
+    // RÈGLE AUTOMATIQUE : On déduit le stock ici
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
-        p.stock -= qty;
+        p.stock -= qty; // Soustraction
         saleItems.push({ name: p.name, qty: qty, price: p.price });
     }
     
@@ -203,9 +202,9 @@ window.processSale = () => {
     cart = {};
     document.getElementById('client-name').value = "";
     renderProducts();
-    updateStockUI();
+    updateStockUI(); // La valeur du stock baissera automatiquement
     updateCartUI();
-    updateDailyTotal();
+    updateDailyTotal(); // Le total vendu augmentera automatiquement
     window.toggleCart();
 };
 
@@ -230,33 +229,50 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK (MODIFIÉE POUR ÉDITION) ---
+// --- GESTION STOCK (AVEC VALEUR TOTALE) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
     
-    if (products.length === 0) {
-        list.innerHTML = `<p class="text-center text-slate-400 mt-4">Inventaire vide. Cliquez sur + pour commencer.</p>`;
-        return;
-    }
+    // CALCUL DE LA VALEUR DU STOCK
+    const totalStockValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+    const totalItems = products.reduce((sum, p) => sum + p.stock, 0);
 
-    list.innerHTML = products.map(p => `
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : ''}">
-            <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                    <p class="font-bold dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
-                    <button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
-                </div>
-                <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
-                ${p.stock === 0 ? '<span class="text-[10px] font-bold text-red-500 uppercase">Rupture de stock</span>' : ''}
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="adjustStock(${p.id}, -1)" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
-                <span class="font-mono font-bold w-8 text-center dark:text-white">${p.stock}</span>
-                <button onclick="adjustStock(${p.id}, 1)" class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
-            </div>
+    // Header Statistique pour le stock
+    let html = `
+    <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-slate-700">
+        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Valeur du Stock</p>
+        <p class="text-3xl font-mono font-bold text-blue-400 mb-1">${totalStockValue.toLocaleString()} <span class="text-sm text-slate-500">FCFA</span></p>
+        <div class="h-1 w-full bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-blue-500 w-full opacity-50"></div>
         </div>
-    `).join('');
+        <p class="text-right text-[10px] font-bold text-slate-400 mt-1">${totalItems} articles en réserve</p>
+    </div>
+    `;
+
+    if (products.length === 0) {
+        html += `<p class="text-center text-slate-400 mt-4">Inventaire vide. Cliquez sur + pour commencer.</p>`;
+    } else {
+        html += products.map(p => `
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : 'mb-3'}">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <p class="font-bold dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
+                        <button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                    <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
+                    ${p.stock === 0 ? '<span class="text-[10px] font-bold text-red-500 uppercase">Rupture de stock</span>' : ''}
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="adjustStock(${p.id}, -1)" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
+                    <span class="font-mono font-bold w-8 text-center dark:text-white">${p.stock}</span>
+                    <button onclick="adjustStock(${p.id}, 1)" class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    list.innerHTML = html;
 }
 
 window.adjustStock = (id, amount) => {
@@ -265,16 +281,15 @@ window.adjustStock = (id, amount) => {
     if (p.stock < 0) p.stock = 0;
     saveData();
     renderProducts();
-    updateStockUI();
+    updateStockUI(); // Met à jour le total automatiquement
 };
 
-// --- MODAL DYNAMIQUE (CRÉATION OU ÉDITION) ---
+// --- MODAL ---
 window.openProductModal = (id = null) => {
     const modal = document.getElementById('productModal');
     const title = modal.querySelector('h3');
     
     if (id) {
-        // MODE ÉDITION
         const p = products.find(x => x.id === id);
         editingId = id;
         title.textContent = "Modifier Produit";
@@ -283,7 +298,6 @@ window.openProductModal = (id = null) => {
         document.getElementById('new-prod-stock').value = p.stock;
         document.getElementById('new-prod-cat').value = p.category;
     } else {
-        // MODE CRÉATION
         editingId = null;
         title.textContent = "Nouveau Produit";
         document.getElementById('new-prod-name').value = "";
@@ -301,14 +315,12 @@ window.saveNewProduct = () => {
     
     if (name && price >= 0) {
         if (editingId) {
-            // SAUVEGARDE MODIFICATION
             const p = products.find(x => x.id === editingId);
             p.name = name;
             p.price = price;
             p.stock = stock || 0;
             p.category = cat;
         } else {
-            // SAUVEGARDE CRÉATION
             products.push({ id: Date.now(), name, price, stock: stock || 0, category: cat });
         }
         
@@ -319,13 +331,29 @@ window.saveNewProduct = () => {
     }
 };
 
-// --- HISTORIQUE ---
+// --- HISTORIQUE (AVEC TOTAL VENDU) ---
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
-    if (sales.length === 0) list.innerHTML = `<p class="text-center text-slate-400 mt-10">Aucune vente enregistrée.</p>`;
-    else {
-        list.innerHTML = sales.map(s => `
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+    
+    // CALCUL DU TOTAL VENDU (Historique Complet)
+    const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
+
+    let html = `
+    <div class="bg-gradient-to-r from-green-800 to-green-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-green-700">
+        <p class="text-[10px] uppercase font-bold text-green-300 tracking-wider">Chiffre d'Affaires Total</p>
+        <p class="text-3xl font-mono font-bold text-white mb-1">${totalAllTime.toLocaleString()} <span class="text-sm text-green-200">FCFA</span></p>
+        <div class="h-1 w-full bg-green-700 rounded-full overflow-hidden">
+            <div class="h-full bg-green-400 w-full opacity-50"></div>
+        </div>
+        <p class="text-right text-[10px] font-bold text-green-200 mt-1">${sales.length} ventes réalisées</p>
+    </div>
+    `;
+
+    if (sales.length === 0) {
+        html += `<p class="text-center text-slate-400 mt-10">Aucune vente enregistrée.</p>`;
+    } else {
+        html += sales.map(s => `
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500 mb-3">
                 <div class="flex justify-between mb-2">
                     <span class="font-bold text-sm text-slate-600 dark:text-slate-400">${s.date.split(',')[0]}</span>
                     <span class="font-bold text-green-600">${s.total.toLocaleString()} F</span>
@@ -336,6 +364,7 @@ function updateHistoryUI() {
             </div>
         `).join('');
     }
+    list.innerHTML = html;
 }
 
 function updateDailyTotal() {
