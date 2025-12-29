@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>F4Ma POS | Matelas</title>
+    <title>INVENTAIRE | Gestion Stock</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -24,30 +24,31 @@
         if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
     </script>
     <style>
-        /* FIX CRITIQUE : Utilise 100dvh pour s'adapter à la barre d'adresse mobile */
         body { height: 100dvh; } 
         .hide-scroll::-webkit-scrollbar { display: none; }
         .glass-panel { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
         .active-tab { color: #00f3ff; border-top: 2px solid #00f3ff; background: rgba(0, 243, 255, 0.05); }
         .inactive-tab { color: #64748b; border-top: 2px solid transparent; }
         .tab-btn { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 33%; transition: all 0.3s; }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-[#050505] text-slate-900 dark:text-white flex flex-col overflow-hidden transition-colors duration-300 selection:bg-blue-500 selection:text-white">
 
     <header class="flex-none h-16 flex items-center justify-between px-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 z-20 shadow-sm shrink-0">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-700 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/30">F</div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-layer-group text-lg"></i>
+            </div>
             <div>
-                <h1 class="font-bold text-lg leading-none tracking-wider">F4Ma<span class="text-blue-500 text-xs ml-1 font-mono">POS</span></h1>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Matelas & Literie</p>
+                <h1 class="font-black text-xl leading-none tracking-widest uppercase dark:text-white">INVENTAIRE</h1>
             </div>
         </div>
         <div class="flex items-center gap-3">
             <button onclick="window.location.reload()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-blue-500 active:rotate-180 transition-all shadow-sm">
                 <i class="fa-solid fa-rotate-right"></i>
             </button>
-            
             <div class="text-right bg-slate-50 dark:bg-white/5 px-3 py-1 rounded-lg border border-slate-200 dark:border-white/10">
                 <p class="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold mb-0.5">Ventes du jour</p>
                 <p class="text-sm font-black text-green-600 dark:text-green-400 font-mono" id="daily-total">0 F</p>
@@ -59,10 +60,8 @@
         
         <section id="view-pos" class="absolute inset-0 flex flex-col transition-transform duration-300 z-10 w-full h-full">
             <div class="flex-none px-4 py-3 overflow-x-auto hide-scroll flex gap-2" id="category-filters"></div>
-            
             <div class="flex-1 overflow-y-auto px-4 pb-48 w-full">
-                <div id="product-grid" class="grid grid-cols-2 gap-3 pb-4">
-                    </div>
+                <div id="product-grid" class="grid grid-cols-2 gap-3 pb-4"></div>
             </div>
             
             <div id="cart-panel" class="absolute bottom-0 left-0 w-full bg-white dark:bg-[#1a1a20] rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] transform translate-y-[88%] transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) z-30 flex flex-col h-[75vh] border-t border-slate-200 dark:border-white/10">
@@ -81,10 +80,7 @@
                         <i class="fa-solid fa-chevron-up text-xs text-slate-500"></i>
                     </div>
                 </div>
-
-                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items">
-                    </div>
-
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items"></div>
                 <div class="flex-none p-6 bg-slate-50 dark:bg-[#111115] border-t border-slate-200 dark:border-white/10 pb-20 safe-area-bottom">
                     <div class="flex justify-between mb-4 items-end">
                         <span class="text-sm font-bold text-slate-500">Total à payer</span>
@@ -105,35 +101,27 @@
                 <h2 class="text-2xl font-black uppercase tracking-tight">Inventaire</h2>
                 <button onclick="openProductModal()" class="bg-slate-900 dark:bg-white text-white dark:text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition hover:bg-blue-600 hover:text-white"><i class="fa-solid fa-plus text-lg"></i></button>
             </div>
-            <div id="stock-list" class="space-y-3">
-                </div>
+            <div id="stock-list" class="space-y-3"></div>
         </section>
 
         <section id="view-history" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20 w-full h-full">
             <h2 class="text-2xl font-black uppercase tracking-tight mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2">Journal</h2>
-            <div id="sales-history" class="space-y-3">
-                </div>
+            <div id="sales-history" class="space-y-3"></div>
         </section>
 
     </main>
 
     <nav class="flex-none glass-panel pb-safe h-20 flex justify-between items-stretch z-40 relative shadow-[0_-5px_20px_rgba(0,0,0,0.2)] shrink-0 w-full">
         <button onclick="switchTab('pos')" id="tab-pos" class="active-tab tab-btn group">
-            <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1">
-                <i class="fa-solid fa-cash-register text-xl"></i>
-            </div>
+            <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-cash-register text-xl"></i></div>
             <span class="text-[10px] font-bold uppercase tracking-wider">Caisse</span>
         </button>
         <button onclick="switchTab('stock')" id="tab-stock" class="inactive-tab tab-btn group">
-            <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1">
-                <i class="fa-solid fa-boxes-stacked text-xl"></i>
-            </div>
+            <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
             <span class="text-[10px] font-bold uppercase tracking-wider">Stock</span>
         </button>
         <button onclick="switchTab('history')" id="tab-history" class="inactive-tab tab-btn group">
-            <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1">
-                <i class="fa-solid fa-chart-line text-xl"></i>
-            </div>
+            <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-chart-line text-xl"></i></div>
             <span class="text-[10px] font-bold uppercase tracking-wider">Journal</span>
         </button>
     </nav>
@@ -141,20 +129,12 @@
     <div id="receiptModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 text-center relative overflow-hidden transform scale-100 transition-all">
             <div class="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
-            <div class="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fa-solid fa-check text-4xl text-green-500"></i>
-            </div>
+            <div class="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-check text-4xl text-green-500"></i></div>
             <h3 class="text-2xl font-black mb-2 dark:text-white">Vente Validée !</h3>
             <p class="text-slate-500 text-sm mb-8 font-medium">La transaction a été enregistrée avec succès.</p>
-            
             <div class="flex flex-col gap-3">
-                <a id="btn-whatsapp" href="#" target="_blank" class="w-full py-4 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-3 hover:brightness-110 transition shadow-lg shadow-green-500/20">
-                    <i class="fa-brands fa-whatsapp text-2xl"></i> 
-                    <span>Envoyer Reçu Client</span>
-                </a>
-                <button onclick="closeReceiptModal()" class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-                    Retour à la caisse
-                </button>
+                <a id="btn-whatsapp" href="#" target="_blank" class="w-full py-4 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-3 hover:brightness-110 transition shadow-lg shadow-green-500/20"><i class="fa-brands fa-whatsapp text-2xl"></i><span>Envoyer Reçu Client</span></a>
+                <button onclick="closeReceiptModal()" class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Retour à la caisse</button>
             </div>
         </div>
     </div>
@@ -193,28 +173,19 @@
             </div>
         </div>
     </div>
+
     <div id="priceModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
         <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 text-center transform scale-100 transition-all">
-            
-            <div class="w-14 h-14 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500">
-                <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
-            </div>
-            
+            <div class="w-14 h-14 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500"><i class="fa-solid fa-hand-holding-dollar text-2xl"></i></div>
             <h3 class="text-xl font-black dark:text-white mb-1">Négocier le Prix</h3>
             <p class="text-xs text-slate-500 font-bold uppercase mb-6" id="price-modal-product">Article...</p>
-            
             <div class="relative mb-6">
                 <input type="number" id="negotiated-price" class="w-full p-4 text-center text-2xl font-mono font-bold rounded-xl bg-slate-50 dark:bg-[#0b0b0f] border-2 border-slate-200 dark:border-slate-700 outline-none focus:border-blue-500 text-slate-900 dark:text-white transition" placeholder="0">
                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">FCFA</span>
             </div>
-            
             <div class="flex gap-3">
-                <button onclick="closePriceModal()" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-                    Annuler
-                </button>
-                <button onclick="saveNegotiatedPrice()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition">
-                    Valider
-                </button>
+                <button onclick="closePriceModal()" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Annuler</button>
+                <button onclick="saveNegotiatedPrice()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition">Valider</button>
             </div>
         </div>
     </div>
