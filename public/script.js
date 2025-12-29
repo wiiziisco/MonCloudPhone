@@ -7,7 +7,7 @@ let products = JSON.parse(localStorage.getItem('shop_products')) || [
 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 let cart = {}; 
-let cartPrices = {}; // NOUVEAU : Stocke les prix négociés { id: nouveauPrix }
+let cartPrices = {}; // Prix négociés
 let currentFilter = 'Tout';
 let editingId = null;
 
@@ -101,7 +101,6 @@ window.addToCart = (id) => {
     const p = products.find(x => x.id === id);
     if (p.stock <= (cart[id] || 0)) return alert("Stock insuffisant !");
     
-    // Si c'est le premier ajout, on initialise le prix avec le prix du stock
     if (!cart[id]) {
         cartPrices[id] = p.price;
     }
@@ -116,19 +115,16 @@ window.removeFromCart = (id) => {
         cart[id]--;
         if (cart[id] === 0) {
             delete cart[id];
-            delete cartPrices[id]; // On nettoie le prix négocié
+            delete cartPrices[id];
         }
         renderProducts();
         updateCartUI();
     }
 };
 
-// --- MODIFICATION PRIX (NÉGOCIATION) ---
 window.editCartPrice = (id) => {
     const p = products.find(x => x.id === id);
     const currentPrice = cartPrices[id] || p.price;
-    
-    // On demande le nouveau prix
     const newPriceStr = prompt(`Prix de vente pour "${p.name}" ?\nPrix normal: ${p.price}`, currentPrice);
     
     if (newPriceStr !== null) {
@@ -163,14 +159,10 @@ function updateCartUI() {
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
         if (p) {
-            // ON UTILISE LE PRIX NÉGOCIÉ (cartPrices)
             const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
             const subtotal = sellingPrice * qty;
-            
             total += subtotal;
             count += qty;
-            
-            // On vérifie si le prix a changé par rapport au prix officiel
             const isModified = sellingPrice !== p.price;
             const priceColor = isModified ? (sellingPrice > p.price ? 'text-green-500' : 'text-orange-500') : 'text-blue-600';
 
@@ -178,7 +170,6 @@ function updateCartUI() {
             <div class="flex justify-between items-center bg-slate-50 dark:bg-white/5 p-3 rounded-xl">
                 <div class="flex-1">
                     <p class="font-bold text-sm text-slate-800 dark:text-white">${p.name}</p>
-                    
                     <div class="flex items-center gap-2 mt-1">
                         <button onclick="editCartPrice(${id})" class="text-xs bg-white dark:bg-white/10 border border-slate-200 dark:border-slate-600 px-2 py-1 rounded-lg font-mono font-bold flex items-center gap-1 ${priceColor}">
                             ${sellingPrice.toLocaleString()} F
@@ -187,7 +178,6 @@ function updateCartUI() {
                         <span class="text-xs text-slate-400">x ${qty} = ${subtotal.toLocaleString()}</span>
                     </div>
                 </div>
-                
                 <div class="flex items-center gap-3 ml-2">
                     <button onclick="removeFromCart(${id})" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-white font-bold">-</button>
                     <span class="font-bold w-4 text-center dark:text-white">${qty}</span>
@@ -214,7 +204,6 @@ function updateCartUI() {
 
 // --- VALIDATION VENTE ---
 window.processSale = () => {
-    // Calcul du total avec les prix NÉGOCIÉS
     const total = Object.entries(cart).reduce((sum, [id, qty]) => {
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : products.find(x => x.id == id).price;
         return sum + (sellingPrice * qty);
@@ -228,9 +217,7 @@ window.processSale = () => {
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
-        
         p.stock -= qty;
-        // On enregistre le prix de vente RÉEL dans l'historique
         saleItems.push({ name: p.name, qty: qty, price: sellingPrice });
     }
     
@@ -244,11 +231,9 @@ window.processSale = () => {
     
     sales.unshift(sale);
     saveData();
-    
     showReceiptModal(sale);
-    
     cart = {};
-    cartPrices = {}; // Reset des prix négociés
+    cartPrices = {};
     document.getElementById('client-name').value = "";
     renderProducts();
     updateStockUI();
@@ -260,7 +245,6 @@ window.processSale = () => {
 function showReceiptModal(sale) {
     const modal = document.getElementById('receiptModal');
     modal.classList.remove('hidden');
-    
     let text = `🧾 *REÇU F4Ma MATELAS*\n`;
     text += `📅 ${sale.date}\n`;
     text += `👤 Client: ${sale.client}\n`;
@@ -271,35 +255,39 @@ function showReceiptModal(sale) {
     text += `----------------\n`;
     text += `💰 *TOTAL: ${sale.total.toLocaleString()} FCFA*\n`;
     text += `✅ Payé`;
-
     const encoded = encodeURIComponent(text);
     document.getElementById('btn-whatsapp').href = `https://wa.me/?text=${encoded}`;
 }
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK ---
+// --- GESTION STOCK (VALEUR + RISTOURNE 9%) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
     
-    // Le stock utilise toujours le PRIX ORIGINAL pour la valeur d'inventaire
     const totalStockValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+    const ristourne = Math.round(totalStockValue * 0.09); // CALCUL RISTOURNE 9%
     const totalItems = products.reduce((sum, p) => sum + p.stock, 0);
 
     let html = `
-    <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-slate-700">
-        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Valeur du Stock (Prix Fixe)</p>
-        <p class="text-3xl font-mono font-bold text-blue-400 mb-1">${totalStockValue.toLocaleString()} <span class="text-sm text-slate-500">FCFA</span></p>
-        <div class="h-1 w-full bg-slate-700 rounded-full overflow-hidden">
-            <div class="h-full bg-blue-500 w-full opacity-50"></div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-slate-800 rounded-xl p-3 shadow-lg border border-slate-700">
+            <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Valeur Stock</p>
+            <p class="text-xl font-mono font-bold text-blue-400">${totalStockValue.toLocaleString()}<span class="text-[10px] text-slate-500">F</span></p>
         </div>
-        <p class="text-right text-[10px] font-bold text-slate-400 mt-1">${totalItems} articles en réserve</p>
+        <div class="bg-slate-800 rounded-xl p-3 shadow-lg border border-slate-700 relative overflow-hidden">
+            <div class="absolute right-0 top-0 p-1 bg-orange-500/20 rounded-bl-lg">
+                <span class="text-[8px] font-bold text-orange-400">9%</span>
+            </div>
+            <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Ristourne Est.</p>
+            <p class="text-xl font-mono font-bold text-orange-400">${ristourne.toLocaleString()}<span class="text-[10px] text-slate-500">F</span></p>
+        </div>
     </div>
     `;
 
     if (products.length === 0) {
-        html += `<p class="text-center text-slate-400 mt-4">Inventaire vide. Cliquez sur + pour commencer.</p>`;
+        html += `<p class="text-center text-slate-400 mt-4">Inventaire vide.</p>`;
     } else {
         html += products.map(p => `
             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : 'mb-3'}">
@@ -309,7 +297,6 @@ function updateStockUI() {
                         <button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
                     </div>
                     <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
-                    ${p.stock === 0 ? '<span class="text-[10px] font-bold text-red-500 uppercase">Rupture de stock</span>' : ''}
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="adjustStock(${p.id}, -1)" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
@@ -335,7 +322,6 @@ window.adjustStock = (id, amount) => {
 window.openProductModal = (id = null) => {
     const modal = document.getElementById('productModal');
     const title = modal.querySelector('h3');
-    
     if (id) {
         const p = products.find(x => x.id === id);
         editingId = id;
@@ -370,7 +356,6 @@ window.saveNewProduct = () => {
         } else {
             products.push({ id: Date.now(), name, price, stock: stock || 0, category: cat });
         }
-        
         saveData();
         document.getElementById('productModal').classList.add('hidden');
         renderProducts();
@@ -378,20 +363,34 @@ window.saveNewProduct = () => {
     }
 };
 
-// --- HISTORIQUE ---
+// --- HISTORIQUE (AVEC CALCUL ANNUEL) ---
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
     
+    const currentYear = new Date().getFullYear();
+    // Total de TOUS les temps
     const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
+    // Total de CETTE ANNÉE seulement
+    const totalYear = sales
+        .filter(s => new Date(s.id).getFullYear() === currentYear)
+        .reduce((sum, s) => sum + s.total, 0);
 
     let html = `
-    <div class="bg-gradient-to-r from-green-800 to-green-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-green-700">
-        <p class="text-[10px] uppercase font-bold text-green-300 tracking-wider">Chiffre d'Affaires Total</p>
-        <p class="text-3xl font-mono font-bold text-white mb-1">${totalAllTime.toLocaleString()} <span class="text-sm text-green-200">FCFA</span></p>
-        <div class="h-1 w-full bg-green-700 rounded-full overflow-hidden">
-            <div class="h-full bg-green-400 w-full opacity-50"></div>
+    <div class="grid grid-cols-1 gap-3 mb-4">
+        <div class="bg-gradient-to-r from-blue-800 to-blue-900 rounded-xl p-4 shadow-lg text-white border border-blue-700">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-blue-300 tracking-wider">CA Annuel (${currentYear})</p>
+                    <p class="text-3xl font-mono font-bold text-white mb-1">${totalYear.toLocaleString()} <span class="text-sm text-blue-200">F</span></p>
+                </div>
+                <i class="fa-solid fa-calendar-check text-blue-500/30 text-4xl"></i>
+            </div>
         </div>
-        <p class="text-right text-[10px] font-bold text-green-200 mt-1">${sales.length} ventes réalisées</p>
+
+        <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700">
+            <span class="text-xs text-slate-400 font-bold uppercase">Total Global (Historique)</span>
+            <span class="font-mono font-bold text-green-400">${totalAllTime.toLocaleString()} F</span>
+        </div>
     </div>
     `;
 
