@@ -7,6 +7,7 @@ let products = JSON.parse(localStorage.getItem('shop_products')) || [
 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 let cart = {}; 
+let cartPrices = {}; // NOUVEAU : Stocke les prix négociés { id: nouveauPrix }
 let currentFilter = 'Tout';
 let editingId = null;
 
@@ -100,6 +101,11 @@ window.addToCart = (id) => {
     const p = products.find(x => x.id === id);
     if (p.stock <= (cart[id] || 0)) return alert("Stock insuffisant !");
     
+    // Si c'est le premier ajout, on initialise le prix avec le prix du stock
+    if (!cart[id]) {
+        cartPrices[id] = p.price;
+    }
+    
     cart[id] = (cart[id] || 0) + 1;
     renderProducts(); 
     updateCartUI();
@@ -108,11 +114,33 @@ window.addToCart = (id) => {
 window.removeFromCart = (id) => {
     if (cart[id]) {
         cart[id]--;
-        if (cart[id] === 0) delete cart[id];
+        if (cart[id] === 0) {
+            delete cart[id];
+            delete cartPrices[id]; // On nettoie le prix négocié
+        }
         renderProducts();
         updateCartUI();
     }
 };
+
+// --- MODIFICATION PRIX (NÉGOCIATION) ---
+window.editCartPrice = (id) => {
+    const p = products.find(x => x.id === id);
+    const currentPrice = cartPrices[id] || p.price;
+    
+    // On demande le nouveau prix
+    const newPriceStr = prompt(`Prix de vente pour "${p.name}" ?\nPrix normal: ${p.price}`, currentPrice);
+    
+    if (newPriceStr !== null) {
+        const newPrice = parseInt(newPriceStr);
+        if (!isNaN(newPrice) && newPrice >= 0) {
+            cartPrices[id] = newPrice;
+            updateCartUI();
+        } else {
+            alert("Prix invalide");
+        }
+    }
+}
 
 window.toggleCart = () => {
     const panel = document.getElementById('cart-panel');
@@ -135,16 +163,32 @@ function updateCartUI() {
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
         if (p) {
-            const subtotal = p.price * qty;
+            // ON UTILISE LE PRIX NÉGOCIÉ (cartPrices)
+            const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
+            const subtotal = sellingPrice * qty;
+            
             total += subtotal;
             count += qty;
+            
+            // On vérifie si le prix a changé par rapport au prix officiel
+            const isModified = sellingPrice !== p.price;
+            const priceColor = isModified ? (sellingPrice > p.price ? 'text-green-500' : 'text-orange-500') : 'text-blue-600';
+
             html += `
             <div class="flex justify-between items-center bg-slate-50 dark:bg-white/5 p-3 rounded-xl">
-                <div>
+                <div class="flex-1">
                     <p class="font-bold text-sm text-slate-800 dark:text-white">${p.name}</p>
-                    <p class="text-xs text-slate-500">${p.price.toLocaleString()} x ${qty} = <span class="font-bold text-blue-600">${subtotal.toLocaleString()}</span></p>
+                    
+                    <div class="flex items-center gap-2 mt-1">
+                        <button onclick="editCartPrice(${id})" class="text-xs bg-white dark:bg-white/10 border border-slate-200 dark:border-slate-600 px-2 py-1 rounded-lg font-mono font-bold flex items-center gap-1 ${priceColor}">
+                            ${sellingPrice.toLocaleString()} F
+                            <i class="fa-solid fa-pen text-[10px] opacity-50"></i>
+                        </button>
+                        <span class="text-xs text-slate-400">x ${qty} = ${subtotal.toLocaleString()}</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3">
+                
+                <div class="flex items-center gap-3 ml-2">
                     <button onclick="removeFromCart(${id})" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-white font-bold">-</button>
                     <span class="font-bold w-4 text-center dark:text-white">${qty}</span>
                     <button onclick="addToCart(${id})" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">+</button>
@@ -168,10 +212,12 @@ function updateCartUI() {
     }
 }
 
-// --- VALIDATION VENTE (RÈGLE DE SOUSTRACTION) ---
+// --- VALIDATION VENTE ---
 window.processSale = () => {
+    // Calcul du total avec les prix NÉGOCIÉS
     const total = Object.entries(cart).reduce((sum, [id, qty]) => {
-        return sum + (products.find(x => x.id == id).price * qty);
+        const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : products.find(x => x.id == id).price;
+        return sum + (sellingPrice * qty);
     }, 0);
 
     if (total === 0) return alert("Panier vide !");
@@ -179,11 +225,13 @@ window.processSale = () => {
     const clientName = document.getElementById('client-name').value || "Client";
     const saleItems = [];
     
-    // RÈGLE AUTOMATIQUE : On déduit le stock ici
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
-        p.stock -= qty; // Soustraction
-        saleItems.push({ name: p.name, qty: qty, price: p.price });
+        const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
+        
+        p.stock -= qty;
+        // On enregistre le prix de vente RÉEL dans l'historique
+        saleItems.push({ name: p.name, qty: qty, price: sellingPrice });
     }
     
     const sale = {
@@ -200,11 +248,12 @@ window.processSale = () => {
     showReceiptModal(sale);
     
     cart = {};
+    cartPrices = {}; // Reset des prix négociés
     document.getElementById('client-name').value = "";
     renderProducts();
-    updateStockUI(); // La valeur du stock baissera automatiquement
+    updateStockUI();
     updateCartUI();
-    updateDailyTotal(); // Le total vendu augmentera automatiquement
+    updateDailyTotal();
     window.toggleCart();
 };
 
@@ -229,19 +278,18 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK (AVEC VALEUR TOTALE) ---
+// --- GESTION STOCK ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
     
-    // CALCUL DE LA VALEUR DU STOCK
+    // Le stock utilise toujours le PRIX ORIGINAL pour la valeur d'inventaire
     const totalStockValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
     const totalItems = products.reduce((sum, p) => sum + p.stock, 0);
 
-    // Header Statistique pour le stock
     let html = `
     <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-slate-700">
-        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Valeur du Stock</p>
+        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Valeur du Stock (Prix Fixe)</p>
         <p class="text-3xl font-mono font-bold text-blue-400 mb-1">${totalStockValue.toLocaleString()} <span class="text-sm text-slate-500">FCFA</span></p>
         <div class="h-1 w-full bg-slate-700 rounded-full overflow-hidden">
             <div class="h-full bg-blue-500 w-full opacity-50"></div>
@@ -281,10 +329,9 @@ window.adjustStock = (id, amount) => {
     if (p.stock < 0) p.stock = 0;
     saveData();
     renderProducts();
-    updateStockUI(); // Met à jour le total automatiquement
+    updateStockUI();
 };
 
-// --- MODAL ---
 window.openProductModal = (id = null) => {
     const modal = document.getElementById('productModal');
     const title = modal.querySelector('h3');
@@ -331,11 +378,10 @@ window.saveNewProduct = () => {
     }
 };
 
-// --- HISTORIQUE (AVEC TOTAL VENDU) ---
+// --- HISTORIQUE ---
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
     
-    // CALCUL DU TOTAL VENDU (Historique Complet)
     const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
 
     let html = `
