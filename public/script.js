@@ -7,9 +7,10 @@ let products = JSON.parse(localStorage.getItem('shop_products')) || [
 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 let cart = {}; 
-let cartPrices = {}; // Prix négociés
+let cartPrices = {}; 
 let currentFilter = 'Tout';
 let editingId = null;
+let negotiatingId = null; // NOUVEAU : Pour savoir quel produit on négocie
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -63,10 +64,8 @@ window.switchTab = (tabName) => {
 // --- LOGIQUE CAISSE ---
 function renderProducts() {
     sortProducts(); 
-    
     const grid = document.getElementById('product-grid');
     const categories = ['Tout', ...new Set(products.map(p => p.category))];
-    
     const filterContainer = document.getElementById('category-filters');
     filterContainer.innerHTML = categories.map(c => 
         `<button onclick="filter('${c}')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${currentFilter === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}">${c}</button>`
@@ -100,11 +99,7 @@ window.filter = (cat) => { currentFilter = cat; renderProducts(); };
 window.addToCart = (id) => {
     const p = products.find(x => x.id === id);
     if (p.stock <= (cart[id] || 0)) return alert("Stock insuffisant !");
-    
-    if (!cart[id]) {
-        cartPrices[id] = p.price;
-    }
-    
+    if (!cart[id]) cartPrices[id] = p.price;
     cart[id] = (cart[id] || 0) + 1;
     renderProducts(); 
     updateCartUI();
@@ -122,20 +117,41 @@ window.removeFromCart = (id) => {
     }
 };
 
+// --- NOUVELLE FONCTION NÉGOCIATION (MODAL) ---
 window.editCartPrice = (id) => {
     const p = products.find(x => x.id === id);
     const currentPrice = cartPrices[id] || p.price;
-    const newPriceStr = prompt(`Prix de vente pour "${p.name}" ?\nPrix normal: ${p.price}`, currentPrice);
     
-    if (newPriceStr !== null) {
-        const newPrice = parseInt(newPriceStr);
-        if (!isNaN(newPrice) && newPrice >= 0) {
-            cartPrices[id] = newPrice;
-            updateCartUI();
-        } else {
-            alert("Prix invalide");
-        }
+    negotiatingId = id; // On sauvegarde l'ID pour plus tard
+    
+    // On remplit le modal
+    document.getElementById('price-modal-product').textContent = p.name;
+    document.getElementById('negotiated-price').value = currentPrice;
+    
+    // On affiche le modal
+    document.getElementById('priceModal').classList.remove('hidden');
+    // Petit délai pour mettre le focus et ouvrir le clavier sur mobile
+    setTimeout(() => document.getElementById('negotiated-price').focus(), 100);
+}
+
+window.saveNegotiatedPrice = () => {
+    if (!negotiatingId) return;
+    
+    const inputVal = document.getElementById('negotiated-price').value;
+    const newPrice = parseInt(inputVal);
+    
+    if (!isNaN(newPrice) && newPrice >= 0) {
+        cartPrices[negotiatingId] = newPrice;
+        updateCartUI();
+        closePriceModal();
+    } else {
+        alert("Prix invalide");
     }
+}
+
+window.closePriceModal = () => {
+    document.getElementById('priceModal').classList.add('hidden');
+    negotiatingId = null;
 }
 
 window.toggleCart = () => {
@@ -261,13 +277,13 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK (VALEUR + RISTOURNE 9%) ---
+// --- GESTION STOCK ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
     
     const totalStockValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
-    const ristourne = Math.round(totalStockValue * 0.09); // CALCUL RISTOURNE 9%
+    const ristourne = Math.round(totalStockValue * 0.09);
     const totalItems = products.reduce((sum, p) => sum + p.stock, 0);
 
     let html = `
@@ -306,7 +322,6 @@ function updateStockUI() {
             </div>
         `).join('');
     }
-    
     list.innerHTML = html;
 }
 
@@ -345,7 +360,6 @@ window.saveNewProduct = () => {
     const price = parseInt(document.getElementById('new-prod-price').value);
     const stock = parseInt(document.getElementById('new-prod-stock').value);
     const cat = document.getElementById('new-prod-cat').value;
-    
     if (name && price >= 0) {
         if (editingId) {
             const p = products.find(x => x.id === editingId);
@@ -363,14 +377,11 @@ window.saveNewProduct = () => {
     }
 };
 
-// --- HISTORIQUE (AVEC CALCUL ANNUEL) ---
+// --- HISTORIQUE ---
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
-    
     const currentYear = new Date().getFullYear();
-    // Total de TOUS les temps
     const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
-    // Total de CETTE ANNÉE seulement
     const totalYear = sales
         .filter(s => new Date(s.id).getFullYear() === currentYear)
         .reduce((sum, s) => sum + s.total, 0);
@@ -386,7 +397,6 @@ function updateHistoryUI() {
                 <i class="fa-solid fa-calendar-check text-blue-500/30 text-4xl"></i>
             </div>
         </div>
-
         <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700">
             <span class="text-xs text-slate-400 font-bold uppercase">Total Global (Historique)</span>
             <span class="font-mono font-bold text-green-400">${totalAllTime.toLocaleString()} F</span>
