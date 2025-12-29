@@ -1,10 +1,8 @@
 // --- CONFIGURATION & DONNÉES ---
-// MISE À JOUR DES NOMS ICI 👇
 let products = JSON.parse(localStorage.getItem('shop_products')) || [
     { id: 1, name: "Matelas ortho 3plcs ph2", price: 120000, category: "Matelas", stock: 5 },
     { id: 2, name: "Matelas ortho 2plcs ph2", price: 250000, category: "Matelas", stock: 2 },
-    { id: 3, name: "Oreillers ortho", price: 15000, category: "Oreillers", stock: 20 },
-    { id: 4, name: "Parure de Draps", price: 25000, category: "Draps", stock: 10 }
+    { id: 3, name: "Oreillers ortho", price: 15000, category: "Oreillers", stock: 20 }
 ];
 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
@@ -13,15 +11,19 @@ let currentFilter = 'Tout';
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // PETITE ASTUCE : Ce bloc force la mise à jour des noms même si tu as déjà des données
-    // (Tu pourras supprimer ce bloc plus tard si tu veux)
-    if (products.length > 0) {
+    // NETTOYAGE AUTOMATIQUE : On supprime les Draps s'ils existent encore
+    const beforeCount = products.length;
+    products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
+    
+    // Si on a supprimé quelque chose ou si les noms sont anciens, on sauvegarde
+    if (products.length !== beforeCount || (products.length > 0 && products[0].name === "Matelas Ortho 2pl")) {
         products.forEach(p => {
+            // On force aussi les bons noms au cas où
             if (p.id === 1) p.name = "Matelas ortho 3plcs ph2";
             if (p.id === 2) p.name = "Matelas ortho 2plcs ph2";
             if (p.id === 3) p.name = "Oreillers ortho";
         });
-        saveData(); // On sauvegarde les nouveaux noms tout de suite
+        saveData(); 
     }
 
     sortProducts(); 
@@ -129,7 +131,7 @@ window.toggleCart = () => {
     const panel = document.getElementById('cart-panel');
     const chevron = document.getElementById('cart-chevron');
     if (panel.style.transform === 'translateY(0px)') {
-        panel.style.transform = 'translateY(90%)';
+        panel.style.transform = 'translateY(88%)'; // Ajusté pour mobile
         chevron.style.transform = 'rotate(0deg)';
     } else {
         panel.style.transform = 'translateY(0px)';
@@ -153,11 +155,11 @@ function updateCartUI() {
             <div class="flex justify-between items-center bg-slate-50 dark:bg-white/5 p-3 rounded-xl">
                 <div>
                     <p class="font-bold text-sm text-slate-800 dark:text-white">${p.name}</p>
-                    <p class="text-xs text-slate-500">${p.price} x ${qty} = <span class="font-bold text-blue-600">${subtotal.toLocaleString()}</span></p>
+                    <p class="text-xs text-slate-500">${p.price.toLocaleString()} x ${qty} = <span class="font-bold text-blue-600">${subtotal.toLocaleString()}</span></p>
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="removeFromCart(${id})" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-white font-bold">-</button>
-                    <span class="font-bold w-4 text-center">${qty}</span>
+                    <span class="font-bold w-4 text-center dark:text-white">${qty}</span>
                     <button onclick="addToCart(${id})" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">+</button>
                 </div>
             </div>`;
@@ -165,7 +167,12 @@ function updateCartUI() {
     }
 
     container.innerHTML = html;
-    document.getElementById('cart-count').innerText = count;
+    
+    const badge = document.getElementById('cart-badge');
+    badge.innerText = count;
+    if (count > 0) badge.classList.remove('scale-0');
+    else badge.classList.add('scale-0');
+
     document.getElementById('cart-total-preview').innerText = total.toLocaleString() + ' F';
     document.getElementById('cart-total-final').innerText = total.toLocaleString() + ' FCFA';
     
