@@ -1,34 +1,41 @@
 // --- CONFIGURATION & DONNÉES ---
-// On démarre avec une liste vide [] par défaut au lieu des exemples
-let products = JSON.parse(localStorage.getItem('shop_products')) || [];
+// MISE À JOUR DES NOMS ICI 👇
+let products = JSON.parse(localStorage.getItem('shop_products')) || [
+    { id: 1, name: "Matelas ortho 3plcs ph2", price: 120000, category: "Matelas", stock: 5 },
+    { id: 2, name: "Matelas ortho 2plcs ph2", price: 250000, category: "Matelas", stock: 2 },
+    { id: 3, name: "Oreillers ortho", price: 15000, category: "Oreillers", stock: 20 },
+    { id: 4, name: "Parure de Draps", price: 25000, category: "Draps", stock: 10 }
+];
 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
-let cart = {}; // { productId: quantity }
+let cart = {}; 
 let currentFilter = 'Tout';
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Petit nettoyage si c'est la première fois après la mise à jour (Optionnel)
-    if(products.length > 0 && products[0].name === "Matelas Ortho 2pl" && products[0].id === 1) {
-        // Si on détecte les anciens exemples par défaut, on peut les garder ou laisser l'utilisateur les supprimer.
-        // Pour l'instant, on laisse tel quel, l'utilisateur gère son stock.
+    // PETITE ASTUCE : Ce bloc force la mise à jour des noms même si tu as déjà des données
+    // (Tu pourras supprimer ce bloc plus tard si tu veux)
+    if (products.length > 0) {
+        products.forEach(p => {
+            if (p.id === 1) p.name = "Matelas ortho 3plcs ph2";
+            if (p.id === 2) p.name = "Matelas ortho 2plcs ph2";
+            if (p.id === 3) p.name = "Oreillers ortho";
+        });
+        saveData(); // On sauvegarde les nouveaux noms tout de suite
     }
-    
-    sortProducts(); // On trie dès le démarrage
+
+    sortProducts(); 
     renderProducts();
     updateStockUI();
     updateHistoryUI();
     updateDailyTotal();
 });
 
-// --- TRI INTELLIGENT (LOGIQUE STOCK) ---
+// --- TRI INTELLIGENT ---
 function sortProducts() {
     products.sort((a, b) => {
-        // Règle 1 : Les stocks épuisés (0) vont tout en bas
         if (a.stock === 0 && b.stock > 0) return 1;
         if (a.stock > 0 && b.stock === 0) return -1;
-        
-        // Règle 2 : Pour le reste, on trie par les plus récents en premier (ID décroissant)
         return b.id - a.id;
     });
 }
@@ -65,26 +72,21 @@ window.switchTab = (tabName) => {
 
 // --- LOGIQUE CAISSE ---
 function renderProducts() {
-    sortProducts(); // On s'assure que c'est trié avant d'afficher
+    sortProducts(); 
     
     const grid = document.getElementById('product-grid');
-    
-    // On récupère les catégories dynamiquement
     const categories = ['Tout', ...new Set(products.map(p => p.category))];
     
-    // Filtres UI
     const filterContainer = document.getElementById('category-filters');
     filterContainer.innerHTML = categories.map(c => 
         `<button onclick="filter('${c}')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${currentFilter === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}">${c}</button>`
     ).join('');
 
-    // Si aucun produit
     if (products.length === 0) {
         grid.innerHTML = `<div class="col-span-2 text-center mt-10 p-4 border-2 border-dashed border-slate-300 rounded-xl"><p class="text-slate-500 font-bold mb-2">Stock Vide</p><button onclick="switchTab('stock'); openProductModal()" class="text-blue-600 text-sm font-bold underline">Ajouter un premier article</button></div>`;
         return;
     }
 
-    // Grille Produits
     grid.innerHTML = products
         .filter(p => currentFilter === 'Tout' || p.category === currentFilter)
         .map(p => {
@@ -183,14 +185,12 @@ window.processSale = () => {
     const clientName = document.getElementById('client-name').value || "Client";
     const saleItems = [];
     
-    // Déduire du stock
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
         p.stock -= qty;
         saleItems.push({ name: p.name, qty: qty, price: p.price });
     }
     
-    // Sauvegarde
     const sale = {
         id: Date.now(),
         date: new Date().toLocaleString(),
@@ -200,13 +200,13 @@ window.processSale = () => {
     };
     
     sales.unshift(sale);
-    saveData(); // Sauvegarde et TRI automatique
+    saveData();
     
     showReceiptModal(sale);
     
     cart = {};
     document.getElementById('client-name').value = "";
-    renderProducts(); // L'interface se met à jour, les produits épuisés descendent
+    renderProducts();
     updateStockUI();
     updateCartUI();
     updateDailyTotal();
@@ -236,7 +236,7 @@ window.closeReceiptModal = () => document.getElementById('receiptModal').classLi
 
 // --- GESTION STOCK ---
 function updateStockUI() {
-    sortProducts(); // On trie avant d'afficher l'inventaire
+    sortProducts(); 
     const list = document.getElementById('stock-list');
     
     if (products.length === 0) {
@@ -265,7 +265,7 @@ window.adjustStock = (id, amount) => {
     p.stock += amount;
     if (p.stock < 0) p.stock = 0;
     saveData();
-    renderProducts(); // Mettre à jour la caisse aussi (pour bloquer/débloquer l'achat)
+    renderProducts();
     updateStockUI();
 };
 
@@ -318,7 +318,6 @@ function updateDailyTotal() {
 
 // --- PERSISTANCE ---
 function saveData() {
-    // Le tri se fait à chaque sauvegarde pour être sûr que l'ordre reste correct
     sortProducts(); 
     localStorage.setItem('shop_products', JSON.stringify(products));
     localStorage.setItem('shop_sales', JSON.stringify(sales));
