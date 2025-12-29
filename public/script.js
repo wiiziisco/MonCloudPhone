@@ -1,402 +1,292 @@
+// --- CONFIGURATION & DONNÉES ---
+let products = JSON.parse(localStorage.getItem('shop_products')) || [
+    { id: 1, name: "Matelas Ortho 2pl", price: 120000, category: "Matelas", stock: 5 },
+    { id: 2, name: "Matelas Royal 3pl", price: 250000, category: "Matelas", stock: 2 },
+    { id: 3, name: "Oreiller Ergonomique", price: 15000, category: "Oreillers", stock: 20 },
+    { id: 4, name: "Parure de Draps", price: 25000, category: "Draps", stock: 10 }
+];
+
+let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
+let cart = {}; // { productId: quantity }
+let currentFilter = 'Tout';
+
+// --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
-    setupFileInput();
-    setupDragAndDrop();
-    initDB(); // On démarre la Grosse Base de Données
+    renderProducts();
+    updateStockUI();
+    updateHistoryUI();
+    updateDailyTotal();
 });
 
-let db; // Variable pour la base de données
-let searchTerm = "";
-let confirmAction = null;
-let isRegistering = false;
+// --- NAVIGATION ---
+window.switchTab = (tabName) => {
+    // UI Onglets
+    document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('active-tab');
+        btn.classList.add('inactive-tab');
+    });
+    document.getElementById(`tab-${tabName}`).classList.add('active-tab');
+    document.getElementById(`tab-${tabName}`).classList.remove('inactive-tab');
 
-// --- 1. CONFIGURATION INDEXED DB (Le Stockage Lourd) ---
-function initDB() {
-    const request = indexedDB.open("F4Ma_Heavy_Storage", 1);
-    
-    request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        // Créer un magasin d'objets pour les fichiers si il n'existe pas
-        if (!db.objectStoreNames.contains("files")) {
-            db.createObjectStore("files", { keyPath: "id" });
-        }
-    };
+    // Mouvement des sections
+    const pos = document.getElementById('view-pos');
+    const stock = document.getElementById('view-stock');
+    const hist = document.getElementById('view-history');
 
-    request.onsuccess = (e) => {
-        db = e.target.result;
-        console.log("DB Lourde chargée");
-        if (localStorage.getItem('is_logged_in') === 'true') {
-            loadGallery(); // Charger la galerie si connecté
-        }
-    };
-
-    request.onerror = (e) => console.error("Erreur DB", e);
-}
-
-// --- 2. AUTHENTIFICATION (Reste en LocalStorage léger) ---
-function checkAuth() {
-    if (localStorage.getItem('is_logged_in') === 'true') {
-        launchApp(true);
-    }
-}
-
-function handleAuth() {
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('auth-screen').classList.add('flex');
-}
-
-function toggleAuthMode() {
-    isRegistering = !isRegistering;
-    document.getElementById('auth-btn').innerText = isRegistering ? "S'INSCRIRE" : "ENTRER";
-    document.getElementById('auth-toggle-text').innerText = isRegistering ? "Retour à la connexion" : "Première visite ? Créer un accès";
-}
-
-function processLogin() {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
-    if (!u || !p) return showNotification("Champs vides !", "error");
-
-    if (isRegistering) {
-        if (localStorage.getItem('user_account')) return showNotification("Compte déjà existant.", "error");
-        localStorage.setItem('user_account', JSON.stringify({ u, p }));
-        localStorage.setItem('is_logged_in', 'true');
-        showNotification("Compte créé !", "success");
-        completeLogin();
+    if (tabName === 'pos') {
+        pos.style.transform = 'translateX(0)';
+        stock.style.transform = 'translateX(100%)';
+        hist.style.transform = 'translateX(100%)';
+    } else if (tabName === 'stock') {
+        pos.style.transform = 'translateX(-100%)';
+        stock.style.transform = 'translateX(0)';
+        hist.style.transform = 'translateX(100%)';
+        updateStockUI();
     } else {
-        const acc = JSON.parse(localStorage.getItem('user_account'));
-        if (acc && u === acc.u && p === acc.p) {
-            localStorage.setItem('is_logged_in', 'true');
-            completeLogin();
-        } else {
-            showNotification("Erreur d'identification", "error");
+        pos.style.transform = 'translateX(-100%)';
+        stock.style.transform = 'translateX(-100%)';
+        hist.style.transform = 'translateX(0)';
+        updateHistoryUI();
+    }
+};
+
+// --- LOGIQUE CAISSE ---
+function renderProducts() {
+    const grid = document.getElementById('product-grid');
+    const categories = ['Tout', ...new Set(products.map(p => p.category))];
+    
+    // Filtres
+    const filterContainer = document.getElementById('category-filters');
+    filterContainer.innerHTML = categories.map(c => 
+        `<button onclick="filter('${c}')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${currentFilter === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}">${c}</button>`
+    ).join('');
+
+    // Grille
+    grid.innerHTML = products
+        .filter(p => currentFilter === 'Tout' || p.category === currentFilter)
+        .map(p => {
+            const qtyInCart = cart[p.id] || 0;
+            return `
+            <div onclick="addToCart(${p.id})" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-white/5 active:scale-95 transition relative overflow-hidden group">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">${p.category}</span>
+                    <span class="text-[10px] font-bold ${p.stock < 3 ? 'text-red-500' : 'text-green-500'}">Stock: ${p.stock}</span>
+                </div>
+                <h3 class="font-bold text-slate-800 dark:text-white leading-tight mb-1">${p.name}</h3>
+                <p class="text-blue-600 dark:text-cyberBlue font-mono font-bold">${p.price.toLocaleString()} F</p>
+                ${qtyInCart > 0 ? `<div class="absolute top-0 right-0 bg-blue-600 text-white w-6 h-6 rounded-bl-xl flex items-center justify-center text-xs font-bold shadow-lg">${qtyInCart}</div>` : ''}
+            </div>`;
+        }).join('');
+}
+
+window.filter = (cat) => { currentFilter = cat; renderProducts(); };
+
+window.addToCart = (id) => {
+    const p = products.find(x => x.id === id);
+    if (p.stock <= (cart[id] || 0)) return alert("Stock insuffisant !");
+    
+    cart[id] = (cart[id] || 0) + 1;
+    renderProducts(); // Met à jour les badges
+    updateCartUI();
+};
+
+window.removeFromCart = (id) => {
+    if (cart[id]) {
+        cart[id]--;
+        if (cart[id] === 0) delete cart[id];
+        renderProducts();
+        updateCartUI();
+    }
+};
+
+window.toggleCart = () => {
+    const panel = document.getElementById('cart-panel');
+    const chevron = document.getElementById('cart-chevron');
+    if (panel.style.transform === 'translateY(0px)') {
+        panel.style.transform = 'translateY(90%)';
+        chevron.style.transform = 'rotate(0deg)';
+    } else {
+        panel.style.transform = 'translateY(0px)';
+        chevron.style.transform = 'rotate(180deg)';
+    }
+};
+
+function updateCartUI() {
+    const container = document.getElementById('cart-items');
+    let total = 0;
+    let count = 0;
+    let html = '';
+
+    for (const [id, qty] of Object.entries(cart)) {
+        const p = products.find(x => x.id == id);
+        if (p) {
+            const subtotal = p.price * qty;
+            total += subtotal;
+            count += qty;
+            html += `
+            <div class="flex justify-between items-center bg-slate-50 dark:bg-white/5 p-3 rounded-xl">
+                <div>
+                    <p class="font-bold text-sm text-slate-800 dark:text-white">${p.name}</p>
+                    <p class="text-xs text-slate-500">${p.price} x ${qty} = <span class="font-bold text-blue-600">${subtotal.toLocaleString()}</span></p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="removeFromCart(${id})" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-white font-bold">-</button>
+                    <span class="font-bold w-4 text-center">${qty}</span>
+                    <button onclick="addToCart(${id})" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">+</button>
+                </div>
+            </div>`;
         }
+    }
+
+    container.innerHTML = html;
+    document.getElementById('cart-count').innerText = count;
+    document.getElementById('cart-total-preview').innerText = total.toLocaleString() + ' F';
+    document.getElementById('cart-total-final').innerText = total.toLocaleString() + ' FCFA';
+    
+    // Ouvre le panier auto si on ajoute le premier item
+    if (count === 1 && document.getElementById('cart-panel').style.transform !== 'translateY(0px)') {
+        window.toggleCart();
     }
 }
 
-function completeLogin() {
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('auth-screen').classList.remove('flex');
-    launchApp();
-}
+// --- VALIDATION VENTE ---
+window.processSale = () => {
+    const total = Object.entries(cart).reduce((sum, [id, qty]) => {
+        return sum + (products.find(x => x.id == id).price * qty);
+    }, 0);
 
-function logoutUser() {
-    showConfirmModal("Déconnexion", "Fermer la session locale ?", () => {
-        localStorage.removeItem('is_logged_in');
-        location.reload();
-    }, 'fa-power-off');
-}
+    if (total === 0) return alert("Panier vide !");
 
-// --- 3. TRANSITION UI ---
-function launchApp(skipAnim = false) {
-    const hero = document.getElementById('hero-section');
-    const appUI = document.getElementById('app-interface');
-    const navSearch = document.getElementById('nav-search-container');
-    const logoutBtn = document.getElementById('logout-btn');
+    const clientName = document.getElementById('client-name').value || "Client";
+    const saleItems = [];
     
-    document.getElementById('robotModal').classList.add('hidden');
+    // Déduire du stock
+    for (const [id, qty] of Object.entries(cart)) {
+        const p = products.find(x => x.id == id);
+        p.stock -= qty;
+        saleItems.push({ name: p.name, qty: qty, price: p.price });
+    }
     
-    hero.classList.remove('active-view');
-    hero.classList.add('blur-out');
-    
-    setTimeout(() => {
-        appUI.classList.remove('blur-out');
-        appUI.classList.add('active-view');
-        navSearch.classList.remove('hidden', 'opacity-0', 'translate-y-[-10px]');
-        logoutBtn.classList.remove('hidden');
-        if (!localStorage.getItem('activeFilter') || localStorage.getItem('activeFilter') === 'all') {
-            localStorage.setItem('activeFilter', 'Documents');
-        }
-        loadGallery();
-    }, skipAnim ? 0 : 500);
-}
-
-// --- 4. GESTION DES FICHIERS LOURDS ---
-let currentFile = null; // Stocke le fichier temporairement avant sauvegarde
-
-function setupFileInput() { 
-    document.getElementById('fileInput').addEventListener('change', function(e) { 
-        handleFileSelect(e.target.files[0]); 
-    }); 
-}
-
-function setupDragAndDrop() {
-    const dropZone = document.body;
-    const overlay = document.createElement('div'); overlay.id = 'drag-overlay'; overlay.className = 'fixed inset-0 z-[9999] bg-blue-600/90 backdrop-blur-sm hidden flex-col items-center justify-center text-white'; overlay.innerHTML = `<div class="border-4 border-dashed border-white/50 rounded-3xl p-12 flex flex-col items-center animate-pulse"><i class="fa-solid fa-cloud-arrow-up text-8xl mb-4"></i><h2 class="text-4xl font-bold font-display">DÉPOSEZ ICI</h2></div>`; document.body.appendChild(overlay);
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, (ev)=>{ev.preventDefault();ev.stopPropagation()}, false));
-    dropZone.addEventListener('dragenter', () => overlay.classList.remove('hidden'));
-    overlay.addEventListener('dragleave', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
-    dropZone.addEventListener('drop', (e) => { overlay.classList.add('hidden'); const files = e.dataTransfer.files; if (files.length > 0) handleFileSelect(files[0]); });
-}
-
-function handleFileSelect(file) {
-    if (!file) return;
-    currentFile = file; // On garde le fichier BLOB en mémoire brute
-    
-    const cat = localStorage.getItem('activeFilter') || 'Documents';
-    let autoCat = cat; 
-    if (file.type.startsWith('image/')) autoCat = 'Photos'; 
-    else if (file.type.startsWith('video/')) autoCat = 'Video'; 
-    else if (file.type.startsWith('audio/')) autoCat = 'Audio'; 
-    else autoCat = 'Documents';
-    
-    openModal(true);
-    document.getElementById('uploadPlaceholder').classList.add('hidden'); 
-    document.getElementById('filePreviewInfo').classList.remove('hidden'); 
-    document.getElementById('previewName').textContent = `${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`; 
-    document.getElementById('imgTitle').value = file.name.split('.')[0]; 
-    document.getElementById('imgCategory').value = autoCat;
-    
-    let type = 'doc'; 
-    if (file.type.startsWith('image/')) type = 'image'; 
-    else if (file.type.startsWith('video/')) type = 'video'; 
-    else if (file.type.startsWith('audio/')) type = 'audio'; 
-    else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) type = 'text'; 
-    
-    document.getElementById('fileType').value = type;
-    // On ne lit plus le fichier en Base64 ici pour ne pas saturer la RAM
-}
-
-function processAndUpload() {
-    if (!currentFile && !document.getElementById('base64String').value) return showNotification("Fichier manquant", "error");
-    
-    const title = document.getElementById('imgTitle').value || 'Sans titre';
-    const cat = document.getElementById('imgCategory').value;
-    const type = document.getElementById('fileType').value;
-
-    // Création de l'objet à stocker
-    const newFile = {
+    // Sauvegarde Vente
+    const sale = {
         id: Date.now(),
-        fileData: currentFile, // On stocke le fichier BRUT (Blob)
-        title: title,
-        category: cat,
-        type: type,
-        date: new Date().toLocaleDateString()
+        date: new Date().toLocaleString(),
+        client: clientName,
+        items: saleItems,
+        total: total
     };
-
-    // Sauvegarde dans IndexedDB
-    const transaction = db.transaction(["files"], "readwrite");
-    const store = transaction.objectStore("files");
-    const request = store.add(newFile);
-
-    request.onsuccess = () => {
-        closeModal();
-        document.getElementById('uploadPlaceholder').classList.remove('hidden');
-        document.getElementById('filePreviewInfo').classList.add('hidden');
-        document.getElementById('fileInput').value = "";
-        document.getElementById('imgTitle').value = "";
-        currentFile = null;
-        showNotification("Fichier lourd sauvegardé !", "success");
-        loadGallery();
-    };
-
-    request.onerror = (e) => {
-        console.error(e);
-        showNotification("Erreur stockage (Disque plein ?)", "error");
-    };
-}
-
-// --- 5. GALERIE (LECTURE DEPUIS INDEXEDDB) ---
-function filterGallery(cat) { localStorage.setItem('activeFilter', cat); loadGallery(); }
-function handleSearch(val) { searchTerm = val.toLowerCase(); loadGallery(); }
-
-function loadGallery() {
-    const gallery = document.getElementById('gallery');
-    const currentFilter = localStorage.getItem('activeFilter') || 'Documents';
     
-    // Update UI boutons
-    document.querySelectorAll('.filter-btn').forEach(btn => { 
-        const isActive = btn.id === `filter-${currentFilter}`; 
-        btn.className = `filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-gray-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'}`; 
-    });
-
-    // Select & Delete UI
-    const filterContainer = document.querySelector('.hide-scroll');
-    if(!document.getElementById('btn-select-mode')) {
-        const selBtn = document.createElement('button'); selBtn.id = 'btn-select-mode';
-        selBtn.className = "px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ml-2 bg-slate-800 border-slate-700 text-gray-400";
-        selBtn.onclick = toggleSelectionMode; filterContainer.appendChild(selBtn);
-    }
-    const selBtn = document.getElementById('btn-select-mode');
-    selBtn.innerHTML = isSelectionMode ? '<i class="fa-solid fa-xmark mr-1"></i> Annuler' : '<i class="fa-regular fa-square-check mr-1"></i> Sélect.';
+    sales.unshift(sale);
+    saveData();
     
-    const existingDel = document.getElementById('btn-delete-selected'); if(existingDel) existingDel.remove();
-    if(isSelectionMode && selectedItems.size > 0) {
-        const delBtn = document.createElement('button'); delBtn.id = 'btn-delete-selected'; delBtn.className = "px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border ml-2 bg-red-600 text-white border-red-600 animate-pulse"; delBtn.innerHTML = `<i class="fa-solid fa-trash mr-1"></i> (${selectedItems.size})`; delBtn.onclick = deleteSelectedItems; filterContainer.appendChild(delBtn);
-    }
+    // UI Feedback
+    showReceiptModal(sale);
+    
+    // Reset
+    cart = {};
+    document.getElementById('client-name').value = "";
+    renderProducts();
+    updateCartUI();
+    updateDailyTotal();
+    window.toggleCart(); // Fermer panier
+};
 
-    gallery.innerHTML = '';
-
-    // Bouton Ajouter
-    if (!isSelectionMode && searchTerm === "") {
-        const addDiv = document.createElement('div');
-        addDiv.className = "aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-blue-500 transition flex flex-col items-center justify-center cursor-pointer group";
-        addDiv.innerHTML = `<div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-blue-600 flex items-center justify-center mb-2 transition shadow-lg"><i class="fa-solid fa-plus text-blue-500 dark:text-blue-400 group-hover:text-white text-xl"></i></div><span class="text-[10px] font-bold text-slate-500 dark:text-gray-500 group-hover:text-slate-800 dark:group-hover:text-white uppercase tracking-wider">Ajouter</span>`;
-        addDiv.onclick = () => openModal(false);
-        gallery.appendChild(addDiv);
-    }
-
-    // Récupération des données IndexedDB
-    const transaction = db.transaction(["files"], "readonly");
-    const store = transaction.objectStore("files");
-    const request = store.openCursor(null, 'prev'); // 'prev' pour trier par plus récent
-
-    request.onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (cursor) {
-            const p = cursor.value;
-            
-            // Filtres
-            if (p.category === currentFilter && p.title.toLowerCase().includes(searchTerm)) {
-                
-                // Création d'une URL temporaire pour afficher l'image/video (Super rapide)
-                let visual = '';
-                let objectUrl = '';
-                
-                if (p.fileData instanceof Blob) {
-                    objectUrl = URL.createObjectURL(p.fileData);
-                } else if (typeof p.fileData === 'string' && p.fileData.startsWith('data:')) {
-                     // Rétro-compatibilité notes
-                     objectUrl = p.fileData;
-                }
-
-                if(p.type === 'image') visual = `<img src="${objectUrl}" class="w-full h-full object-cover transition ${isSelectionMode ? 'opacity-70' : 'opacity-90 group-hover:opacity-100'}">`;
-                else {
-                    let icon = 'fa-file'; let col = 'text-gray-500';
-                    if (p.type === 'video') { icon = 'fa-video'; col = 'text-red-500'; }
-                    if (p.type === 'audio') { icon = 'fa-music'; col = 'text-pink-500'; }
-                    if (p.type === 'text') { icon = 'fa-file-code'; col = 'text-green-500'; }
-                    visual = `<div class="w-full h-full flex items-center justify-center ${isSelectionMode && selectedItems.has(p.id) ? 'bg-transparent' : 'bg-slate-50 dark:bg-slate-900'}"><i class="fa-solid ${icon} ${col} text-4xl"></i></div>`;
-                }
-
-                const div = document.createElement('div');
-                const isSel = selectedItems.has(p.id);
-                div.className = `relative group aspect-square rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border transition-all shadow-md ${isSel ? 'border-blue-500 ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700'}`;
-                
-                const clickAction = isSelectionMode ? `toggleItemSelection(${p.id})` : `openFullscreen(${p.id})`;
-                div.innerHTML = `<div onclick="${clickAction}" class="w-full h-full cursor-pointer">${visual}<div class="absolute bottom-0 left-0 w-full bg-white/90 dark:bg-black/60 backdrop-blur-sm p-1.5 text-center border-t border-slate-100 dark:border-transparent"><p class="text-[10px] font-bold text-slate-700 dark:text-white truncate">${p.title}</p></div>${isSelectionMode ? `<div class="absolute top-2 right-2 w-6 h-6 rounded-full border-2 ${isSel ? 'bg-blue-500 border-blue-500' : 'bg-white/20 border-white'} flex items-center justify-center transition-colors">${isSel ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}</div>` : ''}</div>${!isSelectionMode ? `<button onclick="deletePhoto(${p.id})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"><i class="fa-solid fa-trash text-[10px]"></i></button>` : ''}`;
-                gallery.appendChild(div);
-            }
-            cursor.continue();
-        }
-    };
-}
-
-function deletePhoto(id) {
-    showConfirmModal("Supprimer ?", "Voulez-vous vraiment supprimer cet élément ?", () => {
-        const transaction = db.transaction(["files"], "readwrite");
-        const store = transaction.objectStore("files");
-        store.delete(id);
-        transaction.oncomplete = () => {
-            loadGallery();
-            showNotification("Élément supprimé", "success");
-        };
+function showReceiptModal(sale) {
+    const modal = document.getElementById('receiptModal');
+    modal.classList.remove('hidden');
+    
+    // Génération Texte WhatsApp
+    let text = `🧾 *REÇU F4Ma MATELAS*\n`;
+    text += `📅 ${sale.date}\n`;
+    text += `👤 Client: ${sale.client}\n`;
+    text += `----------------\n`;
+    sale.items.forEach(i => {
+        text += `${i.qty}x ${i.name} (${i.price.toLocaleString()}F)\n`;
     });
+    text += `----------------\n`;
+    text += `💰 *TOTAL: ${sale.total.toLocaleString()} FCFA*\n`;
+    text += `✅ Payé`;
+
+    const encoded = encodeURIComponent(text);
+    document.getElementById('btn-whatsapp').href = `https://wa.me/?text=${encoded}`;
 }
 
-// --- UTILS ---
-let isSelectionMode = false; let selectedItems = new Set();
-function toggleSelectionMode() { isSelectionMode = !isSelectionMode; selectedItems.clear(); loadGallery(); }
-function toggleItemSelection(id) { if (selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id); loadGallery(); }
-function deleteSelectedItems() {
-    if (selectedItems.size === 0) return;
-    showConfirmModal("Supprimer ?", `Supprimer ${selectedItems.size} éléments ?`, () => {
-        const transaction = db.transaction(["files"], "readwrite");
-        const store = transaction.objectStore("files");
-        selectedItems.forEach(id => store.delete(id));
-        transaction.oncomplete = () => {
-            toggleSelectionMode();
-            showNotification("Nettoyage terminé", "success");
-        };
-    });
+window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
+
+// --- GESTION STOCK ---
+function updateStockUI() {
+    const list = document.getElementById('stock-list');
+    list.innerHTML = products.map(p => `
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm">
+            <div>
+                <p class="font-bold dark:text-white">${p.name}</p>
+                <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="adjustStock(${p.id}, -1)" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
+                <span class="font-mono font-bold w-8 text-center dark:text-white">${p.stock}</span>
+                <button onclick="adjustStock(${p.id}, 1)" class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+    `).join('');
 }
 
-function openModal(isDrop = false) { document.getElementById('uploadModal').classList.remove('hidden'); }
-function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-function openNoteModal() { closeModal(); document.getElementById('noteModal').classList.remove('hidden'); document.getElementById('noteTitle').value=""; document.getElementById('noteContent').value=""; }
-function closeNoteModal() { document.getElementById('noteModal').classList.add('hidden'); }
+window.adjustStock = (id, amount) => {
+    const p = products.find(x => x.id === id);
+    p.stock += amount;
+    if (p.stock < 0) p.stock = 0;
+    saveData();
+    updateStockUI();
+};
 
-function saveNote() {
-    const content = document.getElementById('noteContent').value;
-    let title = document.getElementById('noteTitle').value.trim() || `Note_${Date.now()}.txt`;
-    if (!title.endsWith('.txt')) title += '.txt';
-    if (!content) return showNotification("Note vide !", "error");
+window.openProductModal = () => document.getElementById('productModal').classList.remove('hidden');
 
-    const newNote = {
-        id: Date.now(),
-        fileData: "data:text/plain;base64," + btoa(unescape(encodeURIComponent(content))), // Pour les notes texte, le Base64 reste ok
-        title: title.replace('.txt',''),
-        category: 'Documents',
-        type: 'text',
-        date: new Date().toLocaleDateString()
-    };
+window.saveNewProduct = () => {
+    const name = document.getElementById('new-prod-name').value;
+    const price = parseInt(document.getElementById('new-prod-price').value);
+    const stock = parseInt(document.getElementById('new-prod-stock').value);
+    const cat = document.getElementById('new-prod-cat').value;
+    
+    if (name && price) {
+        products.push({ id: Date.now(), name, price, stock, category: cat });
+        saveData();
+        document.getElementById('productModal').classList.add('hidden');
+        // Clean inputs
+        document.getElementById('new-prod-name').value = "";
+        document.getElementById('new-prod-price').value = "";
+        updateStockUI();
+    }
+};
 
-    const transaction = db.transaction(["files"], "readwrite");
-    const store = transaction.objectStore("files");
-    store.add(newNote);
-    transaction.oncomplete = () => {
-        closeNoteModal();
-        showNotification("Note sauvegardée !", "success");
-        localStorage.setItem('activeFilter', 'Documents');
-        loadGallery();
-    };
+// --- HISTORIQUE ---
+function updateHistoryUI() {
+    const list = document.getElementById('sales-history');
+    if (sales.length === 0) list.innerHTML = `<p class="text-center text-slate-400 mt-10">Aucune vente enregistrée.</p>`;
+    else {
+        list.innerHTML = sales.map(s => `
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <div class="flex justify-between mb-2">
+                    <span class="font-bold text-sm text-slate-600 dark:text-slate-400">${s.date.split(',')[0]}</span>
+                    <span class="font-bold text-green-600">${s.total.toLocaleString()} F</span>
+                </div>
+                <div class="text-sm dark:text-white">
+                    <span class="font-bold">${s.client}</span> a acheté ${s.items.length} article(s).
+                </div>
+            </div>
+        `).join('');
+    }
 }
 
-function showNotification(msg, type = 'success') {
-    const container = document.getElementById('toast-container');
-    let bgCol = 'bg-slate-900/90', borderCol = type==='success'?'border-green-500':(type==='error'?'border-red-500':'border-blue-500'), textCol = type==='success'?'text-green-500':(type==='error'?'text-red-500':'text-blue-500'), icon = type==='success'?'fa-check':(type==='error'?'fa-triangle-exclamation':'fa-info-circle');
-    const toast = document.createElement('div');
-    toast.className = `w-full ${bgCol} backdrop-blur-md border-l-4 ${borderCol} text-white p-4 rounded-lg shadow-2xl flex items-center justify-between gap-4 animate-slide-in relative overflow-hidden pointer-events-auto`;
-    toast.innerHTML = `<div class="flex items-center gap-3"><i class="fa-solid ${icon} ${textCol} text-xl"></i><span class="font-bold text-sm">${msg}</span></div><div class="absolute bottom-0 left-0 h-1 ${bgCol} w-full"><div class="h-full ${textCol.replace('text', 'bg')} transition-all duration-[3000ms] ease-linear w-full" id="progress-${Date.now()}"></div></div>`;
-    container.appendChild(toast);
-    setTimeout(() => { const bar = toast.querySelector('div[id^="progress-"]'); if(bar) bar.style.width = '0%'; }, 10);
-    setTimeout(() => { toast.classList.remove('animate-slide-in'); toast.classList.add('animate-fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+function updateDailyTotal() {
+    const today = new Date().toLocaleDateString();
+    const total = sales
+        .filter(s => new Date(s.id).toLocaleDateString() === today)
+        .reduce((sum, s) => sum + s.total, 0);
+    document.getElementById('daily-total').innerText = total.toLocaleString() + ' F';
 }
 
-function showConfirmModal(title, message, action, iconClass = 'fa-trash') {
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
-    document.getElementById('confirmIcon').className = `fa-solid ${iconClass} text-3xl text-red-500`;
-    confirmAction = action;
-    document.getElementById('customConfirmModal').classList.remove('hidden');
+// --- PERSISTANCE ---
+function saveData() {
+    localStorage.setItem('shop_products', JSON.stringify(products));
+    localStorage.setItem('shop_sales', JSON.stringify(sales));
 }
-function closeConfirmModal() { document.getElementById('customConfirmModal').classList.add('hidden'); confirmAction = null; }
-document.getElementById('confirmBtn').addEventListener('click', () => { if (confirmAction) confirmAction(); closeConfirmModal(); });
-
-function openFullscreen(id) {
-    const transaction = db.transaction(["files"], "readonly");
-    const store = transaction.objectStore("files");
-    const request = store.get(id);
-
-    request.onsuccess = (e) => {
-        const p = e.target.result;
-        if (!p) return;
-
-        const c = document.getElementById('fullscreenContent'); 
-        const m = document.getElementById('fullscreenModal'); 
-        m.classList.remove('hidden');
-
-        // Création URL
-        let objectUrl = '';
-        if (p.fileData instanceof Blob) objectUrl = URL.createObjectURL(p.fileData);
-        else if (typeof p.fileData === 'string') objectUrl = p.fileData;
-
-        if (p.type === 'image') { 
-            c.innerHTML = `<img src="${objectUrl}" class="max-h-full max-w-full rounded-lg shadow-2xl">`; 
-        }
-        else if (p.type === 'text') { 
-            const t = decodeURIComponent(escape(atob(p.fileData.split(',')[1]))); 
-            c.innerHTML = `<div class="w-full max-w-2xl bg-slate-900 border border-green-500/30 rounded-lg p-6 shadow-2xl h-[70vh] flex flex-col"><div class="flex justify-between items-center mb-4 border-b border-green-500/30 pb-2"><h2 class="text-green-500 font-mono font-bold"><i class="fa-solid fa-file-code mr-2"></i>${p.title}</h2></div><div class="flex-1 overflow-auto font-mono text-sm text-green-400 whitespace-pre-wrap">${t}</div></div>`; 
-        }
-        else if (p.type === 'video' || p.type === 'audio') { 
-            const isV = p.type === 'video'; 
-            const tag = isV ? 'video' : 'audio'; 
-            c.innerHTML = `<div class="relative w-full max-w-4xl group">${isV?'':`<div class="text-center mb-8"><i class="fa-solid fa-music text-6xl text-cyan-400 animate-pulse"></i><h3 class="text-white text-xl mt-4 font-bold tracking-widest">${p.title}</h3></div>`}<${tag} controls src="${objectUrl}" class="w-full rounded-lg shadow-[0_0_30px_rgba(0,243,255,0.2)] bg-black" ${isV ? 'playsinline' : ''}></${tag}></div>`; 
-        }
-        else { 
-            c.innerHTML = `<div class="bg-slate-800 p-8 rounded-2xl text-center border border-slate-700"><i class="fa-solid fa-download text-6xl text-blue-500 mb-4"></i><h3 class="text-white text-xl font-bold mb-4">${p.title}</h3><a href="${objectUrl}" download="${p.title}" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-500 transition">Télécharger</a></div>`; 
-        }
-    };
-}
-function closeFullscreen() { document.getElementById('fullscreenModal').classList.add('hidden'); document.getElementById('fullscreenContent').innerHTML = ''; }
-function toggleRobotModal() { const m=document.getElementById('robotModal'); const c=document.getElementById('robotCard'); if(m.classList.contains('hidden')){ m.classList.remove('hidden'); setTimeout(()=>c.classList.remove('scale-95'),10); }else{ c.classList.add('scale-95'); setTimeout(()=>m.classList.add('hidden'),200); } }
-function toggleSearchBar() { const s = document.getElementById('searchInput'); if(s.classList.contains('opacity-0')) { s.classList.remove('opacity-0','pointer-events-none','scale-95'); s.focus(); } else { s.classList.add('opacity-0','pointer-events-none','scale-95'); } }
