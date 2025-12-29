@@ -10,7 +10,7 @@ let cart = {};
 let cartPrices = {}; 
 let currentFilter = 'Tout';
 let editingId = null;
-let negotiatingId = null; // NOUVEAU : Pour savoir quel produit on négocie
+let negotiatingId = null;
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -117,29 +117,21 @@ window.removeFromCart = (id) => {
     }
 };
 
-// --- NOUVELLE FONCTION NÉGOCIATION (MODAL) ---
+// --- NÉGOCIATION (MODAL) ---
 window.editCartPrice = (id) => {
     const p = products.find(x => x.id === id);
     const currentPrice = cartPrices[id] || p.price;
-    
-    negotiatingId = id; // On sauvegarde l'ID pour plus tard
-    
-    // On remplit le modal
+    negotiatingId = id;
     document.getElementById('price-modal-product').textContent = p.name;
     document.getElementById('negotiated-price').value = currentPrice;
-    
-    // On affiche le modal
     document.getElementById('priceModal').classList.remove('hidden');
-    // Petit délai pour mettre le focus et ouvrir le clavier sur mobile
     setTimeout(() => document.getElementById('negotiated-price').focus(), 100);
 }
 
 window.saveNegotiatedPrice = () => {
     if (!negotiatingId) return;
-    
     const inputVal = document.getElementById('negotiated-price').value;
     const newPrice = parseInt(inputVal);
-    
     if (!isNaN(newPrice) && newPrice >= 0) {
         cartPrices[negotiatingId] = newPrice;
         updateCartUI();
@@ -261,7 +253,7 @@ window.processSale = () => {
 function showReceiptModal(sale) {
     const modal = document.getElementById('receiptModal');
     modal.classList.remove('hidden');
-    let text = `🧾 *REÇU F4Ma MATELAS*\n`;
+    let text = `🧾 *REÇU INVENTAIRE*\n`;
     text += `📅 ${sale.date}\n`;
     text += `👤 Client: ${sale.client}\n`;
     text += `----------------\n`;
@@ -277,28 +269,43 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK ---
+// --- GESTION STOCK (HAUSSE + RISTOURNE) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
+    const currentYear = new Date().getFullYear();
+
+    // Calculs Stock
+    const annualProducts = products.filter(p => new Date(p.id).getFullYear() === currentYear);
+    const annualStockValue = annualProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
     
     const totalStockValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
-    const ristourne = Math.round(totalStockValue * 0.09);
+    const ristourne = Math.round(totalStockValue * 0.09); // RISTOURNE SUR STOCK (MAINTENUE)
+    
     const totalItems = products.reduce((sum, p) => sum + p.stock, 0);
 
     let html = `
-    <div class="grid grid-cols-2 gap-3 mb-4">
-        <div class="bg-slate-800 rounded-xl p-3 shadow-lg border border-slate-700">
-            <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Valeur Stock</p>
-            <p class="text-xl font-mono font-bold text-blue-400">${totalStockValue.toLocaleString()}<span class="text-[10px] text-slate-500">F</span></p>
-        </div>
-        <div class="bg-slate-800 rounded-xl p-3 shadow-lg border border-slate-700 relative overflow-hidden">
-            <div class="absolute right-0 top-0 p-1 bg-orange-500/20 rounded-bl-lg">
-                <span class="text-[8px] font-bold text-orange-400">9%</span>
+    <div class="bg-gradient-to-r from-cyan-800 to-blue-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-cyan-700 relative overflow-hidden">
+        <div class="relative z-10">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-cyan-300 tracking-wider">Potentiel Stock (${currentYear})</p>
+                    <p class="text-3xl font-mono font-bold text-white mb-1">${annualStockValue.toLocaleString()} <span class="text-sm text-cyan-200">F</span></p>
+                </div>
+                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                    <i class="fa-solid fa-cubes-stacked text-2xl text-cyan-300"></i>
+                </div>
             </div>
-            <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Ristourne Est.</p>
-            <p class="text-xl font-mono font-bold text-orange-400">${ristourne.toLocaleString()}<span class="text-[10px] text-slate-500">F</span></p>
+            
+            <div class="mt-3 flex items-center gap-3 bg-black/20 p-2 rounded-lg border border-white/5">
+                <div class="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xs">9%</div>
+                <div>
+                    <p class="text-[8px] uppercase text-slate-300 font-bold">Ristourne Potentielle (En Stock)</p>
+                    <p class="text-sm font-bold text-orange-400 font-mono">${ristourne.toLocaleString()} F</p>
+                </div>
+            </div>
         </div>
+        <i class="fa-solid fa-boxes-stacked absolute -bottom-4 -right-4 text-8xl text-white/5 rotate-12"></i>
     </div>
     `;
 
@@ -377,7 +384,7 @@ window.saveNewProduct = () => {
     }
 };
 
-// --- HISTORIQUE ---
+// --- HISTORIQUE (RESTRICTION: PAS DE RISTOURNE ICI) ---
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
     const currentYear = new Date().getFullYear();
@@ -385,22 +392,28 @@ function updateHistoryUI() {
     const totalYear = sales
         .filter(s => new Date(s.id).getFullYear() === currentYear)
         .reduce((sum, s) => sum + s.total, 0);
+    
+    // NOTE: Ristourne supprimée ici à la demande du client.
 
     let html = `
-    <div class="grid grid-cols-1 gap-3 mb-4">
-        <div class="bg-gradient-to-r from-blue-800 to-blue-900 rounded-xl p-4 shadow-lg text-white border border-blue-700">
+    <div class="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-blue-700 relative overflow-hidden">
+        <div class="relative z-10">
             <div class="flex justify-between items-start">
                 <div>
                     <p class="text-[10px] uppercase font-bold text-blue-300 tracking-wider">CA Annuel (${currentYear})</p>
                     <p class="text-3xl font-mono font-bold text-white mb-1">${totalYear.toLocaleString()} <span class="text-sm text-blue-200">F</span></p>
                 </div>
-                <i class="fa-solid fa-calendar-check text-blue-500/30 text-4xl"></i>
+                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                    <i class="fa-solid fa-chart-line text-2xl text-blue-300"></i>
+                </div>
             </div>
         </div>
-        <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700">
-            <span class="text-xs text-slate-400 font-bold uppercase">Total Global (Historique)</span>
-            <span class="font-mono font-bold text-green-400">${totalAllTime.toLocaleString()} F</span>
-        </div>
+        <i class="fa-solid fa-coins absolute -bottom-4 -right-4 text-8xl text-white/5 rotate-12"></i>
+    </div>
+
+    <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700 mb-4">
+        <span class="text-xs text-slate-400 font-bold uppercase">Total Global (Historique)</span>
+        <span class="font-mono font-bold text-slate-200">${totalAllTime.toLocaleString()} F</span>
     </div>
     `;
 
