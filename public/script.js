@@ -1,13 +1,68 @@
+// --- SAUVEGARDE & RESTAURATION ---
+window.exportData = () => {
+    const data = {
+        products: localStorage.getItem('shop_products'),
+        sales: localStorage.getItem('shop_sales'),
+        pin: localStorage.getItem('shop_pin') || "8388",
+        date: new Date().toLocaleDateString()
+    };
+    
+    // Création du fichier
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    // Téléchargement automatique
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_inventaire_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    alert("✅ Sauvegarde téléchargée ! Gardez ce fichier précieusement.");
+    document.getElementById('settingsModal').classList.add('hidden');
+};
+
+window.importData = (input) => {
+    const file = input.files[0];
+    if (!file) return;
+
+    if (!confirm("⚠️ ATTENTION : La restauration va écraser les données actuelles. Continuer ?")) {
+        input.value = ''; // Reset input
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (data.products && data.sales) {
+                localStorage.setItem('shop_products', data.products);
+                localStorage.setItem('shop_sales', data.sales);
+                if (data.pin) localStorage.setItem('shop_pin', data.pin);
+                
+                alert("✅ Données restaurées avec succès !");
+                window.location.reload();
+            } else {
+                alert("❌ Fichier invalide.");
+            }
+        } catch (err) {
+            alert("❌ Erreur de lecture du fichier.");
+        }
+    };
+    reader.readAsText(file);
+};
+
 // --- SÉCURITÉ (PIN CODE) ---
 let currentPinInput = "";
-// CODES MODIFIÉS ICI
 const DEFAULT_PIN = "8388"; 
 const RESET_PIN = "1999"; 
 
 let userPin = localStorage.getItem('shop_pin') || DEFAULT_PIN;
 
 if (!sessionStorage.getItem('is_logged_in')) {
-    // Lock screen visible par défaut
+    // Lock screen visible
 } else {
     const lockScreen = document.getElementById('lock-screen');
     if(lockScreen) lockScreen.style.display = 'none';
@@ -17,10 +72,7 @@ window.enterPin = (num) => {
     if (currentPinInput.length < 4) {
         currentPinInput += num;
         updatePinDots();
-        
-        if (currentPinInput.length === 4) {
-            checkPin();
-        }
+        if (currentPinInput.length === 4) checkPin();
     }
 };
 
@@ -43,13 +95,11 @@ function updatePinDots() {
 }
 
 function checkPin() {
-    // CAS SPÉCIAL : CODE RESET TOTAL
     if (currentPinInput === RESET_PIN) {
         document.getElementById('resetModal').classList.remove('hidden');
         return;
     }
 
-    // VÉRIFICATION NORMALE
     if (currentPinInput === userPin) {
         sessionStorage.setItem('is_logged_in', 'true');
         const lockScreen = document.getElementById('lock-screen');
@@ -69,7 +119,6 @@ function checkPin() {
     }
 }
 
-// --- NOUVELLES FONCTIONS RESET ---
 window.closeResetModal = () => {
     document.getElementById('resetModal').classList.add('hidden');
     currentPinInput = ""; 
