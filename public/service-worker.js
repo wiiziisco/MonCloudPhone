@@ -1,50 +1,57 @@
-const CACHE_NAME = 'f4ma-stock-v1';
+// On change le nom pour forcer la mise à jour
+const CACHE_NAME = 'f4ma-stock-v2';
+
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/script.js',
-  '/manifest.json',
-  // On cache aussi les outils externes pour que le design reste beau hors ligne
+  '/manifest.json', // Maintenant ce fichier existe !
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap'
 ];
 
-// 1. Installation : On télécharge tout le site dans le cache
+// INSTALLATION
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Installation du mode Offline...');
+      console.log('Mise en cache des fichiers...');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting(); // Force l'activation immédiate
 });
 
-// 2. Activation : On nettoie les vieux caches si on fait une mise à jour
+// ACTIVATION (Nettoyage des vieux caches v1)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
       return Promise.all(
         keyList.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('Suppression ancien cache:', key);
             return caches.delete(key);
           }
         })
       );
     })
   );
+  self.clients.claim(); // Prend le contrôle immédiat de la page
 });
 
-// 3. Interception : Quand l'utilisateur demande une page
+// INTERCEPTION (Mode Offline)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Si c'est dans le cache (mode hors ligne), on le donne direct
+      // 1. Si on a le fichier en cache, on le donne (Offline marche !)
       if (cachedResponse) {
         return cachedResponse;
       }
-      // Sinon, on cherche sur internet (et on pourrait le mettre en cache pour la prochaine fois)
-      return fetch(event.request);
+      // 2. Sinon on cherche sur internet
+      return fetch(event.request).catch(() => {
+        // 3. Si internet est coupé et qu'on a pas le fichier...
+        // On pourrait retourner une page "Hors Connexion" personnalisée ici
+      });
     })
   );
 });
