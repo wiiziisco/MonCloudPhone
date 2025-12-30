@@ -1,13 +1,12 @@
 // --- SÉCURITÉ (PIN CODE) ---
 let currentPinInput = "";
-const DEFAULT_PIN = "8388"; 
-// Code de réinitialisation d'urgence
+const DEFAULT_PIN = "1234"; 
 const RESET_PIN = "9999"; 
 
 let userPin = localStorage.getItem('shop_pin') || DEFAULT_PIN;
 
 if (!sessionStorage.getItem('is_logged_in')) {
-    // Lock screen visible par défaut
+    // Lock screen visible
 } else {
     const lockScreen = document.getElementById('lock-screen');
     if(lockScreen) lockScreen.style.display = 'none';
@@ -17,10 +16,7 @@ window.enterPin = (num) => {
     if (currentPinInput.length < 4) {
         currentPinInput += num;
         updatePinDots();
-        
-        if (currentPinInput.length === 4) {
-            checkPin();
-        }
+        if (currentPinInput.length === 4) checkPin();
     }
 };
 
@@ -45,14 +41,8 @@ function updatePinDots() {
 function checkPin() {
     // CAS SPÉCIAL : CODE 9999 (RESET TOTAL)
     if (currentPinInput === RESET_PIN) {
-        if (confirm("⚠️ ATTENTION : Vous allez effacer TOUT le stock et l'historique pour démarrer à zéro.\n\nConfirmer ?")) {
-            localStorage.clear();
-            alert("🧹 Système nettoyé ! Redémarrage...");
-            window.location.reload();
-        } else {
-            currentPinInput = "";
-            updatePinDots();
-        }
+        // AU LIEU DU POPUP GRIS, ON AFFICHE NOTRE MODAL ROUGE
+        document.getElementById('resetModal').classList.remove('hidden');
         return;
     }
 
@@ -76,8 +66,23 @@ function checkPin() {
     }
 }
 
-// --- CONFIGURATION & DONNÉES (VIDES POUR PROD) ---
-// On commence avec des tableaux vides [] si rien n'est en mémoire
+// --- NOUVELLES FONCTIONS RESET ---
+window.closeResetModal = () => {
+    document.getElementById('resetModal').classList.add('hidden');
+    currentPinInput = ""; // On vide le code pin
+    updatePinDots(); // On remet les points à zéro
+};
+
+window.executeReset = () => {
+    localStorage.clear();
+    // Petit effet visuel avant reload
+    document.body.style.opacity = '0';
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+};
+
+// --- CONFIGURATION & DONNÉES ---
 let products = JSON.parse(localStorage.getItem('shop_products')) || []; 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 
@@ -90,7 +95,6 @@ let tempImageBase64 = null;
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Migration de sécurité (legacy)
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
     products.forEach(p => {
         if (p.totalInput === undefined) p.totalInput = p.stock;
@@ -123,13 +127,12 @@ window.handleImageUpload = (input) => {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                // Compression assez forte pour stocker beaucoup de produits
                 const MAX_WIDTH = 200;
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                tempImageBase64 = canvas.toDataURL('image/jpeg', 0.6); // Qualité 60%
+                tempImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
                 const preview = document.getElementById('image-preview');
                 preview.src = tempImageBase64;
                 preview.classList.remove('hidden');
@@ -178,7 +181,6 @@ function renderProducts() {
     const categories = ['Tout', ...new Set(products.map(p => p.category))];
     const filterContainer = document.getElementById('category-filters');
     
-    // Si pas de catégories (stock vide), on ne montre rien
     if (categories.length <= 1 && products.length === 0) {
         filterContainer.innerHTML = '';
     } else {
