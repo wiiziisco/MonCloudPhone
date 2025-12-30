@@ -140,6 +140,7 @@ let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 let cart = {}; 
 let cartPrices = {}; 
 let currentFilter = 'Tout';
+let searchTerm = ""; // VARIABLE DE RECHERCHE
 let editingId = null;
 let negotiatingId = null;
 let tempImageBase64 = null;
@@ -225,6 +226,11 @@ window.switchTab = (tabName) => {
 };
 
 // --- LOGIQUE CAISSE ---
+window.searchProducts = (val) => {
+    searchTerm = val;
+    renderProducts();
+}
+
 function renderProducts() {
     sortProducts(); 
     const grid = document.getElementById('product-grid');
@@ -248,9 +254,16 @@ function renderProducts() {
         return;
     }
 
-    grid.innerHTML = products
+    const filtered = products
         .filter(p => currentFilter === 'Tout' || p.category === currentFilter)
-        .map(p => {
+        .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())); // FILTRE RECHERCHE
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-2 text-center mt-10 text-slate-400 text-sm font-bold">Aucun produit trouvé.</div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(p => {
             const qtyInCart = cart[p.id] || 0;
             const isOutOfStock = p.stock === 0;
             const imgHtml = p.image 

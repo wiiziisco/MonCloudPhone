@@ -83,6 +83,14 @@
 
     <main class="flex-1 overflow-hidden relative bg-slate-100 dark:bg-[#0b0b0f] w-full">
         <section id="view-pos" class="absolute inset-0 flex flex-col transition-transform duration-300 z-10 w-full h-full">
+            
+            <div class="px-4 pt-3 pb-1 flex-none z-20">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" oninput="searchProducts(this.value)" placeholder="Rechercher un produit..." class="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none font-bold text-slate-700 dark:text-white focus:border-blue-500 transition shadow-sm placeholder:font-normal text-sm">
+                </div>
+            </div>
+
             <div class="flex-none px-4 py-3 overflow-x-auto hide-scroll flex gap-2" id="category-filters"></div>
             <div class="flex-1 overflow-y-auto px-4 pb-48 w-full">
                 <div id="product-grid" class="grid grid-cols-2 gap-3 pb-4"></div>
@@ -160,11 +168,9 @@
                 <a id="btn-whatsapp" href="#" target="_blank" class="w-full py-4 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-3 hover:brightness-110 transition shadow-lg shadow-green-500/20">
                     <i class="fa-brands fa-whatsapp text-2xl"></i><span>Envoyer sur WhatsApp</span>
                 </a>
-                
                 <a id="btn-sms" href="#" class="w-full py-4 rounded-xl bg-blue-500 text-white font-bold flex items-center justify-center gap-3 hover:bg-blue-600 transition shadow-lg shadow-blue-500/20">
                     <i class="fa-solid fa-message text-xl"></i><span>Envoyer par SMS</span>
                 </a>
-
                 <button onclick="closeReceiptModal()" class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Retour à la caisse</button>
             </div>
         </div>
