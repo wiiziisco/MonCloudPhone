@@ -396,7 +396,6 @@ function updateCartUI() {
     }
 }
 
-// --- VALIDATION VENTE (CALCUL SURPLUS) ---
 window.processSale = () => {
     const total = Object.entries(cart).reduce((sum, [id, qty]) => {
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : products.find(x => x.id == id).price;
@@ -407,14 +406,12 @@ window.processSale = () => {
 
     const clientName = document.getElementById('client-name').value || "Client";
     const saleItems = [];
-    let saleSurplus = 0; // BONUS TOTAL DE CETTE VENTE
+    let saleSurplus = 0;
     
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
-        const basePrice = p.price; // PRIX CATALOGUE
-        
-        // Calcul du surplus sur cet article (Prix Vendu - Prix Catalogue) * Qté
+        const basePrice = p.price;
         const itemSurplus = (sellingPrice - basePrice) * qty;
         saleSurplus += itemSurplus;
 
@@ -428,7 +425,7 @@ window.processSale = () => {
         client: clientName,
         items: saleItems,
         total: total,
-        surplus: saleSurplus // ON SAUVEGARDE LE SURPLUS
+        surplus: saleSurplus
     };
     
     sales.unshift(sale);
@@ -444,6 +441,7 @@ window.processSale = () => {
     window.toggleCart();
 };
 
+// --- MODALE REÇU AVEC SMS ---
 function showReceiptModal(sale) {
     const modal = document.getElementById('receiptModal');
     modal.classList.remove('hidden');
@@ -457,8 +455,14 @@ function showReceiptModal(sale) {
     text += `----------------\n`;
     text += `💰 *TOTAL: ${sale.total.toLocaleString()} FCFA*\n`;
     text += `✅ Payé`;
+    
     const encoded = encodeURIComponent(text);
+    
+    // Lien WhatsApp
     document.getElementById('btn-whatsapp').href = `https://wa.me/?text=${encoded}`;
+    
+    // Lien SMS (Nouveau)
+    document.getElementById('btn-sms').href = `sms:?body=${encoded}`;
 }
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
