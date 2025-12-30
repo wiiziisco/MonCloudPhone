@@ -32,7 +32,10 @@
                 document.documentElement.classList.remove('dark');
             }
         };
-        updateTheme();
+        // Exécuter immédiatement
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
     </script>
 
@@ -256,6 +259,26 @@
             <div class="flex gap-3">
                 <button onclick="closePriceModal()" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Annuler</button>
                 <button onclick="saveNegotiatedPrice()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl border border-blue-500/30 text-center relative overflow-hidden transform scale-100 transition-all">
+            <h3 class="text-xl font-black dark:text-white mb-2">Règlement</h3>
+            <p class="text-xs text-slate-500 font-bold uppercase mb-6">Total à payer : <span id="payment-total-display" class="text-blue-600 dark:text-blue-400 text-lg">0 F</span></p>
+            
+            <div class="text-left mb-4">
+                <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Montant Versé (Aujourd'hui)</label>
+                <div class="relative mt-1">
+                    <input type="number" id="payment-input" class="w-full p-4 text-center text-2xl font-mono font-bold rounded-xl bg-slate-50 dark:bg-[#0b0b0f] border-2 border-slate-200 dark:border-slate-700 outline-none focus:border-blue-500 text-slate-900 dark:text-white transition" placeholder="0">
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">F</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Annuler</button>
+                <button onclick="confirmPayment()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition">VALIDER</button>
             </div>
         </div>
     </div>
