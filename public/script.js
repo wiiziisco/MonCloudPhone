@@ -1,12 +1,13 @@
 // --- SÉCURITÉ (PIN CODE) ---
 let currentPinInput = "";
-const DEFAULT_PIN = "1234"; 
-const RESET_PIN = "9999"; 
+// CODES MODIFIÉS ICI
+const DEFAULT_PIN = "8388"; 
+const RESET_PIN = "1999"; 
 
 let userPin = localStorage.getItem('shop_pin') || DEFAULT_PIN;
 
 if (!sessionStorage.getItem('is_logged_in')) {
-    // Lock screen visible
+    // Lock screen visible par défaut
 } else {
     const lockScreen = document.getElementById('lock-screen');
     if(lockScreen) lockScreen.style.display = 'none';
@@ -16,7 +17,10 @@ window.enterPin = (num) => {
     if (currentPinInput.length < 4) {
         currentPinInput += num;
         updatePinDots();
-        if (currentPinInput.length === 4) checkPin();
+        
+        if (currentPinInput.length === 4) {
+            checkPin();
+        }
     }
 };
 
@@ -39,9 +43,8 @@ function updatePinDots() {
 }
 
 function checkPin() {
-    // CAS SPÉCIAL : CODE 9999 (RESET TOTAL)
+    // CAS SPÉCIAL : CODE RESET TOTAL
     if (currentPinInput === RESET_PIN) {
-        // AU LIEU DU POPUP GRIS, ON AFFICHE NOTRE MODAL ROUGE
         document.getElementById('resetModal').classList.remove('hidden');
         return;
     }
@@ -69,13 +72,12 @@ function checkPin() {
 // --- NOUVELLES FONCTIONS RESET ---
 window.closeResetModal = () => {
     document.getElementById('resetModal').classList.add('hidden');
-    currentPinInput = ""; // On vide le code pin
-    updatePinDots(); // On remet les points à zéro
+    currentPinInput = ""; 
+    updatePinDots(); 
 };
 
 window.executeReset = () => {
     localStorage.clear();
-    // Petit effet visuel avant reload
     document.body.style.opacity = '0';
     setTimeout(() => {
         window.location.reload();
