@@ -335,5 +335,16 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Mode Offline activé ✅', reg))
+                    .catch(err => console.log('Erreur Offline ❌', err));
+            });
+        }
+    </script>
+
+    <script src="script.js"></script>
 </body>
 </html>
