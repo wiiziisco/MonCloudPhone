@@ -441,11 +441,12 @@ window.processSale = () => {
     window.toggleCart();
 };
 
-// --- MODALE REÇU AVEC SMS ---
+// --- MODALE REÇU AVEC SMS & LIEN AUTO ---
 function showReceiptModal(sale) {
     const modal = document.getElementById('receiptModal');
     modal.classList.remove('hidden');
-    let text = `🧾 *REÇU INVENTAIRE*\n`;
+    // MODIFICATION ICI : "REÇU" au lieu de "REÇU INVENTAIRE"
+    let text = `🧾 *REÇU*\n`;
     text += `📅 ${sale.date}\n`;
     text += `👤 Client: ${sale.client}\n`;
     text += `----------------\n`;
@@ -454,14 +455,12 @@ function showReceiptModal(sale) {
     });
     text += `----------------\n`;
     text += `💰 *TOTAL: ${sale.total.toLocaleString()} FCFA*\n`;
-    text += `✅ Payé`;
+    text += `✅ Payé\n`;
+    text += `🔗 Commander ici : ${window.location.origin}`;
     
     const encoded = encodeURIComponent(text);
     
-    // Lien WhatsApp
     document.getElementById('btn-whatsapp').href = `https://wa.me/?text=${encoded}`;
-    
-    // Lien SMS (Nouveau)
     document.getElementById('btn-sms').href = `sms:?body=${encoded}`;
 }
 
@@ -533,91 +532,16 @@ function updateStockUI() {
     list.innerHTML = html;
 }
 
-window.adjustStock = (id, amount) => {
-    const p = products.find(x => x.id === id);
-    p.stock += amount;
-    if (amount > 0) p.totalInput = (p.totalInput || 0) + amount;
-    if (p.stock < 0) p.stock = 0;
-    saveData();
-    renderProducts();
-    updateStockUI();
-};
-
-window.openProductModal = (id = null) => {
-    const modal = document.getElementById('productModal');
-    const title = modal.querySelector('h3');
-    const preview = document.getElementById('image-preview');
-    const container = document.getElementById('image-preview-container');
-    tempImageBase64 = null;
-    preview.src = "";
-    preview.classList.add('hidden');
-    container.classList.remove('opacity-0');
-
-    if (id) {
-        const p = products.find(x => x.id === id);
-        editingId = id;
-        title.textContent = "Modifier Produit";
-        document.getElementById('new-prod-name').value = p.name;
-        document.getElementById('new-prod-price').value = p.price;
-        document.getElementById('new-prod-stock').value = p.stock;
-        document.getElementById('new-prod-cat').value = p.category;
-        if (p.image) {
-            tempImageBase64 = p.image;
-            preview.src = p.image;
-            preview.classList.remove('hidden');
-            container.classList.add('opacity-0');
-        }
-    } else {
-        editingId = null;
-        title.textContent = "Nouveau Produit";
-        document.getElementById('new-prod-name').value = "";
-        document.getElementById('new-prod-price').value = "";
-        document.getElementById('new-prod-stock').value = "";
-    }
-    modal.classList.remove('hidden');
-};
-
-window.saveNewProduct = () => {
-    const name = document.getElementById('new-prod-name').value;
-    const price = parseInt(document.getElementById('new-prod-price').value);
-    const stock = parseInt(document.getElementById('new-prod-stock').value);
-    const cat = document.getElementById('new-prod-cat').value;
-    if (name && price >= 0) {
-        if (editingId) {
-            const p = products.find(x => x.id === editingId);
-            p.name = name;
-            p.price = price;
-            p.stock = stock || 0;
-            p.category = cat;
-            if (tempImageBase64) p.image = tempImageBase64;
-        } else {
-            products.push({ 
-                id: Date.now(), 
-                name, 
-                price, 
-                stock: stock || 0, 
-                totalInput: stock || 0, 
-                category: cat,
-                image: tempImageBase64 
-            });
-        }
-        saveData();
-        document.getElementById('productModal').classList.add('hidden');
-        renderProducts();
-        updateStockUI();
-    }
-};
-
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
     const currentYear = new Date().getFullYear();
     const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
     const totalYear = sales.filter(s => new Date(s.id).getFullYear() === currentYear).reduce((sum, s) => sum + s.total, 0);
     
-    // NOUVEAU CALCUL : SOMME DES SURPLUS RÉELS (plus de 9%)
+    // BONUS ANNUEL (SURPLUS)
     const annualBonus = sales
         .filter(s => new Date(s.id).getFullYear() === currentYear)
-        .reduce((sum, s) => sum + (s.surplus || 0), 0); // On additionne le surplus stocké dans chaque vente
+        .reduce((sum, s) => sum + (s.surplus || 0), 0);
 
     let html = `
     <div class="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-blue-700 relative overflow-hidden">
@@ -632,7 +556,6 @@ function updateHistoryUI() {
         </div>
         <i class="fa-solid fa-coins absolute -bottom-4 -right-4 text-8xl text-white/5 rotate-12"></i>
     </div>
-    
     <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700 mb-4">
         <span class="text-xs text-slate-400 font-bold uppercase">Total Global Ventes</span>
         <span class="font-mono font-bold text-slate-200">${totalAllTime.toLocaleString()} F</span>
@@ -642,9 +565,7 @@ function updateHistoryUI() {
         html += `<div class="text-center mt-10 opacity-50"><i class="fa-solid fa-file-invoice text-4xl text-slate-600 mb-2"></i><p class="text-slate-500 text-sm">Aucune vente.</p></div>`;
     } else {
         html += sales.map(s => {
-            // Affichage du surplus individuel par vente (optionnel mais utile)
             const surplusText = s.surplus > 0 ? `<span class="text-xs font-bold text-green-400 ml-2">(+${s.surplus.toLocaleString()})</span>` : '';
-            
             return `
             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500 mb-3">
                 <div class="flex justify-between mb-2">
