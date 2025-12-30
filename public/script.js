@@ -1,4 +1,6 @@
-// --- SAUVEGARDE & RESTAURATION ---
+// --- SAUVEGARDE & RESTAURATION (MODALES) ---
+let fileToImport = null; // Variable temporaire pour le fichier
+
 window.exportData = () => {
     const data = {
         products: localStorage.getItem('shop_products'),
@@ -7,11 +9,8 @@ window.exportData = () => {
         date: new Date().toLocaleDateString()
     };
     
-    // Création du fichier
     const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    
-    // Téléchargement automatique
     const a = document.createElement('a');
     a.href = url;
     a.download = `backup_inventaire_${Date.now()}.json`;
@@ -19,39 +18,55 @@ window.exportData = () => {
     a.click();
     document.body.removeChild(a);
     
-    alert("✅ Sauvegarde téléchargée ! Gardez ce fichier précieusement.");
+    // Afficher Modal Succès
     document.getElementById('settingsModal').classList.add('hidden');
+    document.getElementById('successMessage').textContent = "Sauvegarde téléchargée ! Gardez ce fichier précieusement.";
+    document.getElementById('successModal').classList.remove('hidden');
 };
 
-window.importData = (input) => {
-    const file = input.files[0];
-    if (!file) return;
-
-    if (!confirm("⚠️ ATTENTION : La restauration va écraser les données actuelles. Continuer ?")) {
-        input.value = ''; // Reset input
-        return;
+window.confirmImport = (input) => {
+    if (input.files && input.files[0]) {
+        fileToImport = input.files[0];
+        document.getElementById('settingsModal').classList.add('hidden');
+        document.getElementById('importConfirmModal').classList.remove('hidden');
     }
+    input.value = ''; // Reset pour permettre de re-sélectionner le même fichier
+};
 
+window.executeImport = () => {
+    if (!fileToImport) return;
+    
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
             const data = JSON.parse(e.target.result);
-            
             if (data.products && data.sales) {
                 localStorage.setItem('shop_products', data.products);
                 localStorage.setItem('shop_sales', data.sales);
                 if (data.pin) localStorage.setItem('shop_pin', data.pin);
                 
-                alert("✅ Données restaurées avec succès !");
-                window.location.reload();
+                // Succès puis reload
+                document.getElementById('importConfirmModal').classList.add('hidden');
+                document.getElementById('successMessage').textContent = "Données restaurées avec succès !";
+                document.getElementById('successModal').classList.remove('hidden');
+                
+                setTimeout(() => window.location.reload(), 1500);
             } else {
                 alert("❌ Fichier invalide.");
             }
         } catch (err) {
-            alert("❌ Erreur de lecture du fichier.");
+            alert("❌ Erreur de lecture.");
         }
     };
-    reader.readAsText(file);
+    reader.readAsText(fileToImport);
+};
+
+window.closeModal = (modalId) => {
+    document.getElementById(modalId).classList.add('hidden');
+    if (modalId === 'resetModal') {
+        currentPinInput = ""; 
+        updatePinDots();
+    }
 };
 
 // --- SÉCURITÉ (PIN CODE) ---
@@ -118,12 +133,6 @@ function checkPin() {
         }, 500);
     }
 }
-
-window.closeResetModal = () => {
-    document.getElementById('resetModal').classList.add('hidden');
-    currentPinInput = ""; 
-    updatePinDots(); 
-};
 
 window.executeReset = () => {
     localStorage.clear();
