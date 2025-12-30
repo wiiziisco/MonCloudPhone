@@ -140,7 +140,7 @@ let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
 let cart = {}; 
 let cartPrices = {}; 
 let currentFilter = 'Tout';
-let searchTerm = ""; // VARIABLE DE RECHERCHE
+let searchTerm = ""; 
 let editingId = null;
 let negotiatingId = null;
 let tempImageBase64 = null;
@@ -256,7 +256,7 @@ function renderProducts() {
 
     const filtered = products
         .filter(p => currentFilter === 'Tout' || p.category === currentFilter)
-        .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())); // FILTRE RECHERCHE
+        .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (filtered.length === 0) {
         grid.innerHTML = `<div class="col-span-2 text-center mt-10 text-slate-400 text-sm font-bold">Aucun produit trouvé.</div>`;
@@ -269,17 +269,18 @@ function renderProducts() {
             const imgHtml = p.image 
                 ? `<img src="${p.image}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-110 transition duration-500">`
                 : `<div class="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center"><i class="fa-solid fa-box-open text-4xl text-slate-600"></i></div>`;
-            const overlay = `<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>`;
+            // Overlay plus léger en mode jour
+            const overlay = `<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent dark:from-black/90 dark:via-black/40"></div>`;
 
             return `
-            <div onclick="${isOutOfStock ? '' : `addToCart(${p.id})`}" class="aspect-[4/5] relative rounded-2xl shadow-sm overflow-hidden group border border-white/5 active:scale-95 transition">
+            <div onclick="${isOutOfStock ? '' : `addToCart(${p.id})`}" class="aspect-[4/5] relative rounded-2xl shadow-sm overflow-hidden group border border-slate-200 dark:border-white/5 active:scale-95 transition bg-white dark:bg-slate-800">
                 ${imgHtml}
                 ${overlay}
                 <div class="absolute top-2 right-2 z-10">
                     ${qtyInCart > 0 ? `<div class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-lg">${qtyInCart}</div>` : ''}
                 </div>
                 <div class="absolute top-2 left-2 z-10">
-                    <span class="text-[9px] font-bold px-2 py-1 rounded bg-black/50 text-white backdrop-blur-sm border border-white/10 uppercase tracking-wider">${p.category}</span>
+                    <span class="text-[9px] font-bold px-2 py-1 rounded bg-white/90 dark:bg-black/50 text-slate-800 dark:text-white backdrop-blur-sm border border-slate-200 dark:border-white/10 uppercase tracking-wider shadow-sm">${p.category}</span>
                 </div>
                 <div class="absolute bottom-0 w-full p-3 z-10">
                     <div class="flex justify-between items-end">
@@ -288,7 +289,7 @@ function renderProducts() {
                             <p class="text-cyberBlue font-mono font-bold text-lg drop-shadow-md">${p.price.toLocaleString()} <span class="text-xs">F</span></p>
                         </div>
                     </div>
-                    ${isOutOfStock ? '<div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center"><span class="text-red-500 font-bold border border-red-500 px-3 py-1 rounded rotate-12">RUPTURE</span></div>' : ''}
+                    ${isOutOfStock ? '<div class="absolute inset-0 bg-white/80 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center"><span class="text-red-500 font-bold border-2 border-red-500 px-3 py-1 rounded rotate-12 bg-white dark:bg-transparent">RUPTURE</span></div>' : ''}
                 </div>
             </div>`;
         }).join('');
@@ -454,11 +455,9 @@ window.processSale = () => {
     window.toggleCart();
 };
 
-// --- MODALE REÇU AVEC SMS & LIEN AUTO ---
 function showReceiptModal(sale) {
     const modal = document.getElementById('receiptModal');
     modal.classList.remove('hidden');
-    // MODIFICATION ICI : "REÇU" au lieu de "REÇU INVENTAIRE"
     let text = `🧾 *REÇU*\n`;
     text += `📅 ${sale.date}\n`;
     text += `👤 Client: ${sale.client}\n`;
@@ -490,26 +489,27 @@ function updateStockUI() {
     const totalBudgetValue = annualProducts.reduce((sum, p) => sum + (p.price * (p.totalInput || 0)), 0);
     const ristourne = Math.round(totalBudgetValue * 0.09);
 
+    // MODIFICATION ICI : CARTE BLANCHE LE JOUR, SOMBRE LA NUIT
     let html = `
-    <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-slate-700 relative overflow-hidden">
+    <div class="bg-white dark:bg-gradient-to-r dark:from-slate-800 dark:to-slate-900 rounded-xl p-4 mb-4 shadow-lg border border-slate-200 dark:border-slate-700 relative overflow-hidden text-slate-900 dark:text-white">
         <div class="relative z-10">
-            <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/10">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100 dark:border-white/10">
                 <div>
-                    <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Entrées (${currentYear})</p>
-                    <p class="text-2xl font-mono font-bold text-white">${totalBudgetValue.toLocaleString()} <span class="text-xs text-slate-500">F</span></p>
+                    <p class="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Total Entrées (${currentYear})</p>
+                    <p class="text-2xl font-mono font-bold text-slate-800 dark:text-white">${totalBudgetValue.toLocaleString()} <span class="text-xs text-slate-500">F</span></p>
                 </div>
-                <div class="bg-white/5 p-2 rounded-lg"><i class="fa-solid fa-truck-ramp-box text-xl text-slate-400"></i></div>
+                <div class="bg-slate-100 dark:bg-white/5 p-2 rounded-lg"><i class="fa-solid fa-truck-ramp-box text-xl text-slate-400"></i></div>
             </div>
             <div class="flex justify-between items-end">
                 <div>
-                    <p class="text-[9px] uppercase font-bold text-cyan-400 tracking-wider">Valeur Restante</p>
-                    <p class="text-xl font-mono font-bold text-cyan-400">${currentStockValue.toLocaleString()} <span class="text-xs text-cyan-600">F</span></p>
+                    <p class="text-[9px] uppercase font-bold text-blue-500 dark:text-cyan-400 tracking-wider">Valeur Restante</p>
+                    <p class="text-xl font-mono font-bold text-blue-600 dark:text-cyan-400">${currentStockValue.toLocaleString()} <span class="text-xs text-blue-400 dark:text-cyan-600">F</span></p>
                 </div>
                 <div class="text-right">
-                    <p class="text-[8px] uppercase text-orange-400/80 font-bold mb-1">Ristourne (Sur Achats)</p>
-                    <div class="inline-flex items-center gap-2 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
-                        <span class="text-orange-400 text-xs font-bold">9%</span>
-                        <span class="text-orange-400 font-mono font-bold text-sm">${ristourne.toLocaleString()} F</span>
+                    <p class="text-[8px] uppercase text-orange-500/80 font-bold mb-1">Ristourne (Sur Achats)</p>
+                    <div class="inline-flex items-center gap-2 bg-orange-50 dark:bg-orange-500/10 px-2 py-1 rounded border border-orange-200 dark:border-orange-500/20">
+                        <span class="text-orange-600 dark:text-orange-400 text-xs font-bold">9%</span>
+                        <span class="text-orange-600 dark:text-orange-400 font-mono font-bold text-sm">${ristourne.toLocaleString()} F</span>
                     </div>
                 </div>
             </div>
@@ -521,14 +521,14 @@ function updateStockUI() {
         html += `<div class="text-center mt-10 opacity-50"><i class="fa-solid fa-wind text-4xl text-slate-600 mb-2"></i><p class="text-slate-500 text-sm">Le stock est vide.</p></div>`;
     } else {
         html += products.map(p => `
-            <div class="bg-white dark:bg-slate-800 p-3 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : 'mb-3'}">
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-xl flex justify-between items-center shadow-sm border border-slate-100 dark:border-transparent ${p.stock === 0 ? 'opacity-60 border-red-200' : 'mb-3'}">
                 <div class="flex items-center gap-3 flex-1">
                     <div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden flex-none">
                          ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div>'}
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-0.5">
-                            <p class="font-bold dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
+                            <p class="font-bold text-slate-800 dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
                             <button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
                         </div>
                         <p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p>
@@ -536,7 +536,7 @@ function updateStockUI() {
                 </div>
                 <div class="flex items-center gap-2 ml-2">
                     <button onclick="adjustStock(${p.id}, -1)" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
-                    <span class="font-mono font-bold w-6 text-center dark:text-white text-sm">${p.stock}</span>
+                    <span class="font-mono font-bold w-6 text-center text-slate-800 dark:text-white text-sm">${p.stock}</span>
                     <button onclick="adjustStock(${p.id}, 1)" class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
@@ -544,6 +544,81 @@ function updateStockUI() {
     }
     list.innerHTML = html;
 }
+
+window.adjustStock = (id, amount) => {
+    const p = products.find(x => x.id === id);
+    p.stock += amount;
+    if (amount > 0) p.totalInput = (p.totalInput || 0) + amount;
+    if (p.stock < 0) p.stock = 0;
+    saveData();
+    renderProducts();
+    updateStockUI();
+};
+
+window.openProductModal = (id = null) => {
+    const modal = document.getElementById('productModal');
+    const title = modal.querySelector('h3');
+    const preview = document.getElementById('image-preview');
+    const container = document.getElementById('image-preview-container');
+    tempImageBase64 = null;
+    preview.src = "";
+    preview.classList.add('hidden');
+    container.classList.remove('opacity-0');
+
+    if (id) {
+        const p = products.find(x => x.id === id);
+        editingId = id;
+        title.textContent = "Modifier Produit";
+        document.getElementById('new-prod-name').value = p.name;
+        document.getElementById('new-prod-price').value = p.price;
+        document.getElementById('new-prod-stock').value = p.stock;
+        document.getElementById('new-prod-cat').value = p.category;
+        if (p.image) {
+            tempImageBase64 = p.image;
+            preview.src = p.image;
+            preview.classList.remove('hidden');
+            container.classList.add('opacity-0');
+        }
+    } else {
+        editingId = null;
+        title.textContent = "Nouveau Produit";
+        document.getElementById('new-prod-name').value = "";
+        document.getElementById('new-prod-price').value = "";
+        document.getElementById('new-prod-stock').value = "";
+    }
+    modal.classList.remove('hidden');
+};
+
+window.saveNewProduct = () => {
+    const name = document.getElementById('new-prod-name').value;
+    const price = parseInt(document.getElementById('new-prod-price').value);
+    const stock = parseInt(document.getElementById('new-prod-stock').value);
+    const cat = document.getElementById('new-prod-cat').value;
+    if (name && price >= 0) {
+        if (editingId) {
+            const p = products.find(x => x.id === editingId);
+            p.name = name;
+            p.price = price;
+            p.stock = stock || 0;
+            p.category = cat;
+            if (tempImageBase64) p.image = tempImageBase64;
+        } else {
+            products.push({ 
+                id: Date.now(), 
+                name, 
+                price, 
+                stock: stock || 0, 
+                totalInput: stock || 0, 
+                category: cat,
+                image: tempImageBase64 
+            });
+        }
+        saveData();
+        document.getElementById('productModal').classList.add('hidden');
+        renderProducts();
+        updateStockUI();
+    }
+};
 
 function updateHistoryUI() {
     const list = document.getElementById('sales-history');
@@ -556,39 +631,40 @@ function updateHistoryUI() {
         .filter(s => new Date(s.id).getFullYear() === currentYear)
         .reduce((sum, s) => sum + (s.surplus || 0), 0);
 
+    // MODIFICATION ICI : COULEURS PLUS CLAIRES EN MODE JOUR
     let html = `
-    <div class="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-blue-700 relative overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-800 dark:to-indigo-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-blue-400 dark:border-blue-700 relative overflow-hidden">
         <div class="relative z-10">
             <div class="flex justify-between items-start">
                 <div>
-                    <p class="text-[10px] uppercase font-bold text-blue-300 tracking-wider">BONUS ANNUEL (SURPLUS)</p>
-                    <p class="text-3xl font-mono font-bold text-white mb-1">${annualBonus.toLocaleString()} <span class="text-sm text-blue-200">F</span></p>
+                    <p class="text-[10px] uppercase font-bold text-blue-100 dark:text-blue-300 tracking-wider">BONUS ANNUEL (SURPLUS)</p>
+                    <p class="text-3xl font-mono font-bold text-white mb-1">${annualBonus.toLocaleString()} <span class="text-sm text-blue-100 dark:text-blue-200">F</span></p>
                 </div>
-                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm"><i class="fa-solid fa-chart-line text-2xl text-blue-300"></i></div>
+                <div class="bg-white/20 dark:bg-white/10 p-2 rounded-lg backdrop-blur-sm"><i class="fa-solid fa-chart-line text-2xl text-white dark:text-blue-300"></i></div>
             </div>
         </div>
-        <i class="fa-solid fa-coins absolute -bottom-4 -right-4 text-8xl text-white/5 rotate-12"></i>
+        <i class="fa-solid fa-coins absolute -bottom-4 -right-4 text-8xl text-white/10 dark:text-white/5 rotate-12"></i>
     </div>
-    <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700 mb-4">
-        <span class="text-xs text-slate-400 font-bold uppercase">Total Global Ventes</span>
-        <span class="font-mono font-bold text-slate-200">${totalAllTime.toLocaleString()} F</span>
+    <div class="bg-white dark:bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-200 dark:border-slate-700 mb-4 shadow-sm">
+        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Total Global Ventes</span>
+        <span class="font-mono font-bold text-slate-800 dark:text-slate-200">${totalAllTime.toLocaleString()} F</span>
     </div>`;
 
     if (sales.length === 0) {
         html += `<div class="text-center mt-10 opacity-50"><i class="fa-solid fa-file-invoice text-4xl text-slate-600 mb-2"></i><p class="text-slate-500 text-sm">Aucune vente.</p></div>`;
     } else {
         html += sales.map(s => {
-            const surplusText = s.surplus > 0 ? `<span class="text-xs font-bold text-green-400 ml-2">(+${s.surplus.toLocaleString()})</span>` : '';
+            const surplusText = s.surplus > 0 ? `<span class="text-xs font-bold text-green-500 dark:text-green-400 ml-2">(+${s.surplus.toLocaleString()})</span>` : '';
             return `
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500 mb-3">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-transparent border-l-4 border-l-blue-500 mb-3">
                 <div class="flex justify-between mb-2">
                     <span class="font-bold text-sm text-slate-600 dark:text-slate-400">${s.date.split(',')[0]}</span>
                     <div>
-                        <span class="font-bold text-slate-200">${s.total.toLocaleString()} F</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200">${s.total.toLocaleString()} F</span>
                         ${surplusText}
                     </div>
                 </div>
-                <div class="text-sm dark:text-white"><span class="font-bold">${s.client}</span> a acheté ${s.items.length} article(s).</div>
+                <div class="text-sm text-slate-700 dark:text-white"><span class="font-bold">${s.client}</span> a acheté ${s.items.length} article(s).</div>
             </div>`;
         }).join('');
     }
