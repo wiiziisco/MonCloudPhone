@@ -19,7 +19,7 @@
             if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
             else document.documentElement.classList.remove('dark');
         };
-        updateTheme();
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
     </script>
     <style>
@@ -147,7 +147,7 @@
                 <button onclick="exportData()" class="w-full py-4 rounded-xl bg-blue-600/10 text-blue-600 font-bold border border-blue-600/20">Sauvegarder</button>
                 <div class="relative"><button class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 font-bold">Restaurer</button><input type="file" onchange="confirmImport(this)" class="absolute inset-0 opacity-0 cursor-pointer"></div>
             </div>
-            <p class="text-xs text-slate-400 mt-6">v5.0</p>
+            <p class="text-xs text-slate-400 mt-6">v6.0</p>
         </div>
     </div>
     
@@ -176,7 +176,7 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(reg => console.log('Offline Ready V5', reg)); });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(reg => console.log('Offline Ready V6', reg)); });
         }
     </script>
     <script src="script.js"></script>
