@@ -1,3 +1,69 @@
+// --- SÉCURITÉ (PIN CODE) ---
+let currentPinInput = "";
+const DEFAULT_PIN = "8388"; 
+// On récupère le PIN défini par l'utilisateur ou on met le défaut
+let userPin = localStorage.getItem('shop_pin') || DEFAULT_PIN;
+
+// Initialisation : On vérifie si on est déjà connecté (session)
+if (!sessionStorage.getItem('is_logged_in')) {
+    // Si pas connecté, le lock screen reste visible (il est visible par défaut dans le HTML)
+} else {
+    // Si connecté, on cache le lock screen direct
+    const lockScreen = document.getElementById('lock-screen');
+    if(lockScreen) lockScreen.style.display = 'none';
+}
+
+window.enterPin = (num) => {
+    if (currentPinInput.length < 4) {
+        currentPinInput += num;
+        updatePinDots();
+        
+        if (currentPinInput.length === 4) {
+            checkPin();
+        }
+    }
+};
+
+window.clearPin = () => {
+    currentPinInput = "";
+    updatePinDots();
+};
+
+function updatePinDots() {
+    const dots = document.querySelectorAll('.dot');
+    dots.forEach((dot, index) => {
+        if (index < currentPinInput.length) {
+            dot.classList.remove('bg-slate-700');
+            dot.classList.add('bg-blue-500');
+        } else {
+            dot.classList.remove('bg-blue-500');
+            dot.classList.add('bg-slate-700');
+        }
+    });
+}
+
+function checkPin() {
+    if (currentPinInput === userPin) {
+        // SUCCÈS
+        sessionStorage.setItem('is_logged_in', 'true');
+        const lockScreen = document.getElementById('lock-screen');
+        lockScreen.style.opacity = '0';
+        setTimeout(() => {
+            lockScreen.style.display = 'none';
+        }, 300);
+    } else {
+        // ÉCHEC
+        navigator.vibrate(200); // Vibre si possible
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach(d => d.classList.add('bg-red-500'));
+        setTimeout(() => {
+            currentPinInput = "";
+            updatePinDots();
+            dots.forEach(d => d.classList.remove('bg-red-500'));
+        }, 500);
+    }
+}
+
 // --- CONFIGURATION & DONNÉES ---
 let products = JSON.parse(localStorage.getItem('shop_products')) || [
     { id: 1, name: "Matelas ortho 3plcs ph2", price: 120000, category: "Matelas", stock: 5 },
@@ -11,12 +77,11 @@ let cartPrices = {};
 let currentFilter = 'Tout';
 let editingId = null;
 let negotiatingId = null;
-let tempImageBase64 = null; // Variable temporaire pour l'image
+let tempImageBase64 = null;
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
-    
     products.forEach(p => {
         if (p.totalInput === undefined) p.totalInput = p.stock;
     });
@@ -38,30 +103,22 @@ function sortProducts() {
     });
 }
 
-// --- GESTION IMAGE (COMPRESSION) ---
+// --- GESTION IMAGE ---
 window.handleImageUpload = (input) => {
     const file = input.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            // Création d'une image pour redimensionnement
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
-                // On fixe une taille max de 200px pour ne pas saturer le stockage
                 const MAX_WIDTH = 200;
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
-
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                // Compression JPEG 0.7
                 tempImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                
-                // Affichage Preview
                 const preview = document.getElementById('image-preview');
                 preview.src = tempImageBase64;
                 preview.classList.remove('hidden');
@@ -103,7 +160,7 @@ window.switchTab = (tabName) => {
     }
 };
 
-// --- LOGIQUE CAISSE (AVEC IMAGES) ---
+// --- LOGIQUE CAISSE ---
 function renderProducts() {
     sortProducts(); 
     const grid = document.getElementById('product-grid');
@@ -123,28 +180,21 @@ function renderProducts() {
         .map(p => {
             const qtyInCart = cart[p.id] || 0;
             const isOutOfStock = p.stock === 0;
-            // IMAGE OU PLACEHOLDER PAR DÉFAUT
             const imgHtml = p.image 
                 ? `<img src="${p.image}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-110 transition duration-500">`
                 : `<div class="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center"><i class="fa-solid fa-box-open text-4xl text-slate-600"></i></div>`;
-            
-            // COUCHE SOMBRE POUR LISIBILITÉ TEXTE
             const overlay = `<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>`;
 
             return `
             <div onclick="${isOutOfStock ? '' : `addToCart(${p.id})`}" class="aspect-[4/5] relative rounded-2xl shadow-sm overflow-hidden group border border-white/5 active:scale-95 transition">
-                
                 ${imgHtml}
                 ${overlay}
-                
                 <div class="absolute top-2 right-2 z-10">
                     ${qtyInCart > 0 ? `<div class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-lg">${qtyInCart}</div>` : ''}
                 </div>
-                
                 <div class="absolute top-2 left-2 z-10">
                     <span class="text-[9px] font-bold px-2 py-1 rounded bg-black/50 text-white backdrop-blur-sm border border-white/10 uppercase tracking-wider">${p.category}</span>
                 </div>
-
                 <div class="absolute bottom-0 w-full p-3 z-10">
                     <div class="flex justify-between items-end">
                         <div>
@@ -331,7 +381,7 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK (AFFICHAGE AVEC THUMBNAIL) ---
+// --- GESTION STOCK ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
@@ -378,7 +428,6 @@ function updateStockUI() {
                     <div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden flex-none">
                          ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div>'}
                     </div>
-                    
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-0.5">
                             <p class="font-bold dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p>
@@ -413,8 +462,6 @@ window.openProductModal = (id = null) => {
     const title = modal.querySelector('h3');
     const preview = document.getElementById('image-preview');
     const container = document.getElementById('image-preview-container');
-    
-    // Reset Image
     tempImageBase64 = null;
     preview.src = "";
     preview.classList.add('hidden');
@@ -428,7 +475,6 @@ window.openProductModal = (id = null) => {
         document.getElementById('new-prod-price').value = p.price;
         document.getElementById('new-prod-stock').value = p.stock;
         document.getElementById('new-prod-cat').value = p.category;
-        
         if (p.image) {
             tempImageBase64 = p.image;
             preview.src = p.image;
@@ -450,7 +496,6 @@ window.saveNewProduct = () => {
     const price = parseInt(document.getElementById('new-prod-price').value);
     const stock = parseInt(document.getElementById('new-prod-stock').value);
     const cat = document.getElementById('new-prod-cat').value;
-    
     if (name && price >= 0) {
         if (editingId) {
             const p = products.find(x => x.id === editingId);
@@ -478,7 +523,6 @@ window.saveNewProduct = () => {
 };
 
 function updateHistoryUI() {
-    // (Pas de changement ici, code identique à la version précédente sans ristourne affichée)
     const list = document.getElementById('sales-history');
     const currentYear = new Date().getFullYear();
     const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
