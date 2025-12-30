@@ -1,31 +1,21 @@
-const CACHE_NAME = 'f4ma-stock-v9'; // VERSION 9 (Force Update)
+const CACHE_NAME = 'f4ma-stock-v12'; // V12 : Ultra-Light
 
-// Fichiers CRITIQUES (L'app ne démarre pas sans eux)
-const CRITICAL_ASSETS = [
+const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/script.js',
-  '/manifest.json'
-];
-
-// Fichiers CONFORT (Design & Graphiques)
-// Si ça échoue (mauvaise connexion), l'app marche quand même !
-const OPTIONAL_ASSETS = [
+  '/manifest.json',
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap',
-  'https://cdn.jsdelivr.net/npm/chart.js'
+  'https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force l'installation immédiate
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('[SW V9] Installation du cœur...');
-      await cache.addAll(CRITICAL_ASSETS);
-      try {
-        await cache.addAll(OPTIONAL_ASSETS);
-      } catch (e) { console.log('Assets optionnels non chargés (pas grave)'); }
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW V12] Installation Light...');
+      return cache.addAll(STATIC_ASSETS);
     })
   );
 });
@@ -50,7 +40,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
         }
         return network;
-      }).catch(() => console.log('Offline : ', event.request.url));
+      }).catch(() => console.log('Offline'));
     })
   );
 });

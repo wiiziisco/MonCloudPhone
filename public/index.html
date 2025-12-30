@@ -3,24 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>INVENTAIRE | F4Ma Stock</title>
-    <meta name="description" content="Gestion Stock, Ventes & Crédits. Mode Hors Ligne.">
+    <title>INVENTAIRE | Light</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Rajdhani', 'sans-serif'] }, colors: { cyberBlue: '#00f3ff', cyberRed: '#ff003c' } } } }
-        const updateTheme = () => {
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-        };
         if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
     </script>
     <style>
         body { height: 100dvh; } .hide-scroll::-webkit-scrollbar { display: none; }
@@ -35,87 +28,70 @@
 
     <header class="flex-none h-16 flex items-center justify-between px-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 z-20 shadow-sm shrink-0">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/20"><i class="fa-solid fa-layer-group text-lg"></i></div>
-            <div><h1 class="font-black text-xl leading-none tracking-widest uppercase dark:text-white">INVENTAIRE</h1></div>
+            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg"><i class="fa-solid fa-layer-group"></i></div>
+            <h1 class="font-black text-xl tracking-widest uppercase">INVENTAIRE</h1>
         </div>
         <div class="flex items-center gap-2">
-            <button onclick="window.location.reload()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-blue-500 active:rotate-180 transition-all shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
-            <button onclick="document.getElementById('settingsModal').classList.remove('hidden')" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-blue-500 transition-all shadow-sm"><i class="fa-solid fa-gear"></i></button>
-            <div class="h-9 flex flex-col justify-center items-center bg-slate-50 dark:bg-white/5 px-3 rounded-full border border-slate-200 dark:border-white/10 ml-1 min-w-[90px]"><span class="text-[8px] text-slate-500 dark:text-slate-400 uppercase font-bold leading-none mb-0.5">Encaissé (Jour)</span><span class="text-xs font-black text-green-600 dark:text-green-400 font-mono leading-none" id="daily-total">0 F</span></div>
+            <button onclick="window.location.reload()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center"><i class="fa-solid fa-rotate-right"></i></button>
+            <button onclick="document.getElementById('settingsModal').classList.remove('hidden')" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center"><i class="fa-solid fa-gear"></i></button>
+            <div class="h-9 px-3 rounded-full border border-slate-200 dark:border-white/10 flex flex-col justify-center items-center bg-slate-50 dark:bg-white/5"><span class="text-[8px] font-bold uppercase text-slate-500">Ventes Jour</span><span class="text-xs font-black text-green-500" id="daily-total">0 F</span></div>
         </div>
     </header>
 
-    <main class="flex-1 overflow-hidden relative bg-slate-100 dark:bg-[#0b0b0f] w-full">
-        <section id="view-pos" class="absolute inset-0 flex flex-col transition-transform duration-300 z-10 w-full h-full">
-            <div class="px-4 pt-3 pb-1 flex-none z-20"><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" oninput="searchProducts(this.value)" placeholder="Rechercher..." class="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none font-bold text-slate-700 dark:text-white focus:border-blue-500 transition shadow-sm placeholder:font-normal text-sm"></div></div>
+    <main class="flex-1 overflow-hidden relative w-full">
+        <section id="view-pos" class="absolute inset-0 flex flex-col transition-transform duration-300 z-10 bg-slate-100 dark:bg-[#0b0b0f]">
+            <div class="px-4 pt-3 pb-1 flex-none"><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" oninput="searchProducts(this.value)" placeholder="Rechercher..." class="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 font-bold outline-none focus:border-blue-500 transition"></div></div>
             <div class="flex-none px-4 py-3 overflow-x-auto hide-scroll flex gap-2" id="category-filters"></div>
-            <div class="flex-1 overflow-y-auto px-4 pb-48 w-full"><div id="product-grid" class="grid grid-cols-2 gap-3 pb-4"></div></div>
-            <div id="cart-panel" class="absolute bottom-0 left-0 w-full bg-white dark:bg-[#1a1a20] rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] transform translate-y-[88%] transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) z-30 flex flex-col h-[75vh] border-t border-slate-200 dark:border-white/10">
-                <div class="flex-none h-16 px-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition" onclick="toggleCart()">
-                    <div class="flex items-center gap-4"><div class="relative"><i class="fa-solid fa-cart-shopping text-xl text-slate-400"></i><div class="absolute -top-2 -right-2 bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm scale-0 transition-transform duration-300" id="cart-badge">0</div></div><div><span class="font-bold text-sm uppercase text-slate-500 dark:text-slate-400 block text-xs">Panier en cours</span><span class="font-black text-lg text-blue-600 dark:text-cyberBlue" id="cart-total-preview">0 F</span></div></div>
-                    <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center transition-transform duration-300" id="cart-chevron"><i class="fa-solid fa-chevron-up text-xs text-slate-500"></i></div>
+            <div class="flex-1 overflow-y-auto px-4 pb-48"><div id="product-grid" class="grid grid-cols-2 gap-3 pb-4"></div></div>
+            <div id="cart-panel" class="absolute bottom-0 left-0 w-full bg-white dark:bg-[#1a1a20] rounded-t-3xl shadow-2xl transform translate-y-[88%] transition-transform duration-500 z-30 flex flex-col h-[75vh] border-t border-slate-200 dark:border-white/10">
+                <div class="flex-none h-16 px-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center cursor-pointer" onclick="toggleCart()">
+                    <div class="flex items-center gap-4"><div class="relative"><i class="fa-solid fa-cart-shopping text-xl text-slate-400"></i><div class="absolute -top-2 -right-2 bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] scale-0 transition" id="cart-badge">0</div></div><span class="font-black text-lg text-blue-600" id="cart-total-preview">0 F</span></div>
+                    <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center" id="cart-chevron"><i class="fa-solid fa-chevron-up text-slate-500"></i></div>
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items"></div>
-                <div class="flex-none p-6 bg-slate-50 dark:bg-[#111115] border-t border-slate-200 dark:border-white/10 pb-20 safe-area-bottom">
-                    <div class="flex justify-between mb-4 items-end"><span class="text-sm font-bold text-slate-500">Total à payer</span><span class="text-2xl font-black text-slate-900 dark:text-white" id="cart-total-final">0 FCFA</span></div>
-                    <div class="space-y-3"><input type="text" id="client-name" placeholder="Nom du client" class="w-full p-4 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 text-sm font-bold outline-none focus:border-blue-500 transition-colors"><button onclick="processSale()" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> VALIDER LA VENTE</button></div>
+                <div class="flex-none p-6 pb-20 bg-slate-50 dark:bg-[#111115] border-t border-slate-200 dark:border-white/10">
+                    <div class="flex justify-between mb-4 items-end"><span class="text-sm font-bold text-slate-500">Total</span><span class="text-2xl font-black" id="cart-total-final">0 FCFA</span></div>
+                    <div class="space-y-3"><input type="text" id="client-name" placeholder="Nom du client" class="w-full p-4 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold outline-none"><button onclick="processSale()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">VALIDER LA VENTE</button></div>
                 </div>
             </div>
         </section>
 
-        <section id="view-stock" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20 w-full h-full">
-            <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2 z-10"><h2 class="text-2xl font-black uppercase tracking-tight">Inventaire</h2><button onclick="openProductModal()" class="bg-slate-900 dark:bg-white text-white dark:text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition hover:bg-blue-600 hover:text-white"><i class="fa-solid fa-plus text-lg"></i></button></div>
+        <section id="view-stock" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20">
+            <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2 z-10"><h2 class="text-2xl font-black uppercase">Inventaire</h2><button onclick="openProductModal()" class="bg-slate-900 dark:bg-white text-white dark:text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition"><i class="fa-solid fa-plus"></i></button></div>
             <div id="stock-list" class="space-y-3"></div>
         </section>
 
-        <section id="view-history" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20 w-full h-full">
-            <h2 class="text-2xl font-black uppercase tracking-tight mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2">Journal</h2>
+        <section id="view-history" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20">
+            <h2 class="text-2xl font-black uppercase mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2">Journal</h2>
             <div id="sales-history" class="space-y-3"></div>
-        </section>
-
-        <section id="view-stats" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20 w-full h-full">
-            <h2 class="text-2xl font-black uppercase tracking-tight mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2">Analyses</h2>
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 mb-4"><h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-4">Évolution Encaissements (7J)</h3><div class="relative h-48 w-full"><canvas id="chart-trend"></canvas></div></div>
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 mb-4"><h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-4">Top Catégories</h3><div class="relative h-64 w-full flex justify-center"><canvas id="chart-pie"></canvas></div></div>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-600/20 text-center"><p class="text-blue-600 dark:text-blue-400 text-xs font-bold uppercase">Record</p><p class="text-xl font-black dark:text-white" id="stat-best-sale">0 F</p></div>
-                <div class="bg-purple-600/10 p-4 rounded-2xl border border-purple-600/20 text-center"><p class="text-purple-600 dark:text-purple-400 text-xs font-bold uppercase">Panier Moy.</p><p class="text-xl font-black dark:text-white" id="stat-avg-cart">0 F</p></div>
-            </div>
         </section>
     </main>
 
-    <nav class="flex-none pb-safe h-20 flex justify-between items-stretch z-40 relative shadow-[0_-5px_20px_rgba(0,0,0,0.05)] shrink-0 w-full bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-white/10 transition-colors">
-        <button onclick="switchTab('pos')" id="tab-pos" class="active-tab tab-btn group w-1/4"><div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-cash-register text-xl"></i></div><span class="text-[10px] font-bold uppercase tracking-wider">Caisse</span></button>
-        <button onclick="switchTab('stock')" id="tab-stock" class="inactive-tab tab-btn group w-1/4"><div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-boxes-stacked text-xl"></i></div><span class="text-[10px] font-bold uppercase tracking-wider">Stock</span></button>
-        <button onclick="switchTab('history')" id="tab-history" class="inactive-tab tab-btn group w-1/4"><div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-chart-line text-xl"></i></div><span class="text-[10px] font-bold uppercase tracking-wider">Journal</span></button>
-        <button onclick="switchTab('stats')" id="tab-stats" class="inactive-tab tab-btn group w-1/4"><div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-chart-pie text-xl"></i></div><span class="text-[10px] font-bold uppercase tracking-wider">Stats</span></button>
+    <nav class="flex-none pb-safe h-20 flex justify-between items-stretch z-40 relative shadow-lg bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-white/10">
+        <button onclick="switchTab('pos')" id="tab-pos" class="active-tab tab-btn group w-1/3"><i class="fa-solid fa-cash-register text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">Caisse</span></button>
+        <button onclick="switchTab('stock')" id="tab-stock" class="inactive-tab tab-btn group w-1/3"><i class="fa-solid fa-boxes-stacked text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">Stock</span></button>
+        <button onclick="switchTab('history')" id="tab-history" class="inactive-tab tab-btn group w-1/3"><i class="fa-solid fa-chart-line text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">Journal</span></button>
     </nav>
 
-    <div id="paymentModal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl border border-blue-500/30 text-center relative overflow-hidden transform scale-100 transition-all">
-            <h3 class="text-xl font-black dark:text-white mb-2">Règlement</h3>
-            <p class="text-xs text-slate-500 font-bold uppercase mb-6">Total à payer : <span id="payment-total-display" class="text-blue-600 dark:text-blue-400 text-lg">0 F</span></p>
-            <div class="text-left mb-4"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Montant Versé (Aujourd'hui)</label><div class="relative mt-1"><input type="number" id="payment-input" class="w-full p-4 text-center text-2xl font-mono font-bold rounded-xl bg-slate-50 dark:bg-[#0b0b0f] border-2 border-slate-200 dark:border-slate-700 outline-none focus:border-blue-500 text-slate-900 dark:text-white transition" placeholder="0"><span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">F</span></div></div>
-            <div class="flex gap-3"><button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Annuler</button><button onclick="confirmPayment()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition">VALIDER</button></div>
-        </div>
-    </div>
-
     <div id="receiptModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 text-center relative overflow-hidden transform scale-100 transition-all">
-            <div class="absolute top-0 left-0 w-full h-2 bg-green-500"></div><div class="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-check text-4xl text-green-500"></i></div>
-            <h3 class="text-2xl font-black mb-2 dark:text-white">Validé !</h3>
-            <div class="flex flex-col gap-3 mt-4"><a id="btn-whatsapp" href="#" target="_blank" class="w-full py-4 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-3"><i class="fa-brands fa-whatsapp text-2xl"></i><span>WhatsApp</span></a><a id="btn-sms" href="#" class="w-full py-4 rounded-xl bg-blue-500 text-white font-bold flex items-center justify-center gap-3"><i class="fa-solid fa-message text-xl"></i><span>SMS</span></a><button onclick="closeReceiptModal()" class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300">Retour</button></div>
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 text-center relative overflow-hidden">
+            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-check text-4xl text-white"></i></div>
+            <h3 class="text-2xl font-black mb-8 dark:text-white">Vente Validée !</h3>
+            <div class="flex flex-col gap-3">
+                <a id="btn-whatsapp" href="#" target="_blank" class="w-full py-4 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-3">WhatsApp</a>
+                <button onclick="closeReceiptModal()" class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300">Retour</button>
+            </div>
         </div>
     </div>
 
     <div id="productModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-bold dark:text-white">Nouveau Produit</h3><button onclick="document.getElementById('productModal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-bold dark:text-white">Produit</h3><button onclick="document.getElementById('productModal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="space-y-4">
-                <div class="mt-1 relative group"><input type="file" id="new-prod-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" onchange="handleImageUpload(this)"><div class="w-full h-32 bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400" id="image-preview-container"><i class="fa-solid fa-camera text-2xl mb-2"></i><span class="text-xs font-bold">Photo</span></div><img id="image-preview" src="" class="absolute inset-0 w-full h-full object-cover rounded-xl hidden pointer-events-none"></div>
-                <input type="text" id="new-prod-name" placeholder="Nom produit" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 font-bold">
-                <div class="flex gap-3"><input type="number" id="new-prod-price" placeholder="Prix" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 font-bold"><input type="number" id="new-prod-stock" placeholder="Stock" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 font-bold"></div>
-                <select id="new-prod-cat" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 font-bold"><option value="Matelas">Matelas</option><option value="Oreillers">Oreillers</option><option value="Draps">Draps</option><option value="Autres">Autres</option></select>
+                <div class="mt-1 relative group"><input type="file" id="new-prod-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 z-10" onchange="handleImageUpload(this)"><div class="w-full h-32 bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400" id="image-preview-container"><i class="fa-solid fa-camera text-2xl"></i></div><img id="image-preview" src="" class="absolute inset-0 w-full h-full object-cover rounded-xl hidden"></div>
+                <input type="text" id="new-prod-name" placeholder="Nom" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold">
+                <div class="flex gap-3"><input type="number" id="new-prod-price" placeholder="Prix" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold"><input type="number" id="new-prod-stock" placeholder="Stock" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold"></div>
+                <select id="new-prod-cat" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold"><option value="Matelas">Matelas</option><option value="Oreillers">Oreillers</option><option value="Draps">Draps</option><option value="Autres">Autres</option></select>
                 <button onclick="saveNewProduct()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-xl mt-4">ENREGISTRER</button>
             </div>
         </div>
@@ -123,38 +99,31 @@
 
     <div id="priceModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
         <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl text-center">
-            <h3 class="text-xl font-black dark:text-white mb-1">Prix</h3>
-            <p class="text-xs text-slate-500 font-bold uppercase mb-6" id="price-modal-product">Article...</p>
+            <h3 class="text-xl font-black dark:text-white mb-4">Prix</h3>
             <input type="number" id="negotiated-price" class="w-full p-4 text-center text-2xl font-mono font-bold rounded-xl bg-slate-50 dark:bg-[#0b0b0f] mb-6" placeholder="0">
-            <div class="flex gap-3"><button onclick="closePriceModal()" class="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-500">Annuler</button><button onclick="saveNegotiatedPrice()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold">Valider</button></div>
+            <div class="flex gap-3"><button onclick="closePriceModal()" class="flex-1 py-3 rounded-xl bg-slate-100 font-bold">Annuler</button><button onclick="saveNegotiatedPrice()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold">Valider</button></div>
         </div>
     </div>
 
-    <div id="settingsModal" class="fixed inset-0 z-[220] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl text-center"><div class="flex justify-between items-center mb-6"><h3 class="text-xl font-bold dark:text-white">Paramètres</h3><button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button></div><div class="space-y-3"><button onclick="exportData()" class="w-full py-4 rounded-xl bg-blue-600/10 text-blue-600 font-bold border border-blue-600/20">Sauvegarder</button><div class="relative"><button class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 font-bold">Restaurer</button><input type="file" onchange="confirmImport(this)" class="absolute inset-0 opacity-0 cursor-pointer"></div></div><p class="text-xs text-slate-400 mt-6">v9.0 Final</p></div></div>
-    <div id="importConfirmModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-[#0f172a] w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-2xl font-black text-yellow-500 mb-4">Restauration</h3><div class="flex gap-3"><button onclick="closeModal('importConfirmModal')" class="flex-1 py-3 rounded-xl bg-slate-800 text-slate-400 font-bold">Non</button><button onclick="executeImport()" class="flex-1 py-3 rounded-xl bg-yellow-600 text-white font-bold">Oui</button></div></div></div>
-    <div id="resetModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-[#0f172a] w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-2xl font-black text-red-500 mb-4">RESET</h3><div class="flex gap-3"><button onclick="closeModal('resetModal')" class="flex-1 py-3 rounded-xl bg-slate-800 text-slate-400 font-bold">Non</button><button onclick="executeReset()" class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold">Oui</button></div></div></div>
-    <div id="successModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-[#0f172a] w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-2xl font-black text-green-500 mb-4">Succès</h3><p id="successMessage" class="text-slate-400 mb-8">OK</p><button onclick="closeModal('successModal')" class="w-full py-3 rounded-xl bg-green-600 text-white font-bold">OK</button></div></div>
+    <div id="settingsModal" class="fixed inset-0 z-[220] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-bold mb-6 dark:text-white">Paramètres</h3><div class="space-y-3"><button onclick="exportData()" class="w-full py-4 rounded-xl bg-blue-50 text-blue-600 font-bold">Sauvegarder</button><div class="relative"><button class="w-full py-4 rounded-xl bg-slate-100 font-bold">Restaurer</button><input type="file" onchange="confirmImport(this)" class="absolute inset-0 opacity-0"></div><button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="w-full py-4 rounded-xl text-slate-400">Fermer</button></div><p class="text-xs text-slate-400 mt-6">v12.0</p></div></div>
+    <div id="importConfirmModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-black mb-4 dark:text-white">Restauration</h3><div class="flex gap-3"><button onclick="closeModal('importConfirmModal')" class="flex-1 py-3 rounded-xl bg-slate-100 font-bold">Non</button><button onclick="executeImport()" class="flex-1 py-3 rounded-xl bg-yellow-500 text-white font-bold">Oui</button></div></div></div>
+    <div id="resetModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-black mb-4 dark:text-white">RESET</h3><div class="flex gap-3"><button onclick="closeModal('resetModal')" class="flex-1 py-3 rounded-xl bg-slate-100 font-bold">Non</button><button onclick="executeReset()" class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold">Oui</button></div></div></div>
+    <div id="successModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-black mb-4 text-green-500">Succès</h3><button onclick="closeModal('successModal')" class="w-full py-3 rounded-xl bg-green-600 text-white font-bold">OK</button></div></div>
 
     <div id="lock-screen" class="fixed inset-0 z-[200] bg-slate-100 dark:bg-[#050505] flex flex-col items-center justify-center p-6 text-center">
         <div class="w-20 h-20 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-2xl mb-8"><i class="fa-solid fa-lock text-3xl"></i></div>
         <div class="flex gap-4 justify-center mb-8"><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div></div>
         <div class="grid grid-cols-3 gap-4 w-full max-w-xs">
-            <button onclick="enterPin(1)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">1</button>
-            <button onclick="enterPin(2)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">2</button>
-            <button onclick="enterPin(3)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">3</button>
-            <button onclick="enterPin(4)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">4</button>
-            <button onclick="enterPin(5)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">5</button>
-            <button onclick="enterPin(6)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">6</button>
-            <button onclick="enterPin(7)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">7</button>
-            <button onclick="enterPin(8)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">8</button>
-            <button onclick="enterPin(9)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">9</button>
-            <div></div><button onclick="enterPin(0)" class="h-16 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xl font-bold">0</button><button onclick="clearPin()" class="h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-delete-left text-xl"></i></button>
+            <button onclick="enterPin(1)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">1</button><button onclick="enterPin(2)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">2</button><button onclick="enterPin(3)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">3</button>
+            <button onclick="enterPin(4)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">4</button><button onclick="enterPin(5)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">5</button><button onclick="enterPin(6)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">6</button>
+            <button onclick="enterPin(7)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">7</button><button onclick="enterPin(8)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">8</button><button onclick="enterPin(9)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">9</button>
+            <div></div><button onclick="enterPin(0)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">0</button><button onclick="clearPin()" class="h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-delete-left text-xl"></i></button>
         </div>
     </div>
 
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(reg => console.log('Offline Ready V9', reg)); });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(reg => console.log('V12 OK')); });
         }
     </script>
     <script src="script.js"></script>
