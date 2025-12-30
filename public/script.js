@@ -1,5 +1,5 @@
 // --- SAUVEGARDE & RESTAURATION (MODALES) ---
-let fileToImport = null; // Variable temporaire pour le fichier
+let fileToImport = null; 
 
 window.exportData = () => {
     const data = {
@@ -8,7 +8,6 @@ window.exportData = () => {
         pin: localStorage.getItem('shop_pin') || "8388",
         date: new Date().toLocaleDateString()
     };
-    
     const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -18,7 +17,6 @@ window.exportData = () => {
     a.click();
     document.body.removeChild(a);
     
-    // Afficher Modal Succès
     document.getElementById('settingsModal').classList.add('hidden');
     document.getElementById('successMessage').textContent = "Sauvegarde téléchargée ! Gardez ce fichier précieusement.";
     document.getElementById('successModal').classList.remove('hidden');
@@ -30,12 +28,11 @@ window.confirmImport = (input) => {
         document.getElementById('settingsModal').classList.add('hidden');
         document.getElementById('importConfirmModal').classList.remove('hidden');
     }
-    input.value = ''; // Reset pour permettre de re-sélectionner le même fichier
+    input.value = ''; 
 };
 
 window.executeImport = () => {
     if (!fileToImport) return;
-    
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
@@ -44,12 +41,9 @@ window.executeImport = () => {
                 localStorage.setItem('shop_products', data.products);
                 localStorage.setItem('shop_sales', data.sales);
                 if (data.pin) localStorage.setItem('shop_pin', data.pin);
-                
-                // Succès puis reload
                 document.getElementById('importConfirmModal').classList.add('hidden');
                 document.getElementById('successMessage').textContent = "Données restaurées avec succès !";
                 document.getElementById('successModal').classList.remove('hidden');
-                
                 setTimeout(() => window.location.reload(), 1500);
             } else {
                 alert("❌ Fichier invalide.");
@@ -73,7 +67,6 @@ window.closeModal = (modalId) => {
 let currentPinInput = "";
 const DEFAULT_PIN = "8388"; 
 const RESET_PIN = "1999"; 
-
 let userPin = localStorage.getItem('shop_pin') || DEFAULT_PIN;
 
 if (!sessionStorage.getItem('is_logged_in')) {
@@ -114,7 +107,6 @@ function checkPin() {
         document.getElementById('resetModal').classList.remove('hidden');
         return;
     }
-
     if (currentPinInput === userPin) {
         sessionStorage.setItem('is_logged_in', 'true');
         const lockScreen = document.getElementById('lock-screen');
@@ -145,7 +137,6 @@ window.executeReset = () => {
 // --- CONFIGURATION & DONNÉES ---
 let products = JSON.parse(localStorage.getItem('shop_products')) || []; 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
-
 let cart = {}; 
 let cartPrices = {}; 
 let currentFilter = 'Tout';
@@ -160,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p.totalInput === undefined) p.totalInput = p.stock;
     });
     saveData();
-
     sortProducts(); 
     renderProducts();
     updateStockUI();
@@ -406,6 +396,7 @@ function updateCartUI() {
     }
 }
 
+// --- VALIDATION VENTE (CALCUL SURPLUS) ---
 window.processSale = () => {
     const total = Object.entries(cart).reduce((sum, [id, qty]) => {
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : products.find(x => x.id == id).price;
@@ -416,10 +407,17 @@ window.processSale = () => {
 
     const clientName = document.getElementById('client-name').value || "Client";
     const saleItems = [];
+    let saleSurplus = 0; // BONUS TOTAL DE CETTE VENTE
     
     for (const [id, qty] of Object.entries(cart)) {
         const p = products.find(x => x.id == id);
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : p.price;
+        const basePrice = p.price; // PRIX CATALOGUE
+        
+        // Calcul du surplus sur cet article (Prix Vendu - Prix Catalogue) * Qté
+        const itemSurplus = (sellingPrice - basePrice) * qty;
+        saleSurplus += itemSurplus;
+
         p.stock -= qty;
         saleItems.push({ name: p.name, qty: qty, price: sellingPrice });
     }
@@ -429,7 +427,8 @@ window.processSale = () => {
         date: new Date().toLocaleString(),
         client: clientName,
         items: saleItems,
-        total: total
+        total: total,
+        surplus: saleSurplus // ON SAUVEGARDE LE SURPLUS
     };
     
     sales.unshift(sale);
@@ -610,33 +609,50 @@ function updateHistoryUI() {
     const currentYear = new Date().getFullYear();
     const totalAllTime = sales.reduce((sum, s) => sum + s.total, 0);
     const totalYear = sales.filter(s => new Date(s.id).getFullYear() === currentYear).reduce((sum, s) => sum + s.total, 0);
+    
+    // NOUVEAU CALCUL : SOMME DES SURPLUS RÉELS (plus de 9%)
+    const annualBonus = sales
+        .filter(s => new Date(s.id).getFullYear() === currentYear)
+        .reduce((sum, s) => sum + (s.surplus || 0), 0); // On additionne le surplus stocké dans chaque vente
 
     let html = `
     <div class="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-xl p-4 mb-4 shadow-lg text-white border border-blue-700 relative overflow-hidden">
         <div class="relative z-10">
             <div class="flex justify-between items-start">
                 <div>
-                    <p class="text-[10px] uppercase font-bold text-blue-300 tracking-wider">CA Annuel (${currentYear})</p>
-                    <p class="text-3xl font-mono font-bold text-white mb-1">${totalYear.toLocaleString()} <span class="text-sm text-blue-200">F</span></p>
+                    <p class="text-[10px] uppercase font-bold text-blue-300 tracking-wider">BONUS ANNUEL (SURPLUS)</p>
+                    <p class="text-3xl font-mono font-bold text-white mb-1">${annualBonus.toLocaleString()} <span class="text-sm text-blue-200">F</span></p>
                 </div>
                 <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm"><i class="fa-solid fa-chart-line text-2xl text-blue-300"></i></div>
             </div>
         </div>
         <i class="fa-solid fa-coins absolute -bottom-4 -right-4 text-8xl text-white/5 rotate-12"></i>
     </div>
+    
     <div class="bg-slate-800 rounded-xl p-3 flex justify-between items-center border border-slate-700 mb-4">
-        <span class="text-xs text-slate-400 font-bold uppercase">Total Global (Historique)</span>
+        <span class="text-xs text-slate-400 font-bold uppercase">Total Global Ventes</span>
         <span class="font-mono font-bold text-slate-200">${totalAllTime.toLocaleString()} F</span>
     </div>`;
 
     if (sales.length === 0) {
         html += `<div class="text-center mt-10 opacity-50"><i class="fa-solid fa-file-invoice text-4xl text-slate-600 mb-2"></i><p class="text-slate-500 text-sm">Aucune vente.</p></div>`;
     } else {
-        html += sales.map(s => `
+        html += sales.map(s => {
+            // Affichage du surplus individuel par vente (optionnel mais utile)
+            const surplusText = s.surplus > 0 ? `<span class="text-xs font-bold text-green-400 ml-2">(+${s.surplus.toLocaleString()})</span>` : '';
+            
+            return `
             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500 mb-3">
-                <div class="flex justify-between mb-2"><span class="font-bold text-sm text-slate-600 dark:text-slate-400">${s.date.split(',')[0]}</span><span class="font-bold text-green-600">${s.total.toLocaleString()} F</span></div>
+                <div class="flex justify-between mb-2">
+                    <span class="font-bold text-sm text-slate-600 dark:text-slate-400">${s.date.split(',')[0]}</span>
+                    <div>
+                        <span class="font-bold text-slate-200">${s.total.toLocaleString()} F</span>
+                        ${surplusText}
+                    </div>
+                </div>
                 <div class="text-sm dark:text-white"><span class="font-bold">${s.client}</span> a acheté ${s.items.length} article(s).</div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     }
     list.innerHTML = html;
 }
