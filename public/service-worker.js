@@ -1,4 +1,4 @@
-const CACHE_NAME = 'f4ma-stock-v3'; // On passe en V3 pour forcer le nettoyage
+const CACHE_NAME = 'f4ma-stock-v4'; // On passe en V4 pour forcer le nettoyage
 
 // Fichiers CRITIQUES (Locaux uniquement)
 // On ne met PAS les liens https:// ici pour éviter les erreurs d'installation
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
   '/index.html',
   '/script.js',
   '/manifest.json'
+'https://cdn.jsdelivr.net/npm/chart.js' // <--- LIGNE AJOUTÉE
 ];
 
 // 1. INSTALLATION (Rapide et Sûre)
