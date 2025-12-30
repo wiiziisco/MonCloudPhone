@@ -11,6 +11,12 @@ let tempImageBase64 = null;
 let chartTrend = null;
 let chartPie = null;
 
+// Variables pour le PIN
+let currentPinInput = "";
+const DEFAULT_PIN = "8388";
+const RESET_PIN = "1999";
+let userPin = localStorage.getItem('shop_pin') || DEFAULT_PIN;
+
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
@@ -18,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveData();
     sortProducts(); renderProducts(); updateStockUI(); updateHistoryUI(); updateDailyTotal();
     
-    let userPin = localStorage.getItem('shop_pin') || "8388";
+    // Vérification Connexion
     if (sessionStorage.getItem('is_logged_in')) {
         const lockScreen = document.getElementById('lock-screen');
         if(lockScreen) lockScreen.style.display = 'none';
@@ -43,7 +49,7 @@ window.switchTab = (tabName) => {
     if (tabName === 'stats') renderCharts();
 };
 
-// --- GRAPHIQUES ---
+// --- GRAPHIQUES (Chart.js) ---
 function renderCharts() {
     if (sales.length === 0) return;
     const last7Days = {}; const daysLabels = [];
@@ -79,20 +85,26 @@ function renderCharts() {
     if (chartTrend) chartTrend.destroy();
     if (chartPie) chartPie.destroy();
 
-    chartTrend = new Chart(document.getElementById('chart-trend').getContext('2d'), {
-        type: 'line',
-        data: { labels: daysLabels, datasets: [{ label: 'Ventes', data: Object.values(last7Days), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 4 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } } } }
-    });
+    const ctxTrend = document.getElementById('chart-trend');
+    if (ctxTrend) {
+        chartTrend = new Chart(ctxTrend.getContext('2d'), {
+            type: 'line',
+            data: { labels: daysLabels, datasets: [{ label: 'Ventes', data: Object.values(last7Days), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } } } }
+        });
+    }
 
-    chartPie = new Chart(document.getElementById('chart-pie').getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: Object.keys(catStats), datasets: [{ data: Object.values(catStats), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, family: 'Rajdhani' }, usePointStyle: true } } }, cutout: '70%' }
-    });
+    const ctxPie = document.getElementById('chart-pie');
+    if (ctxPie) {
+        chartPie = new Chart(ctxPie.getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: Object.keys(catStats), datasets: [{ data: Object.values(catStats), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, family: 'Rajdhani' }, usePointStyle: true } } }, cutout: '70%' }
+        });
+    }
 }
 
-// --- LOGIQUE METIER ---
+// --- LOGIQUE CAISSE ---
 window.processSale = () => {
     const total = Object.entries(cart).reduce((sum, [id, qty]) => {
         const sellingPrice = cartPrices[id] !== undefined ? cartPrices[id] : products.find(x => x.id == id).price;
@@ -136,7 +148,7 @@ function showReceiptModal(sale) {
     document.getElementById('btn-sms').href = `sms:?body=${encoded}`;
 }
 
-// --- GESTION IMAGE FIX ---
+// --- GESTION IMAGE ---
 window.handleImageUpload = (input) => {
     const file = input.files[0];
     if (!file) return;
@@ -199,16 +211,64 @@ function updateCartUI() {
     }
     container.innerHTML = html; const badge = document.getElementById('cart-badge'); badge.innerText = count; if (count > 0) badge.classList.remove('scale-0'); else badge.classList.add('scale-0'); document.getElementById('cart-total-preview').innerText = total.toLocaleString() + ' F'; document.getElementById('cart-total-final').innerText = total.toLocaleString() + ' FCFA'; if (count === 1 && document.getElementById('cart-panel').style.transform !== 'translateY(0px)') { window.toggleCart(); }
 }
+
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
+
+// --- SAUVEGARDE & RESTAURATION ---
 window.exportData = () => { const data = { products: localStorage.getItem('shop_products'), sales: localStorage.getItem('shop_sales'), pin: localStorage.getItem('shop_pin') || "8388", date: new Date().toLocaleDateString() }; const blob = new Blob([JSON.stringify(data)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_inventaire_${Date.now()}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); document.getElementById('settingsModal').classList.add('hidden'); document.getElementById('successMessage').textContent = "Sauvegarde téléchargée !"; document.getElementById('successModal').classList.remove('hidden'); };
 window.confirmImport = (input) => { if (input.files && input.files[0]) { fileToImport = input.files[0]; document.getElementById('settingsModal').classList.add('hidden'); document.getElementById('importConfirmModal').classList.remove('hidden'); } input.value = ''; };
 window.executeImport = () => { if (!fileToImport) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = JSON.parse(e.target.result); if (data.products && data.sales) { localStorage.setItem('shop_products', data.products); localStorage.setItem('shop_sales', data.sales); if (data.pin) localStorage.setItem('shop_pin', data.pin); document.getElementById('importConfirmModal').classList.add('hidden'); document.getElementById('successMessage').textContent = "Données restaurées !"; document.getElementById('successModal').classList.remove('hidden'); setTimeout(() => window.location.reload(), 1500); } else { alert("❌ Fichier invalide."); } } catch (err) { alert("❌ Erreur de lecture."); } }; reader.readAsText(fileToImport); };
 window.closeModal = (modalId) => { document.getElementById(modalId).classList.add('hidden'); if (modalId === 'resetModal') { currentPinInput = ""; updatePinDots(); } };
-window.executeReset = () => { localStorage.clear(); document.body.style.opacity = '0'; setTimeout(() => { window.location.reload(); }, 500); };
-window.enterPin = (num) => { if (currentPinInput.length < 4) { currentPinInput += num; updatePinDots(); if (currentPinInput.length === 4) checkPin(); } };
+
+// --- SÉCURITÉ / PIN (C'EST ICI QUE CELA MANQUAIT !) ---
+window.enterPin = (num) => { 
+    if (currentPinInput.length < 4) { 
+        currentPinInput += num; 
+        updatePinDots(); 
+        if (currentPinInput.length === 4) checkPin(); 
+    } 
+};
+
 window.clearPin = () => { currentPinInput = ""; updatePinDots(); };
-function updatePinDots() { const dots = document.querySelectorAll('.dot'); dots.forEach((dot, index) => { if (index < currentPinInput.length) { dot.classList.remove('bg-slate-700'); dot.classList.add('bg-blue-500'); } else { dot.classList.remove('bg-blue-500'); dot.classList.add('bg-slate-700'); } }); }
-function checkPin() { if (currentPinInput === "1999") { document.getElementById('resetModal').classList.remove('hidden'); return; } if (currentPinInput === userPin) { sessionStorage.setItem('is_logged_in', 'true'); const lockScreen = document.getElementById('lock-screen'); lockScreen.style.opacity = '0'; setTimeout(() => { lockScreen.style.display = 'none'; }, 300); } else { navigator.vibrate(200); const dots = document.querySelectorAll('.dot'); dots.forEach(d => d.classList.add('bg-red-500')); setTimeout(() => { currentPinInput = ""; updatePinDots(); dots.forEach(d => d.classList.remove('bg-red-500')); }, 500); } }
+
+function updatePinDots() { 
+    const dots = document.querySelectorAll('.dot'); 
+    dots.forEach((dot, index) => { 
+        if (index < currentPinInput.length) { 
+            dot.classList.remove('bg-slate-300', 'dark:bg-slate-700'); 
+            dot.classList.add('bg-blue-600', 'dark:bg-blue-400'); 
+        } else { 
+            dot.classList.remove('bg-blue-600', 'dark:bg-blue-400'); 
+            dot.classList.add('bg-slate-300', 'dark:bg-slate-700'); 
+        } 
+    }); 
+}
+
+function checkPin() { 
+    if (currentPinInput === RESET_PIN) { 
+        document.getElementById('resetModal').classList.remove('hidden'); 
+        return; 
+    } 
+    if (currentPinInput === userPin) { 
+        sessionStorage.setItem('is_logged_in', 'true'); 
+        const lockScreen = document.getElementById('lock-screen'); 
+        lockScreen.style.opacity = '0'; 
+        setTimeout(() => { lockScreen.style.display = 'none'; }, 300); 
+    } else { 
+        if (navigator.vibrate) navigator.vibrate(200); 
+        const dots = document.querySelectorAll('.dot'); 
+        dots.forEach(d => d.classList.add('bg-red-500')); 
+        setTimeout(() => { 
+            currentPinInput = ""; 
+            updatePinDots(); 
+            dots.forEach(d => d.classList.remove('bg-red-500')); 
+        }, 500); 
+    } 
+}
+
+window.executeReset = () => { localStorage.clear(); document.body.style.opacity = '0'; setTimeout(() => { window.location.reload(); }, 500); };
+
+// --- AUTRES ---
 function updateStockUI() { sortProducts(); const list = document.getElementById('stock-list'); const currentYear = new Date().getFullYear(); const annualProducts = products.filter(p => new Date(p.id).getFullYear() === currentYear); const currentStockValue = annualProducts.reduce((sum, p) => sum + (p.price * p.stock), 0); const totalBudgetValue = annualProducts.reduce((sum, p) => sum + (p.price * (p.totalInput || 0)), 0); const ristourne = Math.round(totalBudgetValue * 0.09); let html = `<div class="bg-white dark:bg-gradient-to-r dark:from-slate-800 dark:to-slate-900 rounded-xl p-4 mb-4 shadow-lg border border-slate-200 dark:border-slate-700 relative overflow-hidden text-slate-900 dark:text-white"><div class="relative z-10"><div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100 dark:border-white/10"><div><p class="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Total Entrées (${currentYear})</p><p class="text-2xl font-mono font-bold text-slate-800 dark:text-white">${totalBudgetValue.toLocaleString()} <span class="text-xs text-slate-500">F</span></p></div><div class="bg-slate-100 dark:bg-white/5 p-2 rounded-lg"><i class="fa-solid fa-truck-ramp-box text-xl text-slate-400"></i></div></div><div class="flex justify-between items-end"><div><p class="text-[9px] uppercase font-bold text-blue-500 dark:text-cyan-400 tracking-wider">Valeur Restante</p><p class="text-xl font-mono font-bold text-blue-600 dark:text-cyan-400">${currentStockValue.toLocaleString()} <span class="text-xs text-blue-400 dark:text-cyan-600">F</span></p></div><div class="text-right"><p class="text-[8px] uppercase text-orange-500/80 font-bold mb-1">Ristourne (Sur Achats)</p><div class="inline-flex items-center gap-2 bg-orange-50 dark:bg-orange-500/10 px-2 py-1 rounded border border-orange-200 dark:border-orange-500/20"><span class="text-orange-600 dark:text-orange-400 text-xs font-bold">9%</span><span class="text-orange-600 dark:text-orange-400 font-mono font-bold text-sm">${ristourne.toLocaleString()} F</span></div></div></div></div></div>`; if (products.length === 0) { html += `<div class="text-center mt-10 opacity-50"><i class="fa-solid fa-wind text-4xl text-slate-600 mb-2"></i><p class="text-slate-500 text-sm">Le stock est vide.</p></div>`; } else { html += products.map(p => `<div class="bg-white dark:bg-slate-800 p-3 rounded-xl flex justify-between items-center shadow-sm border border-slate-100 dark:border-transparent ${p.stock === 0 ? 'opacity-60 border-red-200' : 'mb-3'}"><div class="flex items-center gap-3 flex-1"><div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden flex-none">${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div>'}</div><div class="flex-1"><div class="flex items-center gap-2 mb-0.5"><p class="font-bold text-slate-800 dark:text-white leading-tight ${p.stock === 0 ? 'line-through decoration-red-500' : ''}">${p.name}</p><button onclick="openProductModal(${p.id})" class="text-blue-500 hover:text-blue-600 p-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button></div><p class="text-xs text-slate-500">${p.category} - ${p.price.toLocaleString()} F</p></div></div><div class="flex items-center gap-2 ml-2"><button onclick="adjustStock(${p.id}, -1)" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center"><i class="fa-solid fa-minus"></i></button><span class="font-mono font-bold w-6 text-center text-slate-800 dark:text-white text-sm">${p.stock}</span><button onclick="adjustStock(${p.id}, 1)" class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center"><i class="fa-solid fa-plus"></i></button></div></div>`).join(''); } list.innerHTML = html; }
 window.adjustStock = (id, amount) => { const p = products.find(x => x.id === id); p.stock += amount; if (amount > 0) p.totalInput = (p.totalInput || 0) + amount; if (p.stock < 0) p.stock = 0; saveData(); renderProducts(); updateStockUI(); };
 window.openProductModal = (id = null) => { const modal = document.getElementById('productModal'); const title = modal.querySelector('h3'); const preview = document.getElementById('image-preview'); const container = document.getElementById('image-preview-container'); tempImageBase64 = null; preview.src = ""; preview.classList.add('hidden'); container.classList.remove('opacity-0'); if (id) { const p = products.find(x => x.id === id); editingId = id; title.textContent = "Modifier Produit"; document.getElementById('new-prod-name').value = p.name; document.getElementById('new-prod-price').value = p.price; document.getElementById('new-prod-stock').value = p.stock; document.getElementById('new-prod-cat').value = p.category; if (p.image) { tempImageBase64 = p.image; preview.src = p.image; preview.classList.remove('hidden'); container.classList.add('opacity-0'); } } else { editingId = null; title.textContent = "Nouveau Produit"; document.getElementById('new-prod-name').value = ""; document.getElementById('new-prod-price').value = ""; document.getElementById('new-prod-stock').value = ""; } modal.classList.remove('hidden'); };
