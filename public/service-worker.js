@@ -1,56 +1,65 @@
-// On change le nom pour forcer la mise à jour
-const CACHE_NAME = 'f4ma-stock-v2';
+const CACHE_NAME = 'f4ma-stock-v3'; // On passe en V3 pour forcer le nettoyage
 
-const ASSETS_TO_CACHE = [
+// Fichiers CRITIQUES (Locaux uniquement)
+// On ne met PAS les liens https:// ici pour éviter les erreurs d'installation
+const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/script.js',
-  '/manifest.json', // Maintenant ce fichier existe !
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap'
+  '/manifest.json'
 ];
 
-// INSTALLATION
+// 1. INSTALLATION (Rapide et Sûre)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Mise en cache des fichiers...');
-      return cache.addAll(ASSETS_TO_CACHE);
+      console.log('[Service Worker] Installation des fichiers critiques...');
+      return cache.addAll(STATIC_ASSETS);
     })
   );
-  self.skipWaiting(); // Force l'activation immédiate
+  self.skipWaiting();
 });
 
-// ACTIVATION (Nettoyage des vieux caches v1)
+// 2. ACTIVATION (Nettoyage V1 et V2)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
       return Promise.all(
         keyList.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('Suppression ancien cache:', key);
+            console.log('[Service Worker] Suppression ancien cache:', key);
             return caches.delete(key);
           }
         })
       );
     })
   );
-  self.clients.claim(); // Prend le contrôle immédiat de la page
+  self.clients.claim();
 });
 
-// INTERCEPTION (Mode Offline)
+// 3. INTERCEPTION (Stratégie "Cache First, puis Network + Mise en cache dynamique")
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // 1. Si on a le fichier en cache, on le donne (Offline marche !)
+      // A. Si c'est dans le cache, on le sert tout de suite (OFFLINE OK)
       if (cachedResponse) {
         return cachedResponse;
       }
-      // 2. Sinon on cherche sur internet
-      return fetch(event.request).catch(() => {
-        // 3. Si internet est coupé et qu'on a pas le fichier...
-        // On pourrait retourner une page "Hors Connexion" personnalisée ici
+
+      // B. Sinon, on va le chercher sur Internet
+      return fetch(event.request).then((networkResponse) => {
+        // Si la réponse est valide, on la met en cache pour la prochaine fois !
+        // C'est ici qu'on sauvegarde Tailwind, FontAwesome, etc. automatiquement
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // C. Si on est offline et qu'on a rien trouvé...
+        console.log("Pas de connexion et pas de cache pour : ", event.request.url);
       });
     })
   );
