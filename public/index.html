@@ -5,24 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <title>INVENTAIRE | Gestion Stock</title>
-    <meta name="description" content="Gestion de stock intelligente pour matelas et literie. Suivi des ventes, ristournes et statistiques.">
+    <meta name="description" content="Gestion de stock intelligente pour matelas et literie.">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     
-    <meta property="og:title" content="INVENTAIRE - Gestion Commerciale">
-    <meta property="og:description" content="🛏️ Stock Matelas & Literie. 📈 Suivi CA & Ristournes.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80">
-    <meta property="og:type" content="website">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Stock">
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
+    
     <script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -44,13 +35,13 @@
         updateTheme();
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
     </script>
+
     <style>
         body { height: 100dvh; } 
         .hide-scroll::-webkit-scrollbar { display: none; }
-        /* Suppression de la classe glass-panel fixe, on utilise Tailwind directement */
         .active-tab { color: #00f3ff; border-top: 2px solid #00f3ff; background: rgba(0, 243, 255, 0.05); }
         .inactive-tab { color: #64748b; border-top: 2px solid transparent; }
-        .tab-btn { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 33%; transition: all 0.3s; }
+        .tab-btn { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s; }
         .animate-fade-in { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
@@ -70,11 +61,9 @@
             <button onclick="window.location.reload()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-blue-500 active:rotate-180 transition-all shadow-sm">
                 <i class="fa-solid fa-rotate-right"></i>
             </button>
-            
             <button onclick="document.getElementById('settingsModal').classList.remove('hidden')" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-blue-500 transition-all shadow-sm">
                 <i class="fa-solid fa-gear"></i>
             </button>
-
             <div class="h-9 flex flex-col justify-center items-center bg-slate-50 dark:bg-white/5 px-3 rounded-full border border-slate-200 dark:border-white/10 ml-1 min-w-[90px]">
                 <span class="text-[8px] text-slate-500 dark:text-slate-400 uppercase font-bold leading-none mb-0.5">Ventes du jour</span>
                 <span class="text-xs font-black text-green-600 dark:text-green-400 font-mono leading-none" id="daily-total">0 F</span>
@@ -83,15 +72,14 @@
     </header>
 
     <main class="flex-1 overflow-hidden relative bg-slate-100 dark:bg-[#0b0b0f] w-full">
+        
         <section id="view-pos" class="absolute inset-0 flex flex-col transition-transform duration-300 z-10 w-full h-full">
-            
             <div class="px-4 pt-3 pb-1 flex-none z-20">
                 <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     <input type="text" oninput="searchProducts(this.value)" placeholder="Rechercher un produit..." class="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none font-bold text-slate-700 dark:text-white focus:border-blue-500 transition shadow-sm placeholder:font-normal text-sm">
                 </div>
             </div>
-
             <div class="flex-none px-4 py-3 overflow-x-auto hide-scroll flex gap-2" id="category-filters"></div>
             <div class="flex-1 overflow-y-auto px-4 pb-48 w-full">
                 <div id="product-grid" class="grid grid-cols-2 gap-3 pb-4"></div>
@@ -141,6 +129,7 @@
             <h2 class="text-2xl font-black uppercase tracking-tight mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2">Journal</h2>
             <div id="sales-history" class="space-y-3"></div>
         </section>
+
         <section id="view-stats" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20 w-full h-full">
             <h2 class="text-2xl font-black uppercase tracking-tight mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2">Analyses</h2>
             
@@ -169,22 +158,23 @@
                 </div>
             </div>
         </section>
+
     </main>
 
     <nav class="flex-none pb-safe h-20 flex justify-between items-stretch z-40 relative shadow-[0_-5px_20px_rgba(0,0,0,0.05)] shrink-0 w-full bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-white/10 transition-colors">
-        <button onclick="switchTab('pos')" id="tab-pos" class="active-tab tab-btn group">
+        <button onclick="switchTab('pos')" id="tab-pos" class="active-tab tab-btn group w-1/4">
             <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-cash-register text-xl"></i></div>
             <span class="text-[10px] font-bold uppercase tracking-wider">Caisse</span>
         </button>
-        <button onclick="switchTab('stock')" id="tab-stock" class="inactive-tab tab-btn group">
+        <button onclick="switchTab('stock')" id="tab-stock" class="inactive-tab tab-btn group w-1/4">
             <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
             <span class="text-[10px] font-bold uppercase tracking-wider">Stock</span>
         </button>
-        <button onclick="switchTab('history')" id="tab-history" class="inactive-tab tab-btn group">
+        <button onclick="switchTab('history')" id="tab-history" class="inactive-tab tab-btn group w-1/4">
             <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-chart-line text-xl"></i></div>
             <span class="text-[10px] font-bold uppercase tracking-wider">Journal</span>
         </button>
-        <button onclick="switchTab('stats')" id="tab-stats" class="inactive-tab tab-btn group">
+        <button onclick="switchTab('stats')" id="tab-stats" class="inactive-tab tab-btn group w-1/4">
             <div class="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 transition mb-1"><i class="fa-solid fa-chart-pie text-xl"></i></div>
             <span class="text-[10px] font-bold uppercase tracking-wider">Stats</span>
         </button>
@@ -375,6 +365,7 @@
             });
         }
     </script>
+
     <script src="script.js"></script>
 </body>
 </html>
