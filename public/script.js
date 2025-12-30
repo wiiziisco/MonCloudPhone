@@ -1,14 +1,14 @@
 // --- SÉCURITÉ (PIN CODE) ---
 let currentPinInput = "";
 const DEFAULT_PIN = "8388"; 
-// On récupère le PIN défini par l'utilisateur ou on met le défaut
+// Code de réinitialisation d'urgence
+const RESET_PIN = "9999"; 
+
 let userPin = localStorage.getItem('shop_pin') || DEFAULT_PIN;
 
-// Initialisation : On vérifie si on est déjà connecté (session)
 if (!sessionStorage.getItem('is_logged_in')) {
-    // Si pas connecté, le lock screen reste visible (il est visible par défaut dans le HTML)
+    // Lock screen visible par défaut
 } else {
-    // Si connecté, on cache le lock screen direct
     const lockScreen = document.getElementById('lock-screen');
     if(lockScreen) lockScreen.style.display = 'none';
 }
@@ -43,8 +43,21 @@ function updatePinDots() {
 }
 
 function checkPin() {
+    // CAS SPÉCIAL : CODE 9999 (RESET TOTAL)
+    if (currentPinInput === RESET_PIN) {
+        if (confirm("⚠️ ATTENTION : Vous allez effacer TOUT le stock et l'historique pour démarrer à zéro.\n\nConfirmer ?")) {
+            localStorage.clear();
+            alert("🧹 Système nettoyé ! Redémarrage...");
+            window.location.reload();
+        } else {
+            currentPinInput = "";
+            updatePinDots();
+        }
+        return;
+    }
+
+    // VÉRIFICATION NORMALE
     if (currentPinInput === userPin) {
-        // SUCCÈS
         sessionStorage.setItem('is_logged_in', 'true');
         const lockScreen = document.getElementById('lock-screen');
         lockScreen.style.opacity = '0';
@@ -52,8 +65,7 @@ function checkPin() {
             lockScreen.style.display = 'none';
         }, 300);
     } else {
-        // ÉCHEC
-        navigator.vibrate(200); // Vibre si possible
+        navigator.vibrate(200);
         const dots = document.querySelectorAll('.dot');
         dots.forEach(d => d.classList.add('bg-red-500'));
         setTimeout(() => {
@@ -64,14 +76,11 @@ function checkPin() {
     }
 }
 
-// --- CONFIGURATION & DONNÉES ---
-let products = JSON.parse(localStorage.getItem('shop_products')) || [
-    { id: 1, name: "Matelas ortho 3plcs ph2", price: 120000, category: "Matelas", stock: 5 },
-    { id: 2, name: "Matelas ortho 2plcs ph2", price: 250000, category: "Matelas", stock: 2 },
-    { id: 3, name: "Oreillers ortho", price: 15000, category: "Oreillers", stock: 20 }
-];
-
+// --- CONFIGURATION & DONNÉES (VIDES POUR PROD) ---
+// On commence avec des tableaux vides [] si rien n'est en mémoire
+let products = JSON.parse(localStorage.getItem('shop_products')) || []; 
 let sales = JSON.parse(localStorage.getItem('shop_sales')) || [];
+
 let cart = {}; 
 let cartPrices = {}; 
 let currentFilter = 'Tout';
@@ -81,6 +90,7 @@ let tempImageBase64 = null;
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Migration de sécurité (legacy)
     products = products.filter(p => p.category !== 'Draps' && p.name !== 'Parure de Draps');
     products.forEach(p => {
         if (p.totalInput === undefined) p.totalInput = p.stock;
@@ -113,12 +123,13 @@ window.handleImageUpload = (input) => {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
+                // Compression assez forte pour stocker beaucoup de produits
                 const MAX_WIDTH = 200;
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                tempImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                tempImageBase64 = canvas.toDataURL('image/jpeg', 0.6); // Qualité 60%
                 const preview = document.getElementById('image-preview');
                 preview.src = tempImageBase64;
                 preview.classList.remove('hidden');
@@ -166,12 +177,22 @@ function renderProducts() {
     const grid = document.getElementById('product-grid');
     const categories = ['Tout', ...new Set(products.map(p => p.category))];
     const filterContainer = document.getElementById('category-filters');
-    filterContainer.innerHTML = categories.map(c => 
-        `<button onclick="filter('${c}')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${currentFilter === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}">${c}</button>`
-    ).join('');
+    
+    // Si pas de catégories (stock vide), on ne montre rien
+    if (categories.length <= 1 && products.length === 0) {
+        filterContainer.innerHTML = '';
+    } else {
+        filterContainer.innerHTML = categories.map(c => 
+            `<button onclick="filter('${c}')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${currentFilter === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}">${c}</button>`
+        ).join('');
+    }
 
     if (products.length === 0) {
-        grid.innerHTML = `<div class="col-span-2 text-center mt-10 p-4 border-2 border-dashed border-slate-300 rounded-xl"><p class="text-slate-500 font-bold mb-2">Stock Vide</p><button onclick="switchTab('stock'); openProductModal()" class="text-blue-600 text-sm font-bold underline">Ajouter un premier article</button></div>`;
+        grid.innerHTML = `<div class="col-span-2 text-center mt-20 p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-3xl opacity-50">
+            <i class="fa-solid fa-box-open text-4xl text-slate-400 mb-4"></i>
+            <p class="text-slate-500 dark:text-slate-400 font-bold mb-4">Prêt au décollage !</p>
+            <button onclick="switchTab('stock'); openProductModal()" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-600/30">Créer le 1er Article</button>
+        </div>`;
         return;
     }
 
@@ -381,7 +402,7 @@ function showReceiptModal(sale) {
 
 window.closeReceiptModal = () => document.getElementById('receiptModal').classList.add('hidden');
 
-// --- GESTION STOCK ---
+// --- GESTION STOCK (HAUSSE + RISTOURNE) ---
 function updateStockUI() {
     sortProducts(); 
     const list = document.getElementById('stock-list');
@@ -420,7 +441,7 @@ function updateStockUI() {
     `;
 
     if (products.length === 0) {
-        html += `<p class="text-center text-slate-400 mt-4">Inventaire vide.</p>`;
+        html += `<div class="text-center mt-10 opacity-50"><i class="fa-solid fa-wind text-4xl text-slate-600 mb-2"></i><p class="text-slate-500 text-sm">Le stock est vide.</p></div>`;
     } else {
         html += products.map(p => `
             <div class="bg-white dark:bg-slate-800 p-3 rounded-xl flex justify-between items-center shadow-sm ${p.stock === 0 ? 'opacity-60 border border-red-200' : 'mb-3'}">
@@ -547,7 +568,7 @@ function updateHistoryUI() {
     </div>`;
 
     if (sales.length === 0) {
-        html += `<p class="text-center text-slate-400 mt-10">Aucune vente enregistrée.</p>`;
+        html += `<div class="text-center mt-10 opacity-50"><i class="fa-solid fa-file-invoice text-4xl text-slate-600 mb-2"></i><p class="text-slate-500 text-sm">Aucune vente.</p></div>`;
     } else {
         html += sales.map(s => `
             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500 mb-3">
