@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matelas DoDo - Manager v2.3 (Prix Flexible)</title>
+    <title>Matelas DoDo - Manager v2.4 (Corrected)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* --- CONFIGURATION GLOBALE --- */
@@ -45,6 +45,7 @@
         h1 { font-weight: 300; text-transform: uppercase; font-size: 1.4rem; }
         h1 span { color: var(--accent); font-weight: bold; }
 
+        /* NAVIGATION MODIFIÉE : Caisse gauche, Dash milieu, Stock droite */
         nav { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px; border-top: var(--glass-border); z-index: 1000; }
         .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .nav-btn.active { color: var(--accent); transform: translateY(-3px); }
@@ -86,6 +87,7 @@
 
         /* --- NOTIFICATION --- */
         #notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: var(--success); color: white; border-radius: 8px; transform: translateX(150%); transition: transform 0.3s; z-index: 3000; }
+        .notif-error { background: var(--danger) !important; }
     </style>
 </head>
 <body onload="loadData()">
@@ -100,6 +102,7 @@
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Prix Stock: <span id="modalStockPrice">0</span></p>
 
             <input type="hidden" id="modalProdId">
+            <input type="hidden" id="modalMaxStock"> 
 
             <div id="saleFormStep">
                 <label>Nom du Client</label>
@@ -111,7 +114,7 @@
                 <label>Quantité</label>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="adjustQty(-1)" style="width: 50px;">-</button>
-                    <input type="number" id="modalQty" value="1" min="1" style="text-align: center;">
+                    <input type="number" id="modalQty" value="1" min="1" style="text-align: center;" onchange="validateQtyInput(this)">
                     <button onclick="adjustQty(1)" style="width: 50px;">+</button>
                 </div>
                 <br>
@@ -136,7 +139,7 @@
         <br>
         <div class="dashboard-grid">
             <div class="card stat-card">
-                <div class="stat-label">Stock Entrant</div>
+                <div class="stat-label">Valeur Stock Actuel</div>
                 <div class="stat-val" id="totalStockValue">0</div>
             </div>
             <div class="card stat-card">
@@ -144,9 +147,9 @@
                 <div class="stat-val" id="salesToday">0</div>
             </div>
             <div class="card stat-card" style="border-bottom: 3px solid var(--warning);">
-                <div class="stat-label">Total Surplus (Bonus)</div>
+                <div class="stat-label">Marge Nette (Surplus)</div>
                 <div class="stat-val" id="totalBonus" style="color: var(--warning)">0</div>
-                <div class="stat-label" style="font-size: 0.6rem;">Sur prix catalogue</div>
+                <div class="stat-label" style="font-size: 0.6rem;">Gains - Rabais</div>
             </div>
             <div class="card stat-card">
                 <div class="stat-label">Ventes Totales</div>
@@ -189,14 +192,14 @@
     </section>
 
     <nav>
+        <button class="nav-btn" onclick="switchTab('caisse', this)"><i class="fas fa-cash-register"></i><span>Caisse</span></button>
         <button class="nav-btn active" onclick="switchTab('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dash</span></button>
         <button class="nav-btn" onclick="switchTab('stock', this)"><i class="fas fa-box-open"></i><span>Stock</span></button>
-        <button class="nav-btn" onclick="switchTab('caisse', this)"><i class="fas fa-cash-register"></i><span>Caisse</span></button>
     </nav>
 
     <script>
         // --- DONNEES ---
-        const DB_KEY = 'matelasDoDoData_v4'; // Nouvelle version DB
+        const DB_KEY = 'matelasDoDoData_v4'; 
         let appData = { products: [], sales: [] };
         let lastSaleData = null;
 
@@ -206,10 +209,35 @@
             updateUI();
         }
         function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(appData)); updateUI(); }
+        
+        function updateUI() {
+            calculateDashboard();
+            renderPOSGrid();
+            renderSalesList();
+            renderStockList(); // Ajout du rendu liste stock
+        }
 
-        // --- CORE LOGIC ---
+        // --- UTILITAIRES (AJOUTÉS) ---
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(amount).replace('XOF', 'FCFA');
+        }
 
-        // 1. Ouvrir Modal avec Prix Stock
+        function showNotification(msg, type='success') {
+            const notif = document.getElementById('notification');
+            notif.innerText = msg;
+            notif.className = type === 'error' ? 'notif-error' : '';
+            notif.style.transform = 'translateX(0)';
+            setTimeout(() => { notif.style.transform = 'translateX(150%)'; }, 3000);
+        }
+
+        function switchTab(sectionId, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // --- MODAL LOGIC (CORRIGÉE) ---
         function openModal(product) {
             document.getElementById('salesModal').style.display = 'flex';
             document.getElementById('saleFormStep').style.display = 'block';
@@ -218,37 +246,58 @@
             document.getElementById('modalProdId').value = product.id;
             document.getElementById('modalProdName').innerText = product.name;
             document.getElementById('modalStockPrice').innerText = formatMoney(product.price);
-            
-            // Pré-remplir le prix de vente avec le prix du stock (modifiable)
             document.getElementById('modalActualPrice').value = product.price;
             
-            document.getElementById('modalQty').value = 1;
+            // Gestion Quantité Max
+            document.getElementById('modalMaxStock').value = product.quantity;
+            const qtyInput = document.getElementById('modalQty');
+            qtyInput.value = 1;
+            qtyInput.max = product.quantity; // Bloque la flèche haut du navigateur
+
             document.getElementById('modalClientName').value = ''; 
         }
 
-        // 2. Validation Vente (Calcul Surplus)
+        function adjustQty(delta) {
+            const input = document.getElementById('modalQty');
+            const max = parseInt(document.getElementById('modalMaxStock').value);
+            let val = parseInt(input.value) + delta;
+            
+            if (val < 1) val = 1;
+            if (val > max) {
+                val = max;
+                showNotification("Stock max atteint", "error");
+            }
+            input.value = val;
+        }
+
+        function validateQtyInput(input) {
+            const max = parseInt(document.getElementById('modalMaxStock').value);
+            let val = parseInt(input.value);
+            if (val > max) {
+                input.value = max;
+                showNotification(`Stock max : ${max}`, "error");
+            } else if (val < 1) {
+                input.value = 1;
+            }
+        }
+
         function validateSale() {
             const prodId = parseInt(document.getElementById('modalProdId').value);
             const qty = parseInt(document.getElementById('modalQty').value);
-            const actualPrice = parseInt(document.getElementById('modalActualPrice').value); // Prix saisi
+            const actualPrice = parseInt(document.getElementById('modalActualPrice').value);
             const clientName = document.getElementById('modalClientName').value.trim() || "Client Anonyme";
 
             const product = appData.products.find(p => p.id === prodId);
             
-            if(product.quantity < qty) return alert("Stock insuffisant !");
-            if(isNaN(actualPrice) || actualPrice < 0) return alert("Prix invalide");
+            if(product.quantity < qty) return showNotification("Stock insuffisant !", "error");
+            if(isNaN(actualPrice) || actualPrice < 0) return showNotification("Prix invalide", "error");
 
-            // Calculs
             const stockPrice = product.price;
             const totalSale = actualPrice * qty;
-            
-            // Le surplus est la différence entre prix vendu et prix catalogue
-            // Si vendu moins cher, le surplus est négatif (perte) ou 0 selon ta politique.
-            // Ici, on enregistre la différence brute.
             const surplusUnit = actualPrice - stockPrice;
             const totalSurplus = surplusUnit * qty;
 
-            product.quantity -= qty;
+            product.quantity -= qty; // Déduction Stock
 
             const newSale = {
                 id: Date.now(),
@@ -256,10 +305,10 @@
                 prodName: product.name,
                 clientName: clientName,
                 quantity: qty,
-                unitPriceSold: actualPrice, // On garde le prix vendu
-                unitPriceStock: stockPrice, // On garde le prix ref
+                unitPriceSold: actualPrice,
+                unitPriceStock: stockPrice,
                 total: totalSale,
-                surplus: totalSurplus, // C'est le BONUS
+                surplus: totalSurplus,
                 date: new Date().toISOString()
             };
 
@@ -267,7 +316,6 @@
             saveData();
             lastSaleData = newSale;
 
-            // Affichage résultat
             document.getElementById('saleFormStep').style.display = 'none';
             document.getElementById('receiptStep').style.display = 'block';
             
@@ -284,19 +332,22 @@
             }
         }
 
-        // --- DASHBOARD & UI ---
+        // --- DASHBOARD CORRECTED ---
         function calculateDashboard() {
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             let stockVal = 0, salesToday = 0, totalBonus = 0, totalGlobal = 0;
 
-            appData.products.forEach(p => stockVal += p.price * p.originalQty);
+            // CORRECTIF 1: Calcul basé sur le stock RESTANT
+            appData.products.forEach(p => {
+                stockVal += p.price * p.quantity; 
+            });
             
             appData.sales.forEach(s => {
                 totalGlobal += s.total;
                 
-                // Si la vente a un surplus positif, on l'ajoute au total bonus
-                if(s.surplus && s.surplus > 0) {
+                // CORRECTIF 2: Calcul du surplus net (Inclus les pertes/rabais pour être rigoureux)
+                if(s.surplus) {
                     totalBonus += s.surplus;
                 }
 
@@ -306,8 +357,25 @@
 
             document.getElementById('totalStockValue').innerText = formatMoney(stockVal);
             document.getElementById('salesToday').innerText = formatMoney(salesToday);
-            document.getElementById('totalBonus').innerText = formatMoney(totalBonus);
+            
+            // Affichage avec couleur dynamique pour le bonus
+            const bonusEl = document.getElementById('totalBonus');
+            bonusEl.innerText = formatMoney(totalBonus);
+            bonusEl.style.color = totalBonus >= 0 ? "var(--warning)" : "var(--danger)";
+            
             document.getElementById('totalSalesGlobal').innerText = formatMoney(totalGlobal);
+            
+            // Remplir le log d'activité (simplifié)
+            const log = document.getElementById('activityLog');
+            log.innerHTML = '';
+            [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,3).forEach(s => {
+                const li = document.createElement('li');
+                li.style.marginBottom = '5px';
+                li.style.fontSize = '0.8rem';
+                li.style.color = 'var(--text-muted)';
+                li.innerText = `${new Date(s.date).toLocaleTimeString()} - ${s.prodName} (${formatMoney(s.total)})`;
+                log.appendChild(li);
+            });
         }
 
         function renderPOSGrid() {
@@ -316,63 +384,86 @@
             appData.products.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'pos-card';
-                if(p.quantity <= 0) div.style.opacity = '0.6';
+                // Griser si stock épuisé
+                if(p.quantity <= 0) div.style.opacity = '0.5';
+                
                 const imgSrc = p.image ? p.image : 'https://via.placeholder.com/150/333/fff?text=IMG';
                 const badge = p.quantity <= 0 ? `<div class="pos-badge">RUPTURE</div>` : `<div class="pos-badge" style="background:var(--success)">${p.quantity}</div>`;
+                
                 div.innerHTML = `${badge}<img src="${imgSrc}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div>`;
-                div.onclick = () => { if(p.quantity > 0) openModal(p); else showNotification("Rupture de stock", "error"); };
+                
+                div.onclick = () => { 
+                    if(p.quantity > 0) openModal(p); 
+                    else showNotification("Rupture de stock", "error"); 
+                };
                 grid.appendChild(div);
             });
         }
 
         function renderSalesList() {
             const list = document.getElementById('salesList'); list.innerHTML = '';
-            [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,5).forEach(s => {
+            [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,10).forEach(s => {
                 const li = document.createElement('li'); li.className = 'card'; li.style.padding = '10px';
-                // Indicateur visuel si bonus
-                const bonusIcon = (s.surplus > 0) ? '🔥' : '';
-                li.innerHTML = `<div style="display:flex; justify-content:space-between;"><div><strong>${s.clientName}</strong> <span style="font-size:0.8rem; color:var(--text-muted)">- ${s.prodName}</span><div style="font-size:0.8rem; color:var(--text-muted)">${new Date(s.date).toLocaleTimeString()}</div></div><div style="text-align:right"><div style="color:var(--success); font-weight:bold">${formatMoney(s.total)}</div><div style="font-size:0.7rem; color:var(--warning)">${bonusIcon}</div></div></div>`;
+                let bonusIcon = '';
+                if(s.surplus > 0) bonusIcon = '🔥';
+                else if(s.surplus < 0) bonusIcon = '📉';
+                
+                li.innerHTML = `<div style="display:flex; justify-content:space-between;"><div><strong>${s.clientName}</strong> <span style="font-size:0.8rem; color:var(--text-muted)">- ${s.prodName}</span><div style="font-size:0.8rem; color:var(--text-muted)">${new Date(s.date).toLocaleString()}</div></div><div style="text-align:right"><div style="color:var(--success); font-weight:bold">${formatMoney(s.total)}</div><div style="font-size:0.7rem;">${bonusIcon}</div></div></div>`;
                 list.appendChild(li);
             });
         }
 
-        // --- UTILS ---
+        // Ajout : Affichage simple du stock dans la section Stock
+        function renderStockList() {
+            const list = document.getElementById('stockList'); list.innerHTML = '';
+            appData.products.forEach(p => {
+                const li = document.createElement('li'); 
+                li.className = 'card'; li.style.padding = '10px'; li.style.marginBottom='5px';
+                li.innerHTML = `<div style="display:flex; justify-content:space-between"><span>${p.name}</span> <span>Qté: <strong>${p.quantity}</strong> / ${p.price} FCFA</span></div>`;
+                list.appendChild(li);
+            });
+        }
+
         function addProduct() {
             const name = document.getElementById('prodName').value;
             const price = parseInt(document.getElementById('prodPrice').value);
             const qty = parseInt(document.getElementById('prodQty').value);
             const cat = document.getElementById('prodCat').value;
             const imgInput = document.getElementById('prodImg');
-            if(!name || !price) return alert("Infos manquantes");
+            
+            if(!name || !price || isNaN(price)) return showNotification("Infos invalides", "error");
             
             const reader = new FileReader();
             reader.onload = function(e) { saveProd(name, cat, price, qty, e.target.result); };
             if (imgInput.files[0]) reader.readAsDataURL(imgInput.files[0]); else saveProd(name, cat, price, qty, null);
         }
+
         function saveProd(name, cat, price, qty, img) {
-            appData.products.push({id: Date.now(), name, category: cat, price, quantity: qty, originalQty: qty, image: img, dateAdded: new Date().toISOString()});
-            saveData(); showNotification("Produit ajouté !");
-            document.getElementById('prodName').value = ''; document.getElementById('prodPrice').value = '';
+            appData.products.push({
+                id: Date.now(), 
+                name, 
+                category: cat, 
+                price, 
+                quantity: qty, 
+                originalQty: qty, // On garde l'historique de l'arrivage
+                image: img, 
+                dateAdded: new Date().toISOString()
+            });
+            saveData(); 
+            showNotification("Produit ajouté !");
+            document.getElementById('prodName').value = ''; 
+            document.getElementById('prodPrice').value = '';
+            document.getElementById('prodQty').value = '';
         }
         
         function sendReceipt(method) {
             if(!lastSaleData) return;
-            // On affiche le prix REEL payé par le client
             const text = `🧾 *MATELAS DODO - REÇU*\n📅 ${new Date(lastSaleData.date).toLocaleString('fr-FR')}\n👤 Client: ${lastSaleData.clientName}\n------------------------\n📦 ${lastSaleData.prodName}\n🔢 Qté: ${lastSaleData.quantity} x ${formatMoney(lastSaleData.unitPriceSold)}\n💰 *TOTAL: ${formatMoney(lastSaleData.total)}*\n------------------------\nMerci de votre confiance !`;
             const url = method === 'whatsapp' ? `https://wa.me/?text=${encodeURIComponent(text)}` : `sms:?body=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
 
         function closeModal() { document.getElementById('salesModal').style.display = 'none'; }
-        function adjustQty(d) { const i = document.getElementById('modalQty'); let v = parseInt(i.value)+d; if(v<1)v=1; i.value = v; }
-        function formatMoney(a) { return a.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " FCFA"; }
-        function showNotification(m, t="success") { const n = document.getElementById('notification'); n.innerText = m; n.style.background = t==='error'? 'var(--danger)':'var(--success)'; n.style.transform='translateX(0)'; setTimeout(()=>n.style.transform='translateX(150%)',3000); }
-        function switchTab(id, btn) { document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); renderActivityLog(); }
-        function renderActivityLog() { 
-            const l = document.getElementById('activityLog'); l.innerHTML = '';
-            const logs = [...appData.sales.map(s=>({t:`Vente: ${s.prodName}`, d:s.date})), ...appData.products.map(p=>({t:`Ajout: ${p.name}`, d:p.dateAdded}))];
-            logs.sort((a,b)=>new Date(b.d)-new Date(a.d)).slice(0,4).forEach(x=>l.innerHTML+=`<li style="font-size:0.9rem; color:var(--text-muted); margin-bottom:5px">${x.t}</li>`);
-        }
     </script>
 </body>
 </html>
