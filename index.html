@@ -220,6 +220,7 @@
         function showNotification(m,t='s'){ const n=document.getElementById('notification'); n.innerHTML=t=='e'?`<i class="fas fa-exclamation"></i> ${m}`:`<i class="fas fa-check"></i> ${m}`; n.className=t=='e'?'notif-error':''; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),3000); }
         function switchTab(id,b){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
 
+        // --- MODALES & GESTION ---
         function openModal(p){ document.getElementById('salesModal').classList.add('show'); document.getElementById('salesModal').style.display='flex'; document.getElementById('saleFormStep').style.display='block'; document.getElementById('receiptStep').style.display='none'; document.getElementById('modalProdId').value=p.id; document.getElementById('modalProdName').innerText=p.name; document.getElementById('modalStockPrice').innerText=formatMoney(p.price); document.getElementById('modalActualPrice').value=p.price; document.getElementById('modalMaxStock').value=p.quantity; document.getElementById('modalQty').value=1; }
         function openProductModal() { document.getElementById('productModal').classList.add('show'); document.getElementById('productModal').style.display='flex'; }
         function closeModal(id){ document.getElementById(id).classList.remove('show'); setTimeout(()=>document.getElementById(id).style.display='none',300); }
@@ -276,7 +277,6 @@
             document.getElementById('totalStockValue').innerText=formatMoney(st); document.getElementById('salesToday').innerText=formatMoney(today); document.getElementById('totalBonus').innerText=formatMoney(bonus); document.getElementById('totalSalesGlobal').innerText=formatMoney(tot); document.getElementById('headerStockEntrant').innerText=formatMoney(stockEntrantVal); document.getElementById('headerRistourne').innerText=formatMoney(stockEntrantVal * 0.09);
         }
 
-        // --- GRAPH HOURLY ---
         function initChart() { const ctx = document.getElementById('perfChart').getContext('2d'); chartInstance = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Ventes', data: [], borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(200, 200, 200, 0.1)' }, ticks: { display: false } } } } }); }
         
         function updateChartData() {
@@ -321,7 +321,27 @@
         }
         function filterPOS() { const query = document.getElementById('searchPos').value.toLowerCase(); const filtered = appData.products.filter(p => p.name.toLowerCase().includes(query)); renderPOSGrid(filtered); }
 
-        function renderSalesList(){ const l=document.getElementById('salesList'); l.innerHTML=''; [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,15).forEach(s=>{ l.innerHTML+=`<li class="list-item"><div><b>${s.clientName}</b><br><small>${s.prodName}</small></div><div><b>${formatMoney(s.total)}</b></div></li>`; }); }
+        function renderSalesList(){ 
+            const l=document.getElementById('salesList'); 
+            l.innerHTML=''; 
+            [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,20).forEach(s=>{ 
+                const d = new Date(s.date);
+                const dateStr = d.toLocaleDateString('fr-FR');
+                const timeStr = d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                
+                l.innerHTML+=`
+                <li class="list-item">
+                    <div>
+                        <b>${s.clientName}</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br>
+                        <small>${s.prodName}</small>
+                    </div>
+                    <div style="text-align:right">
+                        <b>${formatMoney(s.total)}</b><br>
+                        <small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small>
+                    </div>
+                </li>`; 
+            }); 
+        }
         function renderStockList(){ const l=document.getElementById('stockList'); l.innerHTML=''; appData.products.forEach(p=>{ l.innerHTML+=`<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`; }); }
         
         function addProduct(){ 
