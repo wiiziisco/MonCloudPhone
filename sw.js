@@ -1,11 +1,13 @@
-const CACHE_NAME = 'dodo-v4';
+// On change le nom du cache pour forcer la mise à jour
+const CACHE_NAME = 'dodo-v4.3-stockicon';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdn-icons-png.flaticon.com/512/3004/3004797.png'
+  // L'URL de la NOUVELLE icône de stock
+  'https://cdn-icons-png.flaticon.com/512/679/679821.png'
 ];
 
 self.addEventListener('install', (e) => {
