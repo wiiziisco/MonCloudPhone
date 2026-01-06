@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" href="https://via.placeholder.com/192/0A84FF/ffffff?text=DoDo">
 
     <title>Matelas DoDo</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -46,13 +46,13 @@
         .stat-ristourne { font-size: 0.7rem; color: var(--purple); background: rgba(175, 82, 222, 0.1); padding: 1px 6px; border-radius: 6px; font-weight: 600; margin-top: 2px; display: inline-flex; align-items: center; gap: 4px; }
         #installBtn { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); background: var(--bg-card); color: var(--primary); border: 1px solid var(--separator); padding: 5px 15px; border-radius: 20px; font-weight: 600; cursor: pointer; display: none; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-        /* NAV - MODIFIÉE POUR 4 BOUTONS */
+        /* NAV */
         nav { 
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
             width: 90%; max-width: 380px; 
             background: var(--nav-bg); 
             backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); 
-            display: flex; justify-content: space-between; /* Espace égal */
+            display: flex; justify-content: space-between; 
             padding: 12px 20px; 
             border-radius: 35px; border: 0.5px solid var(--separator); 
             z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
@@ -65,8 +65,6 @@
             transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); 
         }
         .nav-btn.active { color: #fff; background: var(--primary); transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
-        
-        /* Style spécifique pour le bouton Ajout (si on veut le différencier un jour, sinon identique) */
         .nav-btn-add { color: var(--primary); } 
         .nav-btn-add:active { transform: scale(0.9); background: rgba(0, 122, 255, 0.1); }
 
@@ -193,7 +191,7 @@
         
         <button class="nav-btn nav-btn-add" onclick="openProductModal()"><i class="fas fa-plus-circle"></i></button>
         
-        <button class="nav-btn" onclick="switchTab('stock',this)"><i class="fas fa-box-open"></i></button>
+        <button class="nav-btn" onclick="switchTab('stock',this)"><i class="fas fa-clock-rotate-left"></i></button>
     </nav>
 
     <script>
@@ -292,7 +290,12 @@
             r.onload=e=>{ appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); }; 
             if(f)r.readAsDataURL(f); else r.onload({target:{result:null}}); 
         }
-        function sendReceipt(){ window.open(`https://wa.me/?text=${encodeURIComponent(`Reçu DoDo: ${lastSaleData.prodName} - ${formatMoney(lastSaleData.total)}`)}`,'_blank'); }
+        
+        // NOUVEAU MESSAGE DE REÇU
+        function sendReceipt(){
+            const text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+        }
     </script>
 </body>
 </html>
