@@ -135,10 +135,15 @@
                 <div class="qty-control"><button class="qty-btn" onclick="adjustQty(-1)">-</button><input type="number" id="modalQty" value="1" class="qty-input"><button class="qty-btn" onclick="adjustQty(1)">+</button></div>
                 <button class="btn-primary" onclick="validateSale()">Valider Vente</button>
             </div>
+            
             <div id="receiptStep" style="display:none;text-align:center">
                 <i class="fas fa-check-circle" style="font-size:3rem;color:var(--success);margin-bottom:15px"></i>
-                <h3 style="margin-bottom:10px">Vente Validée</h3><p id="bonusMsg" style="margin-bottom:20px"></p>
-                <button class="btn-primary" style="background:#25D366" onclick="sendReceipt()"><i class="fab fa-whatsapp"></i> Reçu WhatsApp</button>
+                <h3 style="margin-bottom:10px">Vente Validée</h3>
+                <p id="bonusMsg" style="margin-bottom:20px"></p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <button class="btn-primary" style="background:#25D366" onclick="sendReceipt('wa')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                    <button class="btn-primary" style="background:#007AFF" onclick="sendReceipt('sms')"><i class="fas fa-comment-sms"></i> SMS</button>
+                </div>
             </div>
         </div>
     </div>
@@ -278,68 +283,37 @@
         }
 
         function initChart() { const ctx = document.getElementById('perfChart').getContext('2d'); chartInstance = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Ventes', data: [], borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(200, 200, 200, 0.1)' }, ticks: { display: false } } } } }); }
-        
         function updateChartData() {
             if (!chartInstance) return;
             const hours = ['08h', '10h', '12h', '14h', '16h', '18h', '20h', '22h'];
             const data = [0, 0, 0, 0, 0, 0, 0, 0];
             const todayStr = new Date().toISOString().split('T')[0];
             const todaysSales = appData.sales.filter(s => s.date.startsWith(todayStr));
-
             todaysSales.forEach(s => {
                 const h = new Date(s.date).getHours();
-                if(h >= 8 && h < 10) data[0] += s.total;
-                else if(h >= 10 && h < 12) data[1] += s.total;
-                else if(h >= 12 && h < 14) data[2] += s.total;
-                else if(h >= 14 && h < 16) data[3] += s.total;
-                else if(h >= 16 && h < 18) data[4] += s.total;
-                else if(h >= 18 && h < 20) data[5] += s.total;
-                else if(h >= 20 && h < 22) data[6] += s.total;
-                else if(h >= 22) data[7] += s.total;
+                if(h >= 8 && h < 10) data[0] += s.total; else if(h >= 10 && h < 12) data[1] += s.total; else if(h >= 12 && h < 14) data[2] += s.total; else if(h >= 14 && h < 16) data[3] += s.total; else if(h >= 16 && h < 18) data[4] += s.total; else if(h >= 18 && h < 20) data[5] += s.total; else if(h >= 20 && h < 22) data[6] += s.total; else if(h >= 22) data[7] += s.total;
             });
-
-            chartInstance.data.labels = hours;
-            chartInstance.data.datasets[0].data = data;
-            chartInstance.update();
+            chartInstance.data.labels = hours; chartInstance.data.datasets[0].data = data; chartInstance.update();
         }
 
         function renderPOSGrid(list = appData.products){ 
             const g=document.getElementById('posGrid'); g.innerHTML=''; 
             list.forEach(p=>{ 
                 const img=p.image||'https://via.placeholder.com/150'; const op=p.quantity<=0?'0.5':'1'; 
-                g.innerHTML+=`
-                <div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}">
-                    <div class="card-actions">
-                        <button class="action-btn btn-edit" onclick="event.stopPropagation(); openEditModal(${p.id})"><i class="fas fa-pen"></i></button>
-                        <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
-                    </div>
-                    <span class="pos-badge">${p.quantity}</span>
-                    <img src="${img}" class="pos-img">
-                    <div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div>
-                </div>`; 
+                g.innerHTML+=`<div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}">
+                    <div class="card-actions"><button class="action-btn btn-edit" onclick="event.stopPropagation(); openEditModal(${p.id})"><i class="fas fa-pen"></i></button><button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></div>
+                    <span class="pos-badge">${p.quantity}</span><img src="${img}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div></div>`; 
             }); 
         }
         function filterPOS() { const query = document.getElementById('searchPos').value.toLowerCase(); const filtered = appData.products.filter(p => p.name.toLowerCase().includes(query)); renderPOSGrid(filtered); }
 
         function renderSalesList(){ 
-            const l=document.getElementById('salesList'); 
-            l.innerHTML=''; 
+            const l=document.getElementById('salesList'); l.innerHTML=''; 
             [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,20).forEach(s=>{ 
                 const d = new Date(s.date);
                 const dateStr = d.toLocaleDateString('fr-FR');
                 const timeStr = d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                
-                l.innerHTML+=`
-                <li class="list-item">
-                    <div>
-                        <b>${s.clientName}</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br>
-                        <small>${s.prodName}</small>
-                    </div>
-                    <div style="text-align:right">
-                        <b>${formatMoney(s.total)}</b><br>
-                        <small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small>
-                    </div>
-                </li>`; 
+                l.innerHTML+=`<li class="list-item"><div><b>${s.clientName}</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${s.prodName}</small></div><div style="text-align:right"><b>${formatMoney(s.total)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`; 
             }); 
         }
         function renderStockList(){ const l=document.getElementById('stockList'); l.innerHTML=''; appData.products.forEach(p=>{ l.innerHTML+=`<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`; }); }
@@ -351,7 +325,24 @@
             r.onload=e=>{ appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodQty').value=''; document.getElementById('prodImg').value=''; }; 
             if(f)r.readAsDataURL(f); else r.onload({target:{result:null}}); 
         }
-        function sendReceipt(){ const text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`; window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank'); }
+
+        // --- NOUVELLE FONCTION PARTAGE (SMS + WHATSAPP) ---
+        function sendReceipt(method){
+            let text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`;
+            
+            if(method === 'sms') {
+                // Pour SMS, on retire les astérisques de formatage WhatsApp (*)
+                text = text.replace(/\*/g, '');
+                const ua = navigator.userAgent.toLowerCase();
+                const isiOS = /iphone|ipad|ipod/.test(ua);
+                // iOS préfère '&', Android '?'
+                const sep = isiOS ? '&' : '?';
+                window.location.href = `sms:${sep}body=${encodeURIComponent(text)}`;
+            } else {
+                // WhatsApp
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            }
+        }
     </script>
 </body>
 </html>
