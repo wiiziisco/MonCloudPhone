@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <section id="dashboard" class="section active">
+    <section id="dashboard" class="section">
         <h2 style="margin-bottom:15px; font-size:1.1rem; font-weight:700;">Aperçu</h2>
         <div class="dashboard-grid">
             <div class="card stat-card"><div class="stat-label">Stock Actuel</div><div class="stat-val" id="totalStockValue">0</div></div>
@@ -178,7 +178,7 @@
         </div>
     </section>
 
-    <section id="caisse" class="section">
+    <section id="caisse" class="section active">
         <h2 style="margin-bottom:15px; font-size:1.1rem; font-weight:700;">Caisse</h2>
         <div id="posGrid" class="pos-grid"></div>
     </section>
@@ -194,8 +194,8 @@
     </section>
 
     <nav>
-        <button class="nav-btn" onclick="switchTab('caisse',this)"><i class="fas fa-cash-register"></i></button>
-        <button class="nav-btn active" onclick="switchTab('dashboard',this)"><i class="fas fa-chart-pie"></i></button>
+        <button class="nav-btn active" onclick="switchTab('caisse',this)"><i class="fas fa-cash-register"></i></button>
+        <button class="nav-btn" onclick="switchTab('dashboard',this)"><i class="fas fa-chart-pie"></i></button>
         <button class="nav-btn nav-btn-add" onclick="openProductModal()"><i class="fas fa-plus-circle"></i></button>
         <button class="nav-btn" onclick="switchTab('stock',this)"><i class="fas fa-clock-rotate-left"></i></button>
     </nav>
