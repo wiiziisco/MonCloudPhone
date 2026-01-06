@@ -55,56 +55,18 @@
         #installBtn { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); background: var(--bg-card); color: var(--primary); border: 1px solid var(--separator); padding: 5px 15px; border-radius: 20px; font-weight: 600; cursor: pointer; display: none; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
         /* NAV */
-        nav { 
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
-            width: 90%; max-width: 380px; 
-            background: var(--nav-bg); 
-            backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); 
-            display: flex; justify-content: space-between; 
-            padding: 12px 20px; 
-            border-radius: 35px; border: 0.5px solid var(--separator); 
-            z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
-        }
-        .nav-btn { 
-            background: none; border: none; 
-            color: var(--text-secondary); font-size: 1.4rem; 
-            width: 45px; height: 45px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); 
-        }
+        nav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background: var(--nav-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); display: flex; justify-content: space-between; padding: 12px 20px; border-radius: 35px; border: 0.5px solid var(--separator); z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .nav-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.4rem; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .nav-btn.active { color: #fff; background: var(--primary); transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
-        .nav-btn-add { color: var(--primary); } 
-        .nav-btn-add:active { transform: scale(0.9); background: rgba(0, 122, 255, 0.1); }
+        .nav-btn-add { color: var(--primary); } .nav-btn-add:active { transform: scale(0.9); background: rgba(0, 122, 255, 0.1); }
 
-        /* SECTIONS & CARDS - NOUVEAU STYLE */
+        /* SECTIONS & CARDS */
         .section { display: none; padding: 15px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.4s ease; }
         .section.active { display: block; } @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .card { 
-            background: var(--bg-card); 
-            border-radius: var(--radius-card); 
-            padding: 18px; /* Plus d'espace */
-            margin-bottom: 16px; 
-            /* Suppression de la bordure, ajout d'ombres douces */
-            border: none;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04);
-            /* Transition fluide pour l'effet tactile */
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        /* Effet tactile au clic */
-        .card:active {
-             transform: scale(0.98);
-             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Ajustement Dark Mode pour les ombres */
-        @media (prefers-color-scheme: dark) {
-             .card {
-                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15);
-                 border: 1px solid rgba(255, 255, 255, 0.05); /* Légère bordure pour définir en mode sombre */
-             }
-        }
+        .card { background: var(--bg-card); border-radius: var(--radius-card); padding: 18px; margin-bottom: 16px; border: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .card:active { transform: scale(0.98); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+        @media (prefers-color-scheme: dark) { .card { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); } }
         
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
         .stat-card { text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; height: 100px; }
@@ -112,15 +74,18 @@
         .stat-label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
         .chart-container { position: relative; height: 200px; width: 100%; }
 
-        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-        .pos-card { 
-            background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; position: relative; 
-            border: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .pos-card:active { transform: scale(0.97); }
+        /* HEADER DE SECTION AVEC RECHERCHE */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .section-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+        .search-box { display: flex; align-items: center; background: var(--bg-input); padding: 8px 12px; border-radius: 20px; width: 60%; transition: width 0.3s; }
+        .search-box:focus-within { width: 65%; background: rgba(118, 118, 128, 0.2); }
+        .search-box i { color: var(--text-secondary); font-size: 0.9rem; margin-right: 8px; }
+        .search-box input { border: none; background: transparent; padding: 0; margin: 0; font-size: 0.9rem; width: 100%; color: var(--text-primary); }
+        .search-box input:focus { outline: none; }
 
+        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+        .pos-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; position: relative; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .pos-card:active { transform: scale(0.97); }
         .pos-img { width: 100%; height: 100px; object-fit: cover; background: #eee; }
         .pos-info { padding: 12px; }
         .pos-title { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); }
@@ -130,14 +95,16 @@
         ul { list-style: none; } 
         .list-item { background: var(--bg-card); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border:none; }
 
-        /* MODAL */
+        /* MODAL & INPUTS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { opacity: 1; }
         .modal-content { background: var(--bg-card); width: 100%; max-width: 600px; border-radius: 24px 24px 0 0; padding: 30px 25px 50px 25px; transform: translateY(100%); transition: transform 0.4s; border-top: 1px solid var(--separator); }
         .modal-overlay.show .modal-content { transform: translateY(0); }
         .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.2rem; color: var(--text-secondary); }
 
-        input, select { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--bg-input); color: var(--text-primary); font-size: 1rem; margin-bottom: 15px; }
+        /* CSS Specific for Form Inputs (Distinct from Search) */
+        .modal-content input, .modal-content select { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--bg-input); color: var(--text-primary); font-size: 1rem; margin-bottom: 15px; }
+        
         .btn-primary { background: var(--primary); color: white; font-weight: 600; border: none; padding: 14px; border-radius: var(--radius-btn); width: 100%; font-size: 1rem; transition: transform 0.2s; }
         .btn-primary:active { transform: scale(0.98); }
         .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border-radius: 12px; padding: 5px; margin-bottom: 15px; }
@@ -212,16 +179,20 @@
     </section>
 
     <section id="caisse" class="section active">
-        <h2 style="margin-bottom:15px; font-size:1.1rem; font-weight:700;">Caisse</h2>
+        <div class="section-header">
+            <h2>Caisse</h2>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchPos" placeholder="Chercher..." onkeyup="filterPOS()">
+            </div>
+        </div>
         <div id="posGrid" class="pos-grid"></div>
     </section>
 
     <section id="stock" class="section">
         <h2 style="margin-bottom:15px; font-size:1.1rem; font-weight:700;">Stock & Historique</h2>
-        
         <h3 style="margin:20px 0 10px; font-size:0.9rem; color:var(--text-secondary); text-transform:uppercase;">Inventaire</h3>
         <ul id="stockList"></ul>
-
         <h3 style="margin:30px 0 10px; font-size:0.9rem; color:var(--text-secondary); text-transform:uppercase;">Historique des Ventes</h3>
         <ul id="salesList"></ul>
     </section>
@@ -309,21 +280,32 @@
             chartInstance.data.labels = days; chartInstance.data.datasets[0].data = data; chartInstance.update();
         }
 
-        function renderPOSGrid(){ const g=document.getElementById('posGrid'); g.innerHTML=''; appData.products.forEach(p=>{ const img=p.image||'https://via.placeholder.com/150'; const op=p.quantity<=0?'0.5':'1'; g.innerHTML+=`<div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}"><span class="pos-badge">${p.quantity}</span><img src="${img}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div></div>`; }); }
+        // --- POS (CAISSE) & RECHERCHE ---
+        function renderPOSGrid(list = appData.products){ 
+            const g=document.getElementById('posGrid'); g.innerHTML=''; 
+            list.forEach(p=>{ 
+                const img=p.image||'https://via.placeholder.com/150'; const op=p.quantity<=0?'0.5':'1'; 
+                g.innerHTML+=`<div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}"><span class="pos-badge">${p.quantity}</span><img src="${img}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div></div>`; 
+            }); 
+        }
+
+        function filterPOS() {
+            const query = document.getElementById('searchPos').value.toLowerCase();
+            const filtered = appData.products.filter(p => p.name.toLowerCase().includes(query));
+            renderPOSGrid(filtered);
+        }
+
         function renderSalesList(){ const l=document.getElementById('salesList'); l.innerHTML=''; [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,15).forEach(s=>{ l.innerHTML+=`<li class="list-item"><div><b>${s.clientName}</b><br><small>${s.prodName}</small></div><div><b>${formatMoney(s.total)}</b></div></li>`; }); }
         function renderStockList(){ const l=document.getElementById('stockList'); l.innerHTML=''; appData.products.forEach(p=>{ l.innerHTML+=`<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`; }); }
         
-        // --- FONCTION AJOUT MISE A JOUR ---
+        // --- FONCTION AJOUT ---
         function addProduct(){ 
             const n=document.getElementById('prodName').value, p=document.getElementById('prodPrice').value, q=document.getElementById('prodQty').value, f=document.getElementById('prodImg').files[0]; 
             if(!n||!p)return; 
             const r=new FileReader(); 
             r.onload=e=>{ 
                 appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); 
-                saveData(); // Sauvegarde et Actualise le Dashboard
-                showNotification("Produit Ajouté"); 
-                closeModal('productModal'); 
-                // Reset des champs
+                saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); 
                 document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodQty').value=''; document.getElementById('prodImg').value='';
             }; 
             if(f)r.readAsDataURL(f); else r.onload({target:{result:null}}); 
