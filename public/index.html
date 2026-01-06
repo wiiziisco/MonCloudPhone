@@ -2,180 +2,370 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matelas DoDo - Manager v2.4 (Corrected)</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Matelas DoDo - iOS Edition</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* --- CONFIGURATION GLOBALE --- */
+        /* --- APPLE DESIGN SYSTEM VARIABLES --- */
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.95);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --whatsapp: #25D366;
-            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --bg-body: #000000;
+            --bg-card: rgba(28, 28, 30, 0.75);
+            --bg-input: rgba(118, 118, 128, 0.24);
+            --primary: #0A84FF; /* iOS Blue */
+            --accent: #64D2FF; /* iOS Cyan */
+            --danger: #FF453A;
+            --success: #30D158;
+            --warning: #FFD60A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --separator: rgba(84, 84, 88, 0.65);
+            --radius-card: 22px;
+            --radius-btn: 14px;
+            --blur: 25px;
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        @media (prefers-color-scheme: light) {
-            :root {
-                --bg-color: #f1f5f9;
-                --card-bg: #ffffff;
-                --text-main: #1e293b;
-                --text-muted: #64748b;
-                --glass-border: 1px solid rgba(0, 0, 0, 0.05);
-            }
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
-            font-family: var(--font-main);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding-bottom: 90px;
+            font-family: var(--font-stack);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            padding-bottom: 100px; /* Space for dock */
+            /* Abstract Background Gradient */
+            background-image: radial-gradient(circle at 0% 0%, #1a2a40 0%, transparent 50%), 
+                              radial-gradient(circle at 100% 100%, #1f1f21 0%, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
         }
 
-        /* --- UI ELEMENTS --- */
-        header { padding: 15px; text-align: center; background: var(--card-bg); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { font-weight: 300; text-transform: uppercase; font-size: 1.4rem; }
-        h1 span { color: var(--accent); font-weight: bold; }
+        /* --- HEADER (Glass Header) --- */
+        header { 
+            padding: 20px; 
+            text-align: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border-bottom: 0.5px solid var(--separator);
+        }
+        h1 { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; }
+        h1 span { color: var(--primary); }
 
-        /* NAVIGATION MODIFIÉE : Caisse gauche, Dash milieu, Stock droite */
-        nav { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px; border-top: var(--glass-border); z-index: 1000; }
-        .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-btn.active { color: var(--accent); transform: translateY(-3px); }
+        /* --- NAVIGATION (Floating Dock) --- */
+        nav { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            width: 90%; 
+            max-width: 400px;
+            background: rgba(44, 44, 46, 0.8);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            display: flex; 
+            justify-content: space-around; 
+            padding: 12px; 
+            border-radius: 35px;
+            border: 0.5px solid rgba(255,255,255,0.15);
+            z-index: 1000; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .nav-btn { 
+            background: none; 
+            border: none; 
+            color: var(--text-secondary); 
+            font-size: 1.4rem; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-btn.active { 
+            color: #fff; 
+            background: var(--primary);
+            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
+            transform: translateY(-5px) scale(1.1);
+        }
 
-        .section { display: none; padding: 15px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.4s ease; }
+        /* --- SECTIONS --- */
+        .section { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        .card { background: var(--card-bg); border: var(--glass-border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        /* --- CARDS (iOS Widgets) --- */
+        .card { 
+            background: var(--bg-card); 
+            border-radius: var(--radius-card); 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* --- DASHBOARD GRID --- */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { 
+            text-align: left; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(44,44,46,0.8) 0%, rgba(28,28,30,0.8) 100%);
+        }
+        .stat-val { font-size: 1.5rem; font-weight: 700; color: #fff; margin-top: 5px; letter-spacing: -0.5px; }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- DASHBOARD --- */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card { text-align: center; padding: 15px 5px; }
-        .stat-val { font-size: 1.3rem; font-weight: bold; color: var(--accent); margin: 5px 0; word-break: break-word; }
-        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+        /* --- POS GRID (App Store Style) --- */
+        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .pos-card { 
+            background: var(--bg-card); 
+            border-radius: var(--radius-card); 
+            overflow: hidden; 
+            cursor: pointer; 
+            transition: transform 0.2s;
+            border: 0.5px solid rgba(255,255,255,0.1);
+        }
+        .pos-card:active { transform: scale(0.95); opacity: 0.8; }
+        .pos-img { width: 100%; height: 120px; object-fit: cover; }
+        .pos-info { padding: 12px; }
+        .pos-title { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .pos-price { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+        .pos-badge { 
+            position: absolute; top: 10px; right: 10px; 
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            color: white; font-size: 0.7rem; padding: 4px 8px; border-radius: 20px; font-weight: 600;
+        }
 
-        /* --- POS GRID --- */
-        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .pos-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: var(--glass-border); cursor: pointer; position: relative; }
-        .pos-card:active { transform: scale(0.96); }
-        .pos-img { width: 100%; height: 100px; object-fit: cover; background: #333; }
-        .pos-info { padding: 10px; text-align: center; }
-        .pos-title { font-size: 0.9rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pos-price { color: var(--accent); font-weight: bold; }
-        .pos-badge { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; }
+        /* --- LISTS --- */
+        ul { list-style: none; }
+        .list-item {
+            background: rgba(44, 44, 46, 0.5);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* --- MODAL --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card-bg); width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; position: relative; animation: popIn 0.3s; }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        /* --- MODAL (iOS Sheet Style) --- */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            z-index: 2000; 
+            display: none; 
+            justify-content: center; 
+            align-items: flex-end; /* Align bottom */
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { opacity: 1; }
+        
+        .modal-content { 
+            background: #1C1C1E; 
+            width: 100%; 
+            max-width: 600px; /* Tablet constraint */
+            border-radius: 24px 24px 0 0; 
+            padding: 30px 25px 40px 25px; 
+            position: relative; 
+            transform: translateY(100%); 
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
 
-        /* --- FORMS --- */
-        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
-        input, select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--text-muted); background: rgba(255,255,255,0.05); color: var(--text-main); font-size: 1rem; outline: none; margin-bottom: 15px; }
-        input:focus { border-color: var(--accent); }
-        .btn-primary { background: var(--accent); color: #000; font-weight: bold; border: none; margin-top: 10px; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; border: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        /* Handle bar for sheet */
+        .sheet-handle {
+            width: 40px; height: 5px; background: rgba(255,255,255,0.2);
+            border-radius: 5px; margin: 0 auto 20px auto;
+        }
 
-        /* --- NOTIFICATION --- */
-        #notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: var(--success); color: white; border-radius: 8px; transform: translateX(150%); transition: transform 0.3s; z-index: 3000; }
-        .notif-error { background: var(--danger) !important; }
+        .close-modal { 
+            position: absolute; top: 20px; right: 20px; 
+            width: 30px; height: 30px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; cursor: pointer; color: var(--text-secondary);
+        }
+
+        /* --- FORMS (Apple Inputs) --- */
+        label { margin-left: 5px; margin-bottom: 6px; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; }
+        input, select { 
+            width: 100%; padding: 16px; 
+            border-radius: 12px; border: none; 
+            background: var(--bg-input); 
+            color: var(--text-primary); 
+            font-size: 1.05rem; 
+            margin-bottom: 20px; 
+            transition: background 0.2s;
+            font-family: var(--font-stack);
+        }
+        input:focus, select:focus { background: rgba(118, 118, 128, 0.4); outline: none; }
+        
+        /* Custom File Input */
+        .file-input-wrapper {
+            position: relative; margin-bottom: 20px;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
+        }
+        .file-input-btn {
+            background: var(--bg-input); padding: 15px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            color: var(--primary); font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn-primary { 
+            background: var(--primary); color: white; 
+            font-weight: 600; border: none; padding: 16px; 
+            border-radius: var(--radius-btn); margin-top: 10px; cursor: pointer; 
+            font-size: 1.05rem;
+        }
+        .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+
+        .btn-whatsapp { 
+            background: #25D366; color: white; border: none; 
+            font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; 
+            padding: 16px; border-radius: var(--radius-btn);
+        }
+
+        /* Qté Control */
+        .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border-radius: 12px; padding: 5px; margin-bottom: 20px; }
+        .qty-btn { width: 50px; height: 44px; background: #fff; border: none; border-radius: 8px; font-size: 1.2rem; color: #000; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .qty-btn:active { transform: scale(0.9); }
+        .qty-input { width: 60px; text-align: center; background: transparent; border: none; margin: 0; padding: 0; font-weight: bold; font-size: 1.2rem; }
+
+        /* --- NOTIFICATION (Dynamic Island) --- */
+        #notification { 
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%) translateY(-150%); 
+            padding: 12px 25px; 
+            background: rgba(50, 50, 50, 0.9); 
+            backdrop-filter: blur(20px);
+            color: white; 
+            border-radius: 30px; 
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
+            z-index: 3000; 
+            font-size: 0.9rem; font-weight: 600;
+            min-width: 200px; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #notification.show { transform: translateX(-50%) translateY(0); }
+        .notif-error { background: rgba(255, 69, 58, 0.9) !important; }
+
+        /* Icons tweaks */
+        i { margin-right: 5px; }
+
     </style>
 </head>
 <body onload="loadData()">
 
-    <header><h1>Matelas <span>DoDo</span></h1></header>
-    <div id="notification">Action effectuée !</div>
+    <header>
+        <h1>Matelas <span>DoDo</span></h1>
+    </header>
+
+    <div id="notification"><i class="fas fa-check-circle"></i> <span>Action effectuée</span></div>
 
     <div id="salesModal" class="modal-overlay">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h2 id="modalProdName" style="margin-bottom: 5px; font-size: 1.2rem;">Produit</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Prix Stock: <span id="modalStockPrice">0</span></p>
+            <div class="sheet-handle"></div>
+            <span class="close-modal" onclick="closeModal()"><i class="fas fa-times" style="margin:0"></i></span>
+            
+            <h2 id="modalProdName" style="margin-bottom: 5px; font-size: 1.4rem; letter-spacing: -0.5px;">Produit</h2>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 25px;">Prix Catalogue: <span id="modalStockPrice" style="color:var(--text-primary); font-weight:600;">0</span></p>
 
             <input type="hidden" id="modalProdId">
             <input type="hidden" id="modalMaxStock"> 
 
             <div id="saleFormStep">
                 <label>Nom du Client</label>
-                <input type="text" id="modalClientName" placeholder="Client ou Anonyme">
+                <input type="text" id="modalClientName" placeholder="Ex: Moussa Diarra">
 
-                <label style="color: var(--accent);">Prix de Vente Appliqué (FCFA)</label>
-                <input type="number" id="modalActualPrice" style="font-weight: bold; color: var(--accent); border-color: var(--accent);">
+                <label style="color: var(--primary);">Prix Négocié (FCFA)</label>
+                <input type="number" id="modalActualPrice" style="color: var(--primary); font-weight: 700;">
                 
                 <label>Quantité</label>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="adjustQty(-1)" style="width: 50px;">-</button>
-                    <input type="number" id="modalQty" value="1" min="1" style="text-align: center;" onchange="validateQtyInput(this)">
-                    <button onclick="adjustQty(1)" style="width: 50px;">+</button>
+                <div class="qty-control">
+                    <button class="qty-btn" onclick="adjustQty(-1)">-</button>
+                    <input type="number" id="modalQty" value="1" min="1" class="qty-input" onchange="validateQtyInput(this)">
+                    <button class="qty-btn" onclick="adjustQty(1)">+</button>
                 </div>
-                <br>
-                <button class="btn-primary" onclick="validateSale()">VALIDER & PAYER</button>
+                
+                <button class="btn-primary" onclick="validateSale()">Valider la Vente</button>
             </div>
 
-            <div id="receiptStep" style="display: none; text-align: center;">
-                <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success); margin-bottom: 10px;"></i>
-                <h3 style="margin-bottom: 10px;">Vente Enregistrée !</h3>
-                <p id="bonusMsg" style="color: var(--warning); margin-bottom: 20px; font-weight: bold;"></p>
+            <div id="receiptStep" style="display: none; text-align: center; padding-top: 10px;">
+                <div style="width: 80px; height: 80px; background: rgba(48, 209, 88, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                    <i class="fas fa-check" style="font-size: 2rem; color: var(--success); margin:0;"></i>
+                </div>
+                <h3 style="margin-bottom: 10px; font-size: 1.3rem;">Vente Réussie</h3>
+                <p id="bonusMsg" style="margin-bottom: 25px; font-size: 1rem;"></p>
                 
                 <button class="btn-whatsapp" onclick="sendReceipt('whatsapp')">
-                    <i class="fab fa-whatsapp"></i> Reçu WhatsApp
+                    <i class="fab fa-whatsapp"></i> Envoyer Reçu
                 </button>
-                <button onclick="closeModal()" style="background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); margin-top: 10px; width: 100%; padding: 12px; border-radius: 8px;">Fermer</button>
+                <button onclick="closeModal()" style="background: transparent; border: none; color: var(--text-secondary); margin-top: 20px; padding: 10px; font-size: 1rem;">Fermer</button>
             </div>
         </div>
     </div>
 
     <section id="dashboard" class="section active">
-        <h2>Tableau de Bord</h2>
-        <br>
+        <h2 style="margin-bottom: 20px; font-weight: 700;">Vue d'ensemble</h2>
+        
         <div class="dashboard-grid">
             <div class="card stat-card">
-                <div class="stat-label">Valeur Stock Actuel</div>
+                <div class="stat-label"><i class="fas fa-box"></i> Valeur Stock</div>
                 <div class="stat-val" id="totalStockValue">0</div>
             </div>
             <div class="card stat-card">
-                <div class="stat-label">Chiffre d'Affaires (Jour)</div>
-                <div class="stat-val" id="salesToday">0</div>
-            </div>
-            <div class="card stat-card" style="border-bottom: 3px solid var(--warning);">
-                <div class="stat-label">Marge Nette (Surplus)</div>
-                <div class="stat-val" id="totalBonus" style="color: var(--warning)">0</div>
-                <div class="stat-label" style="font-size: 0.6rem;">Gains - Rabais</div>
+                <div class="stat-label"><i class="fas fa-calendar-day"></i> Ventes Jour</div>
+                <div class="stat-val" id="salesToday" style="color: var(--success)">0</div>
             </div>
             <div class="card stat-card">
-                <div class="stat-label">Ventes Totales</div>
+                <div class="stat-label"><i class="fas fa-chart-line"></i> Marge Nette</div>
+                <div class="stat-val" id="totalBonus">0</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-label"><i class="fas fa-wallet"></i> Ventes Total</div>
                 <div class="stat-val" id="totalSalesGlobal">0</div>
             </div>
         </div>
         
         <div class="card">
-            <h3>Activité Récente</h3>
-            <ul id="activityLog" style="list-style: none; padding-top: 10px;"></ul>
+            <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Activité Récente</h3>
+            <ul id="activityLog"></ul>
         </div>
     </section>
 
     <section id="caisse" class="section">
-        <h2>Caisse Tactile</h2>
+        <h2 style="margin-bottom: 20px; font-weight: 700;">Terminal de Vente</h2>
         <div id="posGrid" class="pos-grid"></div>
         <br>
-        <h3>Historique des Ventes</h3>
-        <ul id="salesList" style="list-style: none;"></ul>
+        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Historique</h3>
+        <ul id="salesList"></ul>
     </section>
 
     <section id="stock" class="section">
-        <h2>Gestion du Stock</h2>
+        <h2 style="margin-bottom: 20px; font-weight: 700;">Inventaire</h2>
         <div class="card">
-            <h3>Ajouter un Article</h3>
-            <input type="file" id="prodImg" accept="image/*" style="margin-top: 10px;">
+            <h3 style="margin-bottom: 20px; font-size: 1.1rem;">Nouveau Produit</h3>
+            
+            <div class="file-input-wrapper">
+                <div class="file-input-btn"><i class="fas fa-camera"></i> Choisir une photo</div>
+                <input type="file" id="prodImg" accept="image/*" onchange="showNotification('Photo sélectionnée')">
+            </div>
+
             <select id="prodCat">
                 <option value="Matelas">Matelas</option>
                 <option value="Tissus">Tissus</option>
@@ -184,21 +374,21 @@
             </select>
             <input type="text" id="prodName" placeholder="Nom du produit">
             <input type="number" id="prodPrice" placeholder="Prix Catalogue (FCFA)">
-            <input type="number" id="prodQty" placeholder="Quantité">
-            <button class="btn-primary" onclick="addProduct()">Sauvegarder</button>
+            <input type="number" id="prodQty" placeholder="Quantité Initiale">
+            <button class="btn-primary" onclick="addProduct()">Ajouter au Stock</button>
         </div>
-        <h3>Inventaire</h3>
-        <ul id="stockList" style="list-style: none;"></ul>
+        
+        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Liste des Articles</h3>
+        <ul id="stockList"></ul>
     </section>
 
     <nav>
-        <button class="nav-btn" onclick="switchTab('caisse', this)"><i class="fas fa-cash-register"></i><span>Caisse</span></button>
-        <button class="nav-btn active" onclick="switchTab('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dash</span></button>
-        <button class="nav-btn" onclick="switchTab('stock', this)"><i class="fas fa-box-open"></i><span>Stock</span></button>
+        <button class="nav-btn" onclick="switchTab('caisse', this)"><i class="fas fa-cash-register"></i></button>
+        <button class="nav-btn active" onclick="switchTab('dashboard', this)"><i class="fas fa-chart-pie"></i></button>
+        <button class="nav-btn" onclick="switchTab('stock', this)"><i class="fas fa-box-open"></i></button>
     </nav>
 
     <script>
-        // --- DONNEES ---
         const DB_KEY = 'matelasDoDoData_v4'; 
         let appData = { products: [], sales: [] };
         let lastSaleData = null;
@@ -214,20 +404,20 @@
             calculateDashboard();
             renderPOSGrid();
             renderSalesList();
-            renderStockList(); // Ajout du rendu liste stock
+            renderStockList();
         }
 
-        // --- UTILITAIRES (AJOUTÉS) ---
         function formatMoney(amount) {
-            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(amount).replace('XOF', 'FCFA');
+            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(amount).replace('XOF', 'F');
         }
 
+        // Modified for Dynamic Island style
         function showNotification(msg, type='success') {
             const notif = document.getElementById('notification');
-            notif.innerText = msg;
+            notif.innerHTML = type === 'error' ? `<i class="fas fa-exclamation-circle"></i> ${msg}` : `<i class="fas fa-check-circle"></i> ${msg}`;
             notif.className = type === 'error' ? 'notif-error' : '';
-            notif.style.transform = 'translateX(0)';
-            setTimeout(() => { notif.style.transform = 'translateX(150%)'; }, 3000);
+            notif.classList.add('show');
+            setTimeout(() => { notif.classList.remove('show'); }, 3000);
         }
 
         function switchTab(sectionId, btn) {
@@ -237,9 +427,12 @@
             btn.classList.add('active');
         }
 
-        // --- MODAL LOGIC (CORRIGÉE) ---
         function openModal(product) {
-            document.getElementById('salesModal').style.display = 'flex';
+            const modal = document.getElementById('salesModal');
+            modal.style.display = 'flex';
+            // Petit délai pour permettre l'animation CSS opacity
+            setTimeout(() => { modal.classList.add('show'); }, 10);
+
             document.getElementById('saleFormStep').style.display = 'block';
             document.getElementById('receiptStep').style.display = 'none';
 
@@ -248,13 +441,19 @@
             document.getElementById('modalStockPrice').innerText = formatMoney(product.price);
             document.getElementById('modalActualPrice').value = product.price;
             
-            // Gestion Quantité Max
             document.getElementById('modalMaxStock').value = product.quantity;
             const qtyInput = document.getElementById('modalQty');
             qtyInput.value = 1;
-            qtyInput.max = product.quantity; // Bloque la flèche haut du navigateur
+            qtyInput.max = product.quantity;
 
             document.getElementById('modalClientName').value = ''; 
+        }
+
+        function closeModal() { 
+            const modal = document.getElementById('salesModal');
+            modal.classList.remove('show');
+            // Attendre la fin de l'animation pour display: none
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
 
         function adjustQty(delta) {
@@ -297,7 +496,7 @@
             const surplusUnit = actualPrice - stockPrice;
             const totalSurplus = surplusUnit * qty;
 
-            product.quantity -= qty; // Déduction Stock
+            product.quantity -= qty; 
 
             const newSale = {
                 id: Date.now(),
@@ -321,36 +520,26 @@
             
             const bonusDisplay = document.getElementById('bonusMsg');
             if(totalSurplus > 0) {
-                bonusDisplay.innerText = `🔥 Bonus généré: ${formatMoney(totalSurplus)}`;
-                bonusDisplay.style.color = "var(--warning)";
+                bonusDisplay.innerHTML = `🔥 Bonus: <span style="color:var(--success); font-weight:bold">${formatMoney(totalSurplus)}</span>`;
             } else if (totalSurplus < 0) {
-                bonusDisplay.innerText = `⚠️ Rabais accordé: ${formatMoney(Math.abs(totalSurplus))}`;
-                bonusDisplay.style.color = "var(--danger)";
+                bonusDisplay.innerHTML = `⚠️ Rabais: <span style="color:var(--danger); font-weight:bold">${formatMoney(Math.abs(totalSurplus))}</span>`;
             } else {
                 bonusDisplay.innerText = "Vente au prix standard.";
-                bonusDisplay.style.color = "var(--text-muted)";
             }
         }
 
-        // --- DASHBOARD CORRECTED ---
         function calculateDashboard() {
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             let stockVal = 0, salesToday = 0, totalBonus = 0, totalGlobal = 0;
 
-            // CORRECTIF 1: Calcul basé sur le stock RESTANT
             appData.products.forEach(p => {
                 stockVal += p.price * p.quantity; 
             });
             
             appData.sales.forEach(s => {
                 totalGlobal += s.total;
-                
-                // CORRECTIF 2: Calcul du surplus net (Inclus les pertes/rabais pour être rigoureux)
-                if(s.surplus) {
-                    totalBonus += s.surplus;
-                }
-
+                if(s.surplus) totalBonus += s.surplus;
                 const sDate = s.date.split('T')[0];
                 if(sDate === todayStr) salesToday += s.total;
             });
@@ -358,22 +547,24 @@
             document.getElementById('totalStockValue').innerText = formatMoney(stockVal);
             document.getElementById('salesToday').innerText = formatMoney(salesToday);
             
-            // Affichage avec couleur dynamique pour le bonus
             const bonusEl = document.getElementById('totalBonus');
             bonusEl.innerText = formatMoney(totalBonus);
-            bonusEl.style.color = totalBonus >= 0 ? "var(--warning)" : "var(--danger)";
+            bonusEl.style.color = totalBonus >= 0 ? "var(--success)" : "var(--danger)";
             
             document.getElementById('totalSalesGlobal').innerText = formatMoney(totalGlobal);
             
-            // Remplir le log d'activité (simplifié)
             const log = document.getElementById('activityLog');
             log.innerHTML = '';
-            [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,3).forEach(s => {
+            [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,5).forEach(s => {
                 const li = document.createElement('li');
-                li.style.marginBottom = '5px';
-                li.style.fontSize = '0.8rem';
-                li.style.color = 'var(--text-muted)';
-                li.innerText = `${new Date(s.date).toLocaleTimeString()} - ${s.prodName} (${formatMoney(s.total)})`;
+                li.className = 'list-item';
+                li.innerHTML = `
+                    <div>
+                        <div style="font-weight:600; font-size:0.9rem;">${s.prodName}</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${new Date(s.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>
+                    <div style="font-weight:bold; color:var(--primary);">${formatMoney(s.total)}</div>
+                `;
                 log.appendChild(li);
             });
         }
@@ -384,11 +575,10 @@
             appData.products.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'pos-card';
-                // Griser si stock épuisé
                 if(p.quantity <= 0) div.style.opacity = '0.5';
                 
-                const imgSrc = p.image ? p.image : 'https://via.placeholder.com/150/333/fff?text=IMG';
-                const badge = p.quantity <= 0 ? `<div class="pos-badge">RUPTURE</div>` : `<div class="pos-badge" style="background:var(--success)">${p.quantity}</div>`;
+                const imgSrc = p.image ? p.image : 'https://via.placeholder.com/150/000000/FFFFFF/?text=No+Img';
+                const badge = p.quantity <= 0 ? `<div class="pos-badge" style="background:var(--danger)">RUPTURE</div>` : `<div class="pos-badge">${p.quantity}</div>`;
                 
                 div.innerHTML = `${badge}<img src="${imgSrc}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div>`;
                 
@@ -403,23 +593,38 @@
         function renderSalesList() {
             const list = document.getElementById('salesList'); list.innerHTML = '';
             [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,10).forEach(s => {
-                const li = document.createElement('li'); li.className = 'card'; li.style.padding = '10px';
-                let bonusIcon = '';
-                if(s.surplus > 0) bonusIcon = '🔥';
-                else if(s.surplus < 0) bonusIcon = '📉';
+                const li = document.createElement('li'); li.className = 'list-item';
                 
-                li.innerHTML = `<div style="display:flex; justify-content:space-between;"><div><strong>${s.clientName}</strong> <span style="font-size:0.8rem; color:var(--text-muted)">- ${s.prodName}</span><div style="font-size:0.8rem; color:var(--text-muted)">${new Date(s.date).toLocaleString()}</div></div><div style="text-align:right"><div style="color:var(--success); font-weight:bold">${formatMoney(s.total)}</div><div style="font-size:0.7rem;">${bonusIcon}</div></div></div>`;
+                li.innerHTML = `
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:600;">${s.clientName}</span>
+                        <span style="font-size:0.8rem; color:var(--text-secondary)">${s.prodName}</span>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="color:var(--text-primary); font-weight:bold">${formatMoney(s.total)}</div>
+                        <div style="font-size:0.7rem; color:${s.surplus >= 0 ? 'var(--success)' : 'var(--danger)'}">${s.surplus >= 0 ? '+' : ''}${s.surplus}</div>
+                    </div>`;
                 list.appendChild(li);
             });
         }
 
-        // Ajout : Affichage simple du stock dans la section Stock
         function renderStockList() {
             const list = document.getElementById('stockList'); list.innerHTML = '';
             appData.products.forEach(p => {
                 const li = document.createElement('li'); 
-                li.className = 'card'; li.style.padding = '10px'; li.style.marginBottom='5px';
-                li.innerHTML = `<div style="display:flex; justify-content:space-between"><span>${p.name}</span> <span>Qté: <strong>${p.quantity}</strong> / ${p.price} FCFA</span></div>`;
+                li.className = 'list-item';
+                li.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <div style="width:40px; height:40px; background:var(--bg-input); border-radius:8px; margin-right:10px; overflow:hidden;">
+                            ${p.image ? `<img src="${p.image}" style="width:100%; height:100%; object-fit:cover;">` : ''}
+                        </div>
+                        <div>
+                            <div style="font-weight:600;">${p.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary)">Stock: ${p.quantity}</div>
+                        </div>
+                    </div>
+                    <div style="font-weight:600;">${formatMoney(p.price)}</div>
+                `;
                 list.appendChild(li);
             });
         }
@@ -440,30 +645,22 @@
 
         function saveProd(name, cat, price, qty, img) {
             appData.products.push({
-                id: Date.now(), 
-                name, 
-                category: cat, 
-                price, 
-                quantity: qty, 
-                originalQty: qty, // On garde l'historique de l'arrivage
-                image: img, 
-                dateAdded: new Date().toISOString()
+                id: Date.now(), name, category: cat, price, quantity: qty, originalQty: qty, image: img, dateAdded: new Date().toISOString()
             });
             saveData(); 
             showNotification("Produit ajouté !");
             document.getElementById('prodName').value = ''; 
             document.getElementById('prodPrice').value = '';
             document.getElementById('prodQty').value = '';
+            document.getElementById('prodImg').value = '';
         }
         
         function sendReceipt(method) {
             if(!lastSaleData) return;
-            const text = `🧾 *MATELAS DODO - REÇU*\n📅 ${new Date(lastSaleData.date).toLocaleString('fr-FR')}\n👤 Client: ${lastSaleData.clientName}\n------------------------\n📦 ${lastSaleData.prodName}\n🔢 Qté: ${lastSaleData.quantity} x ${formatMoney(lastSaleData.unitPriceSold)}\n💰 *TOTAL: ${formatMoney(lastSaleData.total)}*\n------------------------\nMerci de votre confiance !`;
+            const text = `🧾 *MATELAS DODO*\n📅 ${new Date(lastSaleData.date).toLocaleString('fr-FR')}\n👤 ${lastSaleData.clientName}\n📦 ${lastSaleData.prodName}\n💰 ${formatMoney(lastSaleData.total)}`;
             const url = method === 'whatsapp' ? `https://wa.me/?text=${encodeURIComponent(text)}` : `sms:?body=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
-
-        function closeModal() { document.getElementById('salesModal').style.display = 'none'; }
     </script>
 </body>
 </html>
