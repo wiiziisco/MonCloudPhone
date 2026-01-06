@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matelas DoDo - Manager v2.0</title>
+    <title>Matelas DoDo - Manager v2.1 (Caisse FCFA)</title>
     <style>
         /* --- CONFIGURATION GLOBALE & THEME --- */
         :root {
@@ -20,7 +20,7 @@
             --glass-border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Mode Clair Automatique (Day Mode) */
+        /* Mode Clair Automatique */
         @media (prefers-color-scheme: light) {
             :root {
                 --bg-color: #f1f5f9;
@@ -38,7 +38,7 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             transition: background 0.3s, color 0.3s;
-            padding-bottom: 80px; /* Espace pour le menu mobile */
+            padding-bottom: 90px; /* Espace pour le menu mobile */
         }
 
         /* --- LAYOUT & NAVIGATION --- */
@@ -53,7 +53,7 @@
             z-index: 100;
         }
 
-        h1 { font-weight: 300; letter-spacing: 2px; text-transform: uppercase; }
+        h1 { font-weight: 300; letter-spacing: 2px; text-transform: uppercase; font-size: 1.5rem; }
         h1 span { color: var(--accent); font-weight: bold; text-shadow: var(--accent-glow); }
 
         nav {
@@ -64,7 +64,7 @@
             backdrop-filter: blur(15px);
             display: flex;
             justify-content: space-around;
-            padding: 15px;
+            padding: 12px;
             border-top: var(--glass-border);
             z-index: 1000;
         }
@@ -108,8 +108,8 @@
         }
 
         .stat-card { text-align: center; }
-        .stat-val { font-size: 1.8rem; font-weight: bold; color: var(--accent); margin: 5px 0; }
-        .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+        .stat-val { font-size: 1.6rem; font-weight: bold; color: var(--accent); margin: 5px 0; word-break: break-all; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
 
         /* --- FORMS & INPUTS --- */
         .form-group { margin-bottom: 15px; }
@@ -117,12 +117,12 @@
         
         input, select, button {
             width: 100%;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 15px; /* Plus grand pour le tactile */
+            border-radius: 10px;
             border: 1px solid var(--text-muted);
             background: rgba(255,255,255,0.05);
             color: var(--text-main);
-            font-size: 1rem;
+            font-size: 1.1rem;
             outline: none;
             transition: 0.3s;
         }
@@ -137,6 +137,7 @@
             text-transform: uppercase;
             cursor: pointer;
             box-shadow: var(--accent-glow);
+            margin-top: 10px;
         }
         .btn-primary:active { transform: scale(0.98); }
 
@@ -188,7 +189,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="loadData()">
 
     <header>
         <h1>Matelas <span>DoDo</span></h1>
@@ -202,26 +203,27 @@
         <div class="dashboard-grid">
             <div class="card stat-card">
                 <div class="stat-label">Stock Entrant (Valeur)</div>
-                <div class="stat-val" id="totalStockValue">0 €</div>
-                <div class="stat-label" style="color: var(--success)">Dont Ristourne 9%: <span id="totalDiscountValue">0 €</span></div>
+                <div class="stat-val" id="totalStockValue">0 FCFA</div>
+                <div class="stat-label" style="color: var(--success)">Dont Ristourne 9%: <span id="totalDiscountValue">0 FCFA</span></div>
             </div>
             <div class="card stat-card">
                 <div class="stat-label">Ventes (Sans Bonus)</div>
-                <div class="stat-val" id="salesNoBonus">0 €</div>
+                <div class="stat-val" id="salesNoBonus">0 FCFA</div>
             </div>
             <div class="card stat-card">
                 <div class="stat-label">Ventes (Avec Bonus)</div>
-                <div class="stat-val" id="salesWithBonus" style="color: var(--warning)">0 €</div>
+                <div class="stat-val" id="salesWithBonus" style="color: var(--warning)">0 FCFA</div>
             </div>
             <div class="card stat-card">
                 <div class="stat-label">Ventes du Jour</div>
-                <div class="stat-val" id="salesToday">0 €</div>
+                <div class="stat-val" id="salesToday">0 FCFA</div>
             </div>
         </div>
         
         <div class="card">
             <h3>Dernières Activités</h3>
             <ul id="activityLog" class="item-list"></ul>
+            <p id="noActivity" style="text-align:center; color:var(--text-muted); font-size:0.9rem; padding:10px;">Aucune activité récente.</p>
         </div>
     </section>
 
@@ -239,13 +241,14 @@
                 <option value="Matelas">Matelas</option>
                 <option value="Tissus">Tissus pour matelas</option>
                 <option value="Oreillers">Oreillers</option>
+                <option value="Accessoires">Accessoires</option>
             </select>
             <br><br>
             <label>Nom du produit</label>
             <input type="text" id="prodName" placeholder="Ex: Matelas Royal 140x190">
             <br><br>
-            <label>Prix de vente unitaire (€)</label>
-            <input type="number" id="prodPrice" placeholder="0.00">
+            <label>Prix de vente unitaire (FCFA)</label>
+            <input type="number" id="prodPrice" placeholder="Ex: 50000">
             <br><br>
             <label>Quantité Entrante</label>
             <input type="number" id="prodQty" placeholder="1">
@@ -258,26 +261,34 @@
         </div>
 
         <h3>Liste des Articles</h3>
-        <ul id="stockList" class="item-list">
-            </ul>
+        <ul id="stockList" class="item-list"></ul>
     </section>
 
-    <section id="sales" class="section">
-        <h2>Enregistrer une Vente</h2>
+    <section id="caisse" class="section">
+        <h2>Caisse Enregistreuse</h2>
         <br>
-        <div class="card">
-            <label>Produit vendu</label>
-            <select id="saleProdId">
-                </select>
-            <br><br>
-            <label>Quantité</label>
-            <input type="number" id="saleQty" value="1" min="1">
-            <br><br>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <input type="checkbox" id="saleBonus" style="width: 20px;">
-                <label for="saleBonus" style="margin:0; color: var(--warning);">Appliquer Bonus Vente</label>
+        <div class="card" style="border-top: 4px solid var(--accent);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i style="font-size: 3rem; color: var(--accent);">🛒</i>
+                <p style="color: var(--text-muted);">Nouvelle Vente Directe</p>
             </div>
-            <button class="btn-primary" onclick="addSale()">Valider la Vente</button>
+
+            <label>Sélectionner le Produit</label>
+            <select id="saleProdId">
+                <option>Chargement...</option>
+            </select>
+            <br><br>
+            
+            <label>Quantité Vendue</label>
+            <input type="number" id="saleQty" value="1" min="1" style="font-size: 1.5rem; text-align: center;">
+            <br><br>
+            
+            <div style="background: rgba(245, 158, 11, 0.1); padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                <input type="checkbox" id="saleBonus" style="width: 25px; height: 25px;">
+                <label for="saleBonus" style="margin:0; color: var(--warning); font-weight: bold;">Appliquer Bonus Vente</label>
+            </div>
+            
+            <button class="btn-primary" onclick="addSale()" style="font-size: 1.2rem; padding: 20px;">VALIDER LA VENTE</button>
         </div>
         
         <br>
@@ -294,15 +305,15 @@
             <div style="font-size: 1.5rem;">📦</div>
             <span>Stock</span>
         </button>
-        <button class="nav-btn" onclick="switchTab('sales', this)">
+        <button class="nav-btn" onclick="switchTab('caisse', this)">
             <div style="font-size: 1.5rem;">💰</div>
-            <span>Vente</span>
+            <span>Caisse</span>
         </button>
     </nav>
 
     <script>
         // --- 1. GESTION DES DONNÉES (LocalStorage) ---
-        const DB_KEY = 'matelasDoDoData_v1';
+        const DB_KEY = 'matelasDoDoData_v2'; // Changé v2 pour éviter conflit avec ancien format
         
         let appData = {
             products: [], // { id, name, category, price, quantity, image, dateAdded }
@@ -328,11 +339,11 @@
         function addProduct() {
             const name = document.getElementById('prodName').value;
             const cat = document.getElementById('prodCat').value;
-            const price = parseFloat(document.getElementById('prodPrice').value);
+            const price = parseInt(document.getElementById('prodPrice').value); // FCFA = Entier
             const qty = parseInt(document.getElementById('prodQty').value);
             const imgInput = document.getElementById('prodImg');
 
-            if(!name || !price || !qty) return alert("Veuillez remplir tous les champs");
+            if(!name || isNaN(price) || !qty) return alert("Veuillez remplir correctement tous les champs");
 
             // Gestion Image (Base64)
             let imgData = null;
@@ -355,7 +366,7 @@
                 category: cat,
                 price,
                 quantity: qty,
-                originalQty: qty, // Pour le calcul de valeur stock entrant
+                originalQty: qty,
                 image: img,
                 dateAdded: new Date().toISOString()
             };
@@ -370,16 +381,18 @@
             document.getElementById('prodImg').value = '';
         }
 
-        // Enregistrer une vente
+        // Enregistrer une vente (Caisse)
         function addSale() {
             const prodId = parseInt(document.getElementById('saleProdId').value);
             const qty = parseInt(document.getElementById('saleQty').value);
             const hasBonus = document.getElementById('saleBonus').checked;
 
+            if (isNaN(prodId)) return alert("Veuillez sélectionner un produit.");
+
             const product = appData.products.find(p => p.id === prodId);
 
             if (!product) return alert("Produit introuvable");
-            if (product.quantity < qty) return alert("Stock insuffisant !");
+            if (product.quantity < qty) return alert("Stock insuffisant ! Il ne reste que " + product.quantity + " unités.");
 
             // Mise à jour stock
             product.quantity -= qty;
@@ -398,16 +411,21 @@
 
             appData.sales.push(newSale);
             saveData();
-            showNotification("Vente enregistrée !");
+            
+            // Feedback
+            showNotification(`Vente de ${formatMoney(total)} validée !`);
+            document.getElementById('saleQty').value = "1";
+            document.getElementById('saleBonus').checked = false;
         }
 
         // --- 3. CALCULS ET AFFICHAGE (UI) ---
 
         function updateUI() {
             renderStockList();
-            renderSalesForm();
-            renderSalesList();
+            renderSalesForm(); // Met à jour la liste déroulante de la caisse
+            renderSalesList(); // Met à jour l'historique
             calculateDashboard();
+            renderActivityLog();
         }
 
         function calculateDashboard() {
@@ -421,13 +439,12 @@
             let salesWithBonusVal = 0;
             let salesTodayVal = 0;
 
-            // 1. Calcul Stock Entrant (Année en cours)
+            // 1. Calcul Stock Entrant
             appData.products.forEach(p => {
                 const d = new Date(p.dateAdded);
                 if (d.getFullYear() === currentYear) {
                     const val = p.price * p.originalQty;
                     totalStockInVal += val;
-                    // Ristourne 9% sur stock entrant
                     totalDiscount += (val * 0.09);
                 }
             });
@@ -463,18 +480,19 @@
             const list = document.getElementById('stockList');
             list.innerHTML = '';
             
-            // Trier par date décroissante
             [...appData.products].reverse().forEach(p => {
                 const li = document.createElement('li');
                 li.className = 'item-card';
-                // Image par défaut si pas d'image
                 const imgSrc = p.image ? p.image : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cG9seWxpbmUgcG9pbnRzPSIyMSAxNSAxNiAxMCA1IDIxIi8+PC9zdmc+';
                 
+                // Couleur rouge si stock bas
+                const stockColor = p.quantity < 2 ? 'red' : 'inherit';
+
                 li.innerHTML = `
                     <img src="${imgSrc}" class="item-img" alt="prod">
-                    <div class="item-info">
+                    <div class="item-info" style="flex:1">
                         <h3>${p.name} <span class="badge">${p.category}</span></h3>
-                        <p>Stock: <strong>${p.quantity}</strong> | Prix: ${formatMoney(p.price)}</p>
+                        <p style="color:${stockColor}">Stock: <strong>${p.quantity}</strong> | Prix: ${formatMoney(p.price)}</p>
                     </div>
                 `;
                 list.appendChild(li);
@@ -484,21 +502,30 @@
         function renderSalesForm() {
             const select = document.getElementById('saleProdId');
             select.innerHTML = '';
+            
+            let hasStock = false;
+
             appData.products.forEach(p => {
                 if(p.quantity > 0) {
+                    hasStock = true;
                     const opt = document.createElement('option');
                     opt.value = p.id;
-                    opt.innerText = `${p.name} (Reste: ${p.quantity})`;
+                    opt.innerText = `${p.name} - ${formatMoney(p.price)} (Reste: ${p.quantity})`;
                     select.appendChild(opt);
                 }
             });
+
+            if(!hasStock) {
+                const opt = document.createElement('option');
+                opt.innerText = "Aucun produit en stock";
+                select.appendChild(opt);
+            }
         }
 
         function renderSalesList() {
             const list = document.getElementById('salesList');
-            list.innerHTML = ''; // Clear current
+            list.innerHTML = ''; 
             
-            // 5 dernières ventes
             const recentSales = [...appData.sales].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
             recentSales.forEach(s => {
@@ -510,7 +537,7 @@
                     <div class="item-info" style="width:100%">
                         <div style="display:flex; justify-content:space-between">
                             <h3>${s.prodName}</h3>
-                            <span>${formatMoney(s.total)}</span>
+                            <span style="color:var(--success); font-weight:bold;">+ ${formatMoney(s.total)}</span>
                         </div>
                         <p>${new Date(s.date).toLocaleTimeString()} - Qté: ${s.quantity} ${bonusTag}</p>
                     </div>
@@ -518,18 +545,56 @@
                 list.appendChild(li);
             });
         }
+        
+        function renderActivityLog() {
+            const logList = document.getElementById('activityLog');
+            const noActivityMsg = document.getElementById('noActivity');
+            logList.innerHTML = '';
+            
+            // Combiner ventes et ajouts de stock pour le log
+            let logs = [];
+            
+            appData.sales.forEach(s => logs.push({ type: 'vente', date: s.date, text: `Vente: ${s.prodName}`, amount: s.total }));
+            appData.products.forEach(p => logs.push({ type: 'stock', date: p.dateAdded, text: `Ajout Stock: ${p.name}`, amount: p.price * p.originalQty }));
+            
+            logs.sort((a,b) => new Date(b.date) - new Date(a.date));
+            const recentLogs = logs.slice(0, 5);
+
+            if(recentLogs.length > 0) {
+                noActivityMsg.style.display = 'none';
+                recentLogs.forEach(log => {
+                    const li = document.createElement('li');
+                    li.style.padding = "10px 0";
+                    li.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+                    li.style.fontSize = "0.9rem";
+                    li.style.display = "flex";
+                    li.style.justifyContent = "space-between";
+                    
+                    const color = log.type === 'vente' ? 'var(--success)' : 'var(--accent)';
+                    const icon = log.type === 'vente' ? '💰' : '📦';
+                    
+                    li.innerHTML = `
+                        <span>${icon} ${log.text}</span>
+                        <span style="color:${color}">${formatMoney(log.amount)}</span>
+                    `;
+                    logList.appendChild(li);
+                });
+            } else {
+                noActivityMsg.style.display = 'block';
+            }
+        }
 
         // --- UTILITAIRES ---
+        // Formatage manuel pour FCFA (sans décimales)
         function formatMoney(amount) {
-            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+            // Sépare les milliers par des espaces
+            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " FCFA";
         }
 
         function switchTab(tabId, btn) {
-            // Cacher toutes les sections
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
-            // Afficher la cible
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
         }
@@ -542,10 +607,6 @@
                 notif.style.transform = 'translateX(150%)';
             }, 3000);
         }
-
-        // Initialisation
-        loadData();
-
     </script>
 </body>
 </html>
