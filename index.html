@@ -280,13 +280,22 @@
         function renderSalesList(){ const l=document.getElementById('salesList'); l.innerHTML=''; [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,15).forEach(s=>{ l.innerHTML+=`<li class="list-item"><div><b>${s.clientName}</b><br><small>${s.prodName}</small></div><div><b>${formatMoney(s.total)}</b></div></li>`; }); }
         function renderStockList(){ const l=document.getElementById('stockList'); l.innerHTML=''; appData.products.forEach(p=>{ l.innerHTML+=`<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`; }); }
         
+        // --- FONCTION AJOUT MISE A JOUR ---
         function addProduct(){ 
             const n=document.getElementById('prodName').value, p=document.getElementById('prodPrice').value, q=document.getElementById('prodQty').value, f=document.getElementById('prodImg').files[0]; 
             if(!n||!p)return; 
             const r=new FileReader(); 
-            r.onload=e=>{ appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); }; 
+            r.onload=e=>{ 
+                appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); 
+                saveData(); // Sauvegarde et Actualise le Dashboard
+                showNotification("Produit Ajouté"); 
+                closeModal('productModal'); 
+                // Reset des champs
+                document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodQty').value=''; document.getElementById('prodImg').value='';
+            }; 
             if(f)r.readAsDataURL(f); else r.onload({target:{result:null}}); 
         }
+
         function sendReceipt(){ 
             const text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`;
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank'); 
