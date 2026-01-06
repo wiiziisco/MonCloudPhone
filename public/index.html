@@ -2,27 +2,56 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Matelas DoDo">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/0A84FF/ffffff?text=DoDo">
+
     <title>Matelas DoDo - iOS Edition</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* --- APPLE DESIGN SYSTEM VARIABLES --- */
+        /* --- DYNAMIC THEME VARIABLES --- */
         :root {
-            --bg-body: #000000;
-            --bg-card: rgba(28, 28, 30, 0.75);
-            --bg-input: rgba(118, 118, 128, 0.24);
-            --primary: #0A84FF; /* iOS Blue */
-            --accent: #64D2FF; /* iOS Cyan */
-            --danger: #FF453A;
-            --success: #30D158;
-            --warning: #FFD60A;
-            --text-primary: #FFFFFF;
-            --text-secondary: #8E8E93;
-            --separator: rgba(84, 84, 88, 0.65);
+            /* DEFAULT: LIGHT MODE (iOS System Gray) */
+            --bg-body: #F2F2F7;
+            --bg-card: #FFFFFF;
+            --bg-input: rgba(118, 118, 128, 0.12);
+            --header-bg: rgba(255, 255, 255, 0.85);
+            --nav-bg: rgba(255, 255, 255, 0.9);
+            --text-primary: #000000;
+            --text-secondary: #8A8A8E;
+            --separator: rgba(60, 60, 67, 0.29);
+            --shadow-card: 0 4px 20px rgba(0,0,0,0.08);
+            
+            --primary: #007AFF;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --warning: #FFCC00;
+            
             --radius-card: 22px;
             --radius-btn: 14px;
-            --blur: 25px;
-            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --blur: 20px;
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* AUTO DARK MODE OVERRIDES */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #000000;
+                --bg-card: #1C1C1E;
+                --bg-input: rgba(118, 118, 128, 0.24);
+                --header-bg: rgba(28, 28, 30, 0.75);
+                --nav-bg: rgba(30, 30, 30, 0.85);
+                --text-primary: #FFFFFF;
+                --text-secondary: #98989D;
+                --separator: rgba(84, 84, 88, 0.65);
+                --shadow-card: 0 4px 20px rgba(0,0,0,0.4);
+            }
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -31,248 +60,164 @@
             font-family: var(--font-stack);
             background-color: var(--bg-body);
             color: var(--text-primary);
-            padding-bottom: 100px; /* Space for dock */
-            /* Abstract Background Gradient */
-            background-image: radial-gradient(circle at 0% 0%, #1a2a40 0%, transparent 50%), 
-                              radial-gradient(circle at 100% 100%, #1f1f21 0%, transparent 50%);
-            background-attachment: fixed;
+            padding-bottom: 110px;
+            transition: background-color 0.3s ease, color 0.3s ease;
             min-height: 100vh;
         }
 
-        /* --- HEADER (Glass Header) --- */
+        /* --- HEADER --- */
         header { 
-            padding: 20px; 
-            text-align: center; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+            background: var(--header-bg);
             backdrop-filter: blur(var(--blur));
             -webkit-backdrop-filter: blur(var(--blur));
             border-bottom: 0.5px solid var(--separator);
         }
         h1 { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; }
         h1 span { color: var(--primary); }
+        
+        /* Install Button */
+        #installBtn {
+            background: var(--bg-input); color: var(--primary);
+            border: none; padding: 8px 15px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            display: none; /* Hidden by default */
+        }
 
-        /* --- NAVIGATION (Floating Dock) --- */
+        /* --- NAVIGATION --- */
         nav { 
-            position: fixed; 
-            bottom: 20px; 
-            left: 50%; 
-            transform: translateX(-50%);
-            width: 90%; 
-            max-width: 400px;
-            background: rgba(44, 44, 46, 0.8);
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 380px;
+            background: var(--nav-bg);
             backdrop-filter: blur(var(--blur));
             -webkit-backdrop-filter: blur(var(--blur));
-            display: flex; 
-            justify-content: space-around; 
-            padding: 12px; 
+            display: flex; justify-content: space-around; padding: 12px; 
             border-radius: 35px;
-            border: 0.5px solid rgba(255,255,255,0.15);
+            border: 0.5px solid var(--separator);
             z-index: 1000; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
         }
         .nav-btn { 
-            background: none; 
-            border: none; 
-            color: var(--text-secondary); 
-            font-size: 1.4rem; 
-            cursor: pointer; 
+            background: none; border: none; 
+            color: var(--text-secondary); font-size: 1.4rem; 
+            width: 50px; height: 50px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         .nav-btn.active { 
-            color: #fff; 
-            background: var(--primary);
-            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
-            transform: translateY(-5px) scale(1.1);
+            color: #fff; background: var(--primary);
+            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+            transform: translateY(-5px);
         }
 
-        /* --- SECTIONS --- */
-        .section { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        /* --- LAYOUT & CARDS --- */
+        .section { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.4s ease; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- CARDS (iOS Widgets) --- */
         .card { 
-            background: var(--bg-card); 
-            border-radius: var(--radius-card); 
-            padding: 20px; 
-            margin-bottom: 20px; 
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
+            background: var(--bg-card); border-radius: var(--radius-card); 
+            padding: 20px; margin-bottom: 20px; 
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--separator);
         }
         
-        /* --- DASHBOARD GRID --- */
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { 
-            text-align: left; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-            background: linear-gradient(135deg, rgba(44,44,46,0.8) 0%, rgba(28,28,30,0.8) 100%);
+            text-align: left; display: flex; flex-direction: column; justify-content: space-between;
+            padding: 15px;
         }
-        .stat-val { font-size: 1.5rem; font-weight: 700; color: #fff; margin-top: 5px; letter-spacing: -0.5px; }
-        .stat-label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin-top: 5px; letter-spacing: -0.5px; }
+        .stat-label { font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; }
 
-        /* --- POS GRID (App Store Style) --- */
-        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        /* --- POS GRID --- */
+        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 15px; }
         .pos-card { 
-            background: var(--bg-card); 
-            border-radius: var(--radius-card); 
-            overflow: hidden; 
-            cursor: pointer; 
-            transition: transform 0.2s;
-            border: 0.5px solid rgba(255,255,255,0.1);
+            background: var(--bg-card); border-radius: var(--radius-card); 
+            overflow: hidden; cursor: pointer; 
+            box-shadow: var(--shadow-card);
+            position: relative;
         }
-        .pos-card:active { transform: scale(0.95); opacity: 0.8; }
-        .pos-img { width: 100%; height: 120px; object-fit: cover; }
+        .pos-card:active { transform: scale(0.96); opacity: 0.9; }
+        .pos-img { width: 100%; height: 110px; object-fit: cover; background: #eee; }
         .pos-info { padding: 12px; }
-        .pos-title { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .pos-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .pos-price { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
         .pos-badge { 
-            position: absolute; top: 10px; right: 10px; 
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-            color: white; font-size: 0.7rem; padding: 4px 8px; border-radius: 20px; font-weight: 600;
+            position: absolute; top: 8px; right: 8px; 
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; font-weight: 600;
         }
 
         /* --- LISTS --- */
         ul { list-style: none; }
         .list-item {
-            background: rgba(44, 44, 46, 0.5);
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: var(--bg-card); border-radius: 16px;
+            padding: 15px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 0.5px solid var(--separator);
         }
 
-        /* --- MODAL (iOS Sheet Style) --- */
+        /* --- MODAL (iOS Sheet) --- */
         .modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.6); 
-            z-index: 2000; 
-            display: none; 
-            justify-content: center; 
-            align-items: flex-end; /* Align bottom */
-            backdrop-filter: blur(5px);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            background: rgba(0,0,0,0.4); z-index: 2000; 
+            display: none; justify-content: center; align-items: flex-end;
+            backdrop-filter: blur(4px);
+            opacity: 0; transition: opacity 0.3s;
         }
         .modal-overlay.show { opacity: 1; }
         
         .modal-content { 
-            background: #1C1C1E; 
-            width: 100%; 
-            max-width: 600px; /* Tablet constraint */
-            border-radius: 24px 24px 0 0; 
-            padding: 30px 25px 40px 25px; 
-            position: relative; 
-            transform: translateY(100%); 
-            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-card); width: 100%; max-width: 600px;
+            border-radius: 24px 24px 0 0; padding: 30px 25px 50px 25px; 
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            border-top: 1px solid var(--separator);
         }
         .modal-overlay.show .modal-content { transform: translateY(0); }
+        .sheet-handle { width: 40px; height: 5px; background: var(--separator); border-radius: 5px; margin: 0 auto 20px auto; }
+        .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.2rem; color: var(--text-secondary); cursor: pointer; }
 
-        /* Handle bar for sheet */
-        .sheet-handle {
-            width: 40px; height: 5px; background: rgba(255,255,255,0.2);
-            border-radius: 5px; margin: 0 auto 20px auto;
-        }
-
-        .close-modal { 
-            position: absolute; top: 20px; right: 20px; 
-            width: 30px; height: 30px; background: rgba(255,255,255,0.1);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; cursor: pointer; color: var(--text-secondary);
-        }
-
-        /* --- FORMS (Apple Inputs) --- */
+        /* --- FORMS --- */
         label { margin-left: 5px; margin-bottom: 6px; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; }
         input, select { 
-            width: 100%; padding: 16px; 
-            border-radius: 12px; border: none; 
-            background: var(--bg-input); 
-            color: var(--text-primary); 
-            font-size: 1.05rem; 
-            margin-bottom: 20px; 
-            transition: background 0.2s;
-            font-family: var(--font-stack);
+            width: 100%; padding: 16px; border-radius: 12px; border: none; 
+            background: var(--bg-input); color: var(--text-primary); 
+            font-size: 1.05rem; margin-bottom: 20px; font-family: var(--font-stack);
         }
-        input:focus, select:focus { background: rgba(118, 118, 128, 0.4); outline: none; }
+        input:focus { outline: 2px solid var(--primary); background: var(--bg-card); }
         
-        /* Custom File Input */
-        .file-input-wrapper {
-            position: relative; margin-bottom: 20px;
-        }
-        .file-input-wrapper input[type=file] {
-            position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
-        }
-        .file-input-btn {
-            background: var(--bg-input); padding: 15px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            color: var(--primary); font-weight: 600;
-        }
-
-        /* Buttons */
         .btn-primary { 
-            background: var(--primary); color: white; 
-            font-weight: 600; border: none; padding: 16px; 
-            border-radius: var(--radius-btn); margin-top: 10px; cursor: pointer; 
-            font-size: 1.05rem;
+            background: var(--primary); color: white; font-weight: 600; border: none; 
+            padding: 16px; border-radius: var(--radius-btn); width: 100%; font-size: 1rem; cursor: pointer;
         }
-        .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+        .btn-whatsapp { background: #25D366; color: white; border: none; font-weight: 600; width: 100%; padding: 16px; border-radius: var(--radius-btn); display: flex; justify-content: center; gap: 8px; }
 
-        .btn-whatsapp { 
-            background: #25D366; color: white; border: none; 
-            font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; 
-            padding: 16px; border-radius: var(--radius-btn);
-        }
-
-        /* Qté Control */
         .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border-radius: 12px; padding: 5px; margin-bottom: 20px; }
-        .qty-btn { width: 50px; height: 44px; background: #fff; border: none; border-radius: 8px; font-size: 1.2rem; color: #000; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
-        .qty-btn:active { transform: scale(0.9); }
-        .qty-input { width: 60px; text-align: center; background: transparent; border: none; margin: 0; padding: 0; font-weight: bold; font-size: 1.2rem; }
+        .qty-btn { width: 50px; height: 44px; background: var(--bg-card); border: none; border-radius: 8px; font-size: 1.2rem; color: var(--text-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .qty-input { width: 60px; text-align: center; background: transparent; border: none; margin: 0; padding: 0; font-weight: bold; font-size: 1.2rem; color: var(--text-primary); }
 
-        /* --- NOTIFICATION (Dynamic Island) --- */
+        /* --- NOTIFICATION --- */
         #notification { 
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%) translateY(-150%); 
-            padding: 12px 25px; 
-            background: rgba(50, 50, 50, 0.9); 
-            backdrop-filter: blur(20px);
-            color: white; 
-            border-radius: 30px; 
-            display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
-            z-index: 3000; 
-            font-size: 0.9rem; font-weight: 600;
-            min-width: 200px; justify-content: center;
-            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 20px; background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px);
+            color: white; border-radius: 30px; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
+            z-index: 3000; font-size: 0.9rem; font-weight: 600;
         }
         #notification.show { transform: translateX(-50%) translateY(0); }
-        .notif-error { background: rgba(255, 69, 58, 0.9) !important; }
-
-        /* Icons tweaks */
-        i { margin-right: 5px; }
+        .notif-error { background: rgba(255, 59, 48, 0.95) !important; }
 
     </style>
 </head>
-<body onload="loadData()">
+<body onload="initApp()">
 
     <header>
         <h1>Matelas <span>DoDo</span></h1>
+        <button id="installBtn" onclick="installApp()"><i class="fas fa-download"></i> Installer</button>
     </header>
 
     <div id="notification"><i class="fas fa-check-circle"></i> <span>Action effectuée</span></div>
@@ -280,105 +225,81 @@
     <div id="salesModal" class="modal-overlay">
         <div class="modal-content">
             <div class="sheet-handle"></div>
-            <span class="close-modal" onclick="closeModal()"><i class="fas fa-times" style="margin:0"></i></span>
-            
-            <h2 id="modalProdName" style="margin-bottom: 5px; font-size: 1.4rem; letter-spacing: -0.5px;">Produit</h2>
-            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 25px;">Prix Catalogue: <span id="modalStockPrice" style="color:var(--text-primary); font-weight:600;">0</span></p>
-
-            <input type="hidden" id="modalProdId">
-            <input type="hidden" id="modalMaxStock"> 
+            <span class="close-modal" onclick="closeModal()"><i class="fas fa-times"></i></span>
+            <h2 id="modalProdName" style="margin-bottom: 5px; color: var(--text-primary);">Produit</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Prix Ref: <span id="modalStockPrice">0</span></p>
+            <input type="hidden" id="modalProdId"><input type="hidden" id="modalMaxStock"> 
 
             <div id="saleFormStep">
-                <label>Nom du Client</label>
-                <input type="text" id="modalClientName" placeholder="Ex: Moussa Diarra">
-
-                <label style="color: var(--primary);">Prix Négocié (FCFA)</label>
-                <input type="number" id="modalActualPrice" style="color: var(--primary); font-weight: 700;">
-                
+                <label>Nom Client</label>
+                <input type="text" id="modalClientName" placeholder="Nom du client">
+                <label style="color: var(--primary);">Prix Vendu</label>
+                <input type="number" id="modalActualPrice" style="color: var(--primary); font-weight: bold;">
                 <label>Quantité</label>
                 <div class="qty-control">
                     <button class="qty-btn" onclick="adjustQty(-1)">-</button>
                     <input type="number" id="modalQty" value="1" min="1" class="qty-input" onchange="validateQtyInput(this)">
                     <button class="qty-btn" onclick="adjustQty(1)">+</button>
                 </div>
-                
-                <button class="btn-primary" onclick="validateSale()">Valider la Vente</button>
+                <button class="btn-primary" onclick="validateSale()">Valider</button>
             </div>
 
-            <div id="receiptStep" style="display: none; text-align: center; padding-top: 10px;">
-                <div style="width: 80px; height: 80px; background: rgba(48, 209, 88, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                    <i class="fas fa-check" style="font-size: 2rem; color: var(--success); margin:0;"></i>
+            <div id="receiptStep" style="display: none; text-align: center;">
+                <div style="width: 70px; height: 70px; background: rgba(52, 199, 89, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                    <i class="fas fa-check" style="font-size: 2rem; color: var(--success);"></i>
                 </div>
-                <h3 style="margin-bottom: 10px; font-size: 1.3rem;">Vente Réussie</h3>
-                <p id="bonusMsg" style="margin-bottom: 25px; font-size: 1rem;"></p>
-                
-                <button class="btn-whatsapp" onclick="sendReceipt('whatsapp')">
-                    <i class="fab fa-whatsapp"></i> Envoyer Reçu
-                </button>
-                <button onclick="closeModal()" style="background: transparent; border: none; color: var(--text-secondary); margin-top: 20px; padding: 10px; font-size: 1rem;">Fermer</button>
+                <h3 style="margin-bottom: 10px; color: var(--text-primary);">Vente Validée</h3>
+                <p id="bonusMsg" style="margin-bottom: 20px; font-weight: 500;"></p>
+                <button class="btn-whatsapp" onclick="sendReceipt('whatsapp')"><i class="fab fa-whatsapp"></i> Envoyer Reçu</button>
             </div>
         </div>
     </div>
 
     <section id="dashboard" class="section active">
-        <h2 style="margin-bottom: 20px; font-weight: 700;">Vue d'ensemble</h2>
-        
+        <h2 style="margin-bottom: 15px; color: var(--text-primary);">Aperçu</h2>
         <div class="dashboard-grid">
             <div class="card stat-card">
-                <div class="stat-label"><i class="fas fa-box"></i> Valeur Stock</div>
+                <div class="stat-label">Valeur Stock</div>
                 <div class="stat-val" id="totalStockValue">0</div>
             </div>
             <div class="card stat-card">
-                <div class="stat-label"><i class="fas fa-calendar-day"></i> Ventes Jour</div>
+                <div class="stat-label">Ventes Jour</div>
                 <div class="stat-val" id="salesToday" style="color: var(--success)">0</div>
             </div>
             <div class="card stat-card">
-                <div class="stat-label"><i class="fas fa-chart-line"></i> Marge Nette</div>
+                <div class="stat-label">Marge Nette</div>
                 <div class="stat-val" id="totalBonus">0</div>
             </div>
             <div class="card stat-card">
-                <div class="stat-label"><i class="fas fa-wallet"></i> Ventes Total</div>
+                <div class="stat-label">Total Global</div>
                 <div class="stat-val" id="totalSalesGlobal">0</div>
             </div>
         </div>
-        
         <div class="card">
-            <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Activité Récente</h3>
+            <h3 style="margin-bottom: 15px; font-size: 1rem;">Dernières Ventes</h3>
             <ul id="activityLog"></ul>
         </div>
     </section>
 
     <section id="caisse" class="section">
-        <h2 style="margin-bottom: 20px; font-weight: 700;">Terminal de Vente</h2>
+        <h2 style="margin-bottom: 15px; color: var(--text-primary);">Caisse</h2>
         <div id="posGrid" class="pos-grid"></div>
         <br>
-        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Historique</h3>
+        <h3 style="margin-bottom: 15px;">Historique</h3>
         <ul id="salesList"></ul>
     </section>
 
     <section id="stock" class="section">
-        <h2 style="margin-bottom: 20px; font-weight: 700;">Inventaire</h2>
+        <h2 style="margin-bottom: 15px; color: var(--text-primary);">Inventaire</h2>
         <div class="card">
-            <h3 style="margin-bottom: 20px; font-size: 1.1rem;">Nouveau Produit</h3>
-            
-            <div class="file-input-wrapper">
-                <div class="file-input-btn"><i class="fas fa-camera"></i> Choisir une photo</div>
-                <input type="file" id="prodImg" accept="image/*" onchange="showNotification('Photo sélectionnée')">
-            </div>
-
-            <select id="prodCat">
-                <option value="Matelas">Matelas</option>
-                <option value="Tissus">Tissus</option>
-                <option value="Oreillers">Oreillers</option>
-                <option value="Accessoires">Accessoires</option>
-            </select>
-            <input type="text" id="prodName" placeholder="Nom du produit">
-            <input type="number" id="prodPrice" placeholder="Prix Catalogue (FCFA)">
-            <input type="number" id="prodQty" placeholder="Quantité Initiale">
-            <button class="btn-primary" onclick="addProduct()">Ajouter au Stock</button>
+            <label style="display: block; margin-bottom: 10px;">Ajouter Produit</label>
+            <input type="file" id="prodImg" accept="image/*" style="margin-bottom: 10px;">
+            <select id="prodCat"><option>Matelas</option><option>Tissus</option><option>Oreillers</option><option>Autre</option></select>
+            <input type="text" id="prodName" placeholder="Nom">
+            <input type="number" id="prodPrice" placeholder="Prix">
+            <input type="number" id="prodQty" placeholder="Qté">
+            <button class="btn-primary" onclick="addProduct()">Sauvegarder</button>
         </div>
-        
-        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Liste des Articles</h3>
         <ul id="stockList"></ul>
     </section>
 
@@ -389,6 +310,37 @@
     </nav>
 
     <script>
+        // PWA INSTALL LOGIC
+        let deferredPrompt;
+        
+        function initApp() {
+            loadData();
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('SW Registered'))
+                .catch((err) => console.log('SW Fail', err));
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'block';
+        });
+
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredPrompt = null;
+                    document.getElementById('installBtn').style.display = 'none';
+                }
+            }
+        }
+
+        // APP LOGIC
         const DB_KEY = 'matelasDoDoData_v4'; 
         let appData = { products: [], sales: [] };
         let lastSaleData = null;
@@ -399,267 +351,118 @@
             updateUI();
         }
         function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(appData)); updateUI(); }
+        function updateUI() { calculateDashboard(); renderPOSGrid(); renderSalesList(); renderStockList(); }
         
-        function updateUI() {
-            calculateDashboard();
-            renderPOSGrid();
-            renderSalesList();
-            renderStockList();
-        }
-
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(amount).replace('XOF', 'F');
-        }
-
-        // Modified for Dynamic Island style
+        function formatMoney(amount) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(amount).replace('XOF', 'F'); }
         function showNotification(msg, type='success') {
             const notif = document.getElementById('notification');
-            notif.innerHTML = type === 'error' ? `<i class="fas fa-exclamation-circle"></i> ${msg}` : `<i class="fas fa-check-circle"></i> ${msg}`;
+            notif.innerHTML = type === 'error' ? `<i class="fas fa-exclamation-triangle"></i> ${msg}` : `<i class="fas fa-check-circle"></i> ${msg}`;
             notif.className = type === 'error' ? 'notif-error' : '';
-            notif.classList.add('show');
-            setTimeout(() => { notif.classList.remove('show'); }, 3000);
+            notif.classList.add('show'); setTimeout(() => notif.classList.remove('show'), 3000);
         }
-
-        function switchTab(sectionId, btn) {
+        function switchTab(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
+            document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
 
-        function openModal(product) {
-            const modal = document.getElementById('salesModal');
-            modal.style.display = 'flex';
-            // Petit délai pour permettre l'animation CSS opacity
-            setTimeout(() => { modal.classList.add('show'); }, 10);
-
+        // MODAL & SALES
+        function openModal(p) {
+            document.getElementById('salesModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('salesModal').classList.add('show'), 10);
             document.getElementById('saleFormStep').style.display = 'block';
             document.getElementById('receiptStep').style.display = 'none';
-
-            document.getElementById('modalProdId').value = product.id;
-            document.getElementById('modalProdName').innerText = product.name;
-            document.getElementById('modalStockPrice').innerText = formatMoney(product.price);
-            document.getElementById('modalActualPrice').value = product.price;
-            
-            document.getElementById('modalMaxStock').value = product.quantity;
-            const qtyInput = document.getElementById('modalQty');
-            qtyInput.value = 1;
-            qtyInput.max = product.quantity;
-
-            document.getElementById('modalClientName').value = ''; 
+            document.getElementById('modalProdId').value = p.id;
+            document.getElementById('modalProdName').innerText = p.name;
+            document.getElementById('modalStockPrice').innerText = formatMoney(p.price);
+            document.getElementById('modalActualPrice').value = p.price;
+            document.getElementById('modalMaxStock').value = p.quantity;
+            document.getElementById('modalQty').value = 1;
         }
-
-        function closeModal() { 
-            const modal = document.getElementById('salesModal');
-            modal.classList.remove('show');
-            // Attendre la fin de l'animation pour display: none
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        function closeModal() {
+            document.getElementById('salesModal').classList.remove('show');
+            setTimeout(() => document.getElementById('salesModal').style.display = 'none', 300);
         }
-
-        function adjustQty(delta) {
-            const input = document.getElementById('modalQty');
-            const max = parseInt(document.getElementById('modalMaxStock').value);
-            let val = parseInt(input.value) + delta;
-            
-            if (val < 1) val = 1;
-            if (val > max) {
-                val = max;
-                showNotification("Stock max atteint", "error");
-            }
-            input.value = val;
+        function adjustQty(d) {
+            const el = document.getElementById('modalQty');
+            let v = parseInt(el.value) + d, max = parseInt(document.getElementById('modalMaxStock').value);
+            if(v < 1) v = 1; if(v > max) { v = max; showNotification("Max Stock", "error"); }
+            el.value = v;
         }
-
-        function validateQtyInput(input) {
-            const max = parseInt(document.getElementById('modalMaxStock').value);
-            let val = parseInt(input.value);
-            if (val > max) {
-                input.value = max;
-                showNotification(`Stock max : ${max}`, "error");
-            } else if (val < 1) {
-                input.value = 1;
-            }
-        }
-
         function validateSale() {
-            const prodId = parseInt(document.getElementById('modalProdId').value);
+            const pid = parseInt(document.getElementById('modalProdId').value);
             const qty = parseInt(document.getElementById('modalQty').value);
-            const actualPrice = parseInt(document.getElementById('modalActualPrice').value);
-            const clientName = document.getElementById('modalClientName').value.trim() || "Client Anonyme";
+            const price = parseInt(document.getElementById('modalActualPrice').value);
+            const client = document.getElementById('modalClientName').value || "Client";
+            const p = appData.products.find(x => x.id === pid);
 
-            const product = appData.products.find(p => p.id === prodId);
+            if(p.quantity < qty) return showNotification("Stock insuffisant", "error");
             
-            if(product.quantity < qty) return showNotification("Stock insuffisant !", "error");
-            if(isNaN(actualPrice) || actualPrice < 0) return showNotification("Prix invalide", "error");
-
-            const stockPrice = product.price;
-            const totalSale = actualPrice * qty;
-            const surplusUnit = actualPrice - stockPrice;
-            const totalSurplus = surplusUnit * qty;
-
-            product.quantity -= qty; 
-
-            const newSale = {
-                id: Date.now(),
-                prodId: product.id,
-                prodName: product.name,
-                clientName: clientName,
-                quantity: qty,
-                unitPriceSold: actualPrice,
-                unitPriceStock: stockPrice,
-                total: totalSale,
-                surplus: totalSurplus,
-                date: new Date().toISOString()
-            };
-
-            appData.sales.push(newSale);
-            saveData();
-            lastSaleData = newSale;
-
+            p.quantity -= qty;
+            const sale = { id: Date.now(), prodId: p.id, prodName: p.name, clientName: client, quantity: qty, unitPriceSold: price, unitPriceStock: p.price, total: price*qty, surplus: (price - p.price)*qty, date: new Date().toISOString() };
+            appData.sales.push(sale); lastSaleData = sale; saveData();
+            
             document.getElementById('saleFormStep').style.display = 'none';
             document.getElementById('receiptStep').style.display = 'block';
-            
-            const bonusDisplay = document.getElementById('bonusMsg');
-            if(totalSurplus > 0) {
-                bonusDisplay.innerHTML = `🔥 Bonus: <span style="color:var(--success); font-weight:bold">${formatMoney(totalSurplus)}</span>`;
-            } else if (totalSurplus < 0) {
-                bonusDisplay.innerHTML = `⚠️ Rabais: <span style="color:var(--danger); font-weight:bold">${formatMoney(Math.abs(totalSurplus))}</span>`;
-            } else {
-                bonusDisplay.innerText = "Vente au prix standard.";
-            }
+            const bonus = sale.surplus;
+            document.getElementById('bonusMsg').innerHTML = bonus > 0 ? `Bonus: <span style="color:var(--success)">+${formatMoney(bonus)}</span>` : (bonus < 0 ? `Rabais: <span style="color:var(--danger)">${formatMoney(bonus)}</span>` : 'Prix Standard');
         }
 
+        // RENDERING
         function calculateDashboard() {
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            let stockVal = 0, salesToday = 0, totalBonus = 0, totalGlobal = 0;
-
-            appData.products.forEach(p => {
-                stockVal += p.price * p.quantity; 
-            });
-            
+            let stock=0, today=0, bonus=0, total=0;
+            const now = new Date().toISOString().split('T')[0];
+            appData.products.forEach(p => stock += p.price * p.quantity);
             appData.sales.forEach(s => {
-                totalGlobal += s.total;
-                if(s.surplus) totalBonus += s.surplus;
-                const sDate = s.date.split('T')[0];
-                if(sDate === todayStr) salesToday += s.total;
+                total += s.total; if(s.surplus) bonus += s.surplus;
+                if(s.date.startsWith(now)) today += s.total;
             });
-
-            document.getElementById('totalStockValue').innerText = formatMoney(stockVal);
-            document.getElementById('salesToday').innerText = formatMoney(salesToday);
+            document.getElementById('totalStockValue').innerText = formatMoney(stock);
+            document.getElementById('salesToday').innerText = formatMoney(today);
+            document.getElementById('totalBonus').innerText = formatMoney(bonus);
+            document.getElementById('totalSalesGlobal').innerText = formatMoney(total);
             
-            const bonusEl = document.getElementById('totalBonus');
-            bonusEl.innerText = formatMoney(totalBonus);
-            bonusEl.style.color = totalBonus >= 0 ? "var(--success)" : "var(--danger)";
-            
-            document.getElementById('totalSalesGlobal').innerText = formatMoney(totalGlobal);
-            
-            const log = document.getElementById('activityLog');
-            log.innerHTML = '';
-            [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,5).forEach(s => {
-                const li = document.createElement('li');
-                li.className = 'list-item';
-                li.innerHTML = `
-                    <div>
-                        <div style="font-weight:600; font-size:0.9rem;">${s.prodName}</div>
-                        <div style="font-size:0.75rem; color:var(--text-secondary);">${new Date(s.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                    </div>
-                    <div style="font-weight:bold; color:var(--primary);">${formatMoney(s.total)}</div>
-                `;
-                log.appendChild(li);
+            const log = document.getElementById('activityLog'); log.innerHTML = '';
+            [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,4).forEach(s => {
+                log.innerHTML += `<li class="list-item"><div><strong>${s.clientName}</strong><br><small style="color:var(--text-secondary)">${s.prodName}</small></div><b>${formatMoney(s.total)}</b></li>`;
             });
         }
-
         function renderPOSGrid() {
-            const grid = document.getElementById('posGrid');
-            grid.innerHTML = '';
+            const g = document.getElementById('posGrid'); g.innerHTML = '';
             appData.products.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'pos-card';
-                if(p.quantity <= 0) div.style.opacity = '0.5';
-                
-                const imgSrc = p.image ? p.image : 'https://via.placeholder.com/150/000000/FFFFFF/?text=No+Img';
-                const badge = p.quantity <= 0 ? `<div class="pos-badge" style="background:var(--danger)">RUPTURE</div>` : `<div class="pos-badge">${p.quantity}</div>`;
-                
-                div.innerHTML = `${badge}<img src="${imgSrc}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div>`;
-                
-                div.onclick = () => { 
-                    if(p.quantity > 0) openModal(p); 
-                    else showNotification("Rupture de stock", "error"); 
-                };
-                grid.appendChild(div);
-            });
+                const img = p.image || 'https://via.placeholder.com/150?text=IMG';
+                const badge = p.quantity <= 0 ? `<span class="pos-badge" style="background:var(--danger)">0</span>` : `<span class="pos-badge">${p.quantity}</span>`;
+                const op = p.quantity <= 0 ? '0.5' : '1';
+                g.innerHTML += `<div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0 ? `openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})` : ''}">${badge}<img src="${img}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div></div>`;
+            }); 
         }
-
         function renderSalesList() {
-            const list = document.getElementById('salesList'); list.innerHTML = '';
-            [...appData.sales].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,10).forEach(s => {
-                const li = document.createElement('li'); li.className = 'list-item';
-                
-                li.innerHTML = `
-                    <div style="display:flex; flex-direction:column;">
-                        <span style="font-weight:600;">${s.clientName}</span>
-                        <span style="font-size:0.8rem; color:var(--text-secondary)">${s.prodName}</span>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="color:var(--text-primary); font-weight:bold">${formatMoney(s.total)}</div>
-                        <div style="font-size:0.7rem; color:${s.surplus >= 0 ? 'var(--success)' : 'var(--danger)'}">${s.surplus >= 0 ? '+' : ''}${s.surplus}</div>
-                    </div>`;
-                list.appendChild(li);
-            });
+             const l = document.getElementById('salesList'); l.innerHTML = '';
+             [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8).forEach(s => {
+                 l.innerHTML += `<li class="list-item"><div><b>${s.clientName}</b><br><small>${s.prodName}</small></div><div style="text-align:right"><b>${formatMoney(s.total)}</b><br><small style="color:${s.surplus>=0?'var(--success)':'var(--danger)'}">${s.surplus}</small></div></li>`;
+             });
         }
-
         function renderStockList() {
-            const list = document.getElementById('stockList'); list.innerHTML = '';
+            const l = document.getElementById('stockList'); l.innerHTML = '';
             appData.products.forEach(p => {
-                const li = document.createElement('li'); 
-                li.className = 'list-item';
-                li.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <div style="width:40px; height:40px; background:var(--bg-input); border-radius:8px; margin-right:10px; overflow:hidden;">
-                            ${p.image ? `<img src="${p.image}" style="width:100%; height:100%; object-fit:cover;">` : ''}
-                        </div>
-                        <div>
-                            <div style="font-weight:600;">${p.name}</div>
-                            <div style="font-size:0.8rem; color:var(--text-secondary)">Stock: ${p.quantity}</div>
-                        </div>
-                    </div>
-                    <div style="font-weight:600;">${formatMoney(p.price)}</div>
-                `;
-                list.appendChild(li);
+                l.innerHTML += `<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`;
             });
         }
-
         function addProduct() {
-            const name = document.getElementById('prodName').value;
-            const price = parseInt(document.getElementById('prodPrice').value);
-            const qty = parseInt(document.getElementById('prodQty').value);
-            const cat = document.getElementById('prodCat').value;
-            const imgInput = document.getElementById('prodImg');
-            
-            if(!name || !price || isNaN(price)) return showNotification("Infos invalides", "error");
-            
+            const n=document.getElementById('prodName').value, p=document.getElementById('prodPrice').value, q=document.getElementById('prodQty').value;
+            const f=document.getElementById('prodImg').files[0];
+            if(!n || !p) return;
             const reader = new FileReader();
-            reader.onload = function(e) { saveProd(name, cat, price, qty, e.target.result); };
-            if (imgInput.files[0]) reader.readAsDataURL(imgInput.files[0]); else saveProd(name, cat, price, qty, null);
+            reader.onload = (e) => {
+                appData.products.push({id:Date.now(), name:n, price:parseInt(p), quantity:parseInt(q), image: f ? e.target.result : null});
+                saveData(); showNotification("Produit Ajouté");
+            };
+            if(f) reader.readAsDataURL(f); else reader.onload({target:{result:null}});
         }
-
-        function saveProd(name, cat, price, qty, img) {
-            appData.products.push({
-                id: Date.now(), name, category: cat, price, quantity: qty, originalQty: qty, image: img, dateAdded: new Date().toISOString()
-            });
-            saveData(); 
-            showNotification("Produit ajouté !");
-            document.getElementById('prodName').value = ''; 
-            document.getElementById('prodPrice').value = '';
-            document.getElementById('prodQty').value = '';
-            document.getElementById('prodImg').value = '';
-        }
-        
-        function sendReceipt(method) {
-            if(!lastSaleData) return;
-            const text = `🧾 *MATELAS DODO*\n📅 ${new Date(lastSaleData.date).toLocaleString('fr-FR')}\n👤 ${lastSaleData.clientName}\n📦 ${lastSaleData.prodName}\n💰 ${formatMoney(lastSaleData.total)}`;
-            const url = method === 'whatsapp' ? `https://wa.me/?text=${encodeURIComponent(text)}` : `sms:?body=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
+        function sendReceipt(m) {
+            const t = `🧾 Reçu DoDo\n👤 ${lastSaleData.clientName}\n📦 ${lastSaleData.prodName}\n💰 ${formatMoney(lastSaleData.total)}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(t)}`, '_blank');
         }
     </script>
 </body>
