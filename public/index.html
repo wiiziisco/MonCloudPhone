@@ -2,130 +2,550 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>INVENTAIRE | Light</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Rajdhani', 'sans-serif'] }, colors: { cyberBlue: '#00f3ff', cyberRed: '#ff003c' } } } }
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matelas DoDo - Manager v2.0</title>
     <style>
-        body { height: 100dvh; } .hide-scroll::-webkit-scrollbar { display: none; }
-        .active-tab { color: #00f3ff; border-top: 2px solid #00f3ff; background: rgba(0, 243, 255, 0.05); }
-        .inactive-tab { color: #64748b; border-top: 2px solid transparent; }
-        .tab-btn { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s; }
-        .animate-fade-in { animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        /* --- CONFIGURATION GLOBALE & THEME --- */
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8; /* Bleu Ciel Néon */
+            --accent-glow: 0 0 10px rgba(56, 189, 248, 0.5);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mode Clair Automatique (Day Mode) */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-color: #f1f5f9;
+                --card-bg: rgba(255, 255, 255, 0.8);
+                --text-main: #1e293b;
+                --text-muted: #64748b;
+                --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background 0.3s, color 0.3s;
+            padding-bottom: 80px; /* Espace pour le menu mobile */
+        }
+
+        /* --- LAYOUT & NAVIGATION --- */
+        header {
+            padding: 20px;
+            text-align: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 { font-weight: 300; letter-spacing: 2px; text-transform: uppercase; }
+        h1 span { color: var(--accent); font-weight: bold; text-shadow: var(--accent-glow); }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            border-top: var(--glass-border);
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+        }
+
+        .nav-btn.active { color: var(--accent); transform: translateY(-5px); text-shadow: var(--accent-glow); }
+        .nav-btn span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- SECTIONS --- */
+        .section { display: none; padding: 20px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.5s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- CARDS & DASHBOARD --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card { text-align: center; }
+        .stat-val { font-size: 1.8rem; font-weight: bold; color: var(--accent); margin: 5px 0; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+
+        /* --- FORMS & INPUTS --- */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
+        
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent), #2563eb);
+            border: none;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: var(--accent-glow);
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* --- LISTS & ITEMS --- */
+        .item-list { list-style: none; }
+        .item-card {
+            background: var(--card-bg);
+            border: var(--glass-border);
+            margin-bottom: 15px;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background-color: #333;
+            object-fit: cover;
+        }
+
+        .item-info h3 { font-size: 1rem; margin-bottom: 3px; }
+        .item-info p { font-size: 0.85rem; color: var(--text-muted); }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* --- NOTIFICATIONS --- */
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: var(--success);
+            color: white;
+            border-radius: 8px;
+            transform: translateX(150%);
+            transition: transform 0.3s;
+            z-index: 2000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-[#050505] text-slate-900 dark:text-white flex flex-col overflow-hidden transition-colors duration-300 selection:bg-blue-500 selection:text-white">
+<body>
 
-    <header class="flex-none h-16 flex items-center justify-between px-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 z-20 shadow-sm shrink-0">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg"><i class="fa-solid fa-layer-group"></i></div>
-            <h1 class="font-black text-xl tracking-widest uppercase">INVENTAIRE</h1>
-        </div>
-        <div class="flex items-center gap-2">
-            <button onclick="window.location.reload()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center"><i class="fa-solid fa-rotate-right"></i></button>
-            <button onclick="document.getElementById('settingsModal').classList.remove('hidden')" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center"><i class="fa-solid fa-gear"></i></button>
-            <div class="h-9 px-3 rounded-full border border-slate-200 dark:border-white/10 flex flex-col justify-center items-center bg-slate-50 dark:bg-white/5"><span class="text-[8px] font-bold uppercase text-slate-500">Ventes Jour</span><span class="text-xs font-black text-green-500" id="daily-total">0 F</span></div>
-        </div>
+    <header>
+        <h1>Matelas <span>DoDo</span></h1>
     </header>
 
-    <main class="flex-1 overflow-hidden relative w-full">
-        <section id="view-pos" class="absolute inset-0 flex flex-col transition-transform duration-300 z-10 bg-slate-100 dark:bg-[#0b0b0f]">
-            <div class="px-4 pt-3 pb-1 flex-none"><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" oninput="searchProducts(this.value)" placeholder="Rechercher..." class="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 font-bold outline-none focus:border-blue-500 transition"></div></div>
-            <div class="flex-none px-4 py-3 overflow-x-auto hide-scroll flex gap-2" id="category-filters"></div>
-            <div class="flex-1 overflow-y-auto px-4 pb-48"><div id="product-grid" class="grid grid-cols-2 gap-3 pb-4"></div></div>
-            <div id="cart-panel" class="absolute bottom-0 left-0 w-full bg-white dark:bg-[#1a1a20] rounded-t-3xl shadow-2xl transform translate-y-[88%] transition-transform duration-500 z-30 flex flex-col h-[75vh] border-t border-slate-200 dark:border-white/10">
-                <div class="flex-none h-16 px-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center cursor-pointer" onclick="toggleCart()">
-                    <div class="flex items-center gap-4"><div class="relative"><i class="fa-solid fa-cart-shopping text-xl text-slate-400"></i><div class="absolute -top-2 -right-2 bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] scale-0 transition" id="cart-badge">0</div></div><span class="font-black text-lg text-blue-600" id="cart-total-preview">0 F</span></div>
-                    <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center" id="cart-chevron"><i class="fa-solid fa-chevron-up text-slate-500"></i></div>
-                </div>
-                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items"></div>
-                <div class="flex-none p-6 pb-20 bg-slate-50 dark:bg-[#111115] border-t border-slate-200 dark:border-white/10">
-                    <div class="flex justify-between mb-4 items-end"><span class="text-sm font-bold text-slate-500">Total</span><span class="text-2xl font-black" id="cart-total-final">0 FCFA</span></div>
-                    <div class="space-y-3"><input type="text" id="client-name" placeholder="Nom du client" class="w-full p-4 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold outline-none"><button onclick="processSale()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">VALIDER LA VENTE</button></div>
-                </div>
+    <div id="notification">Action effectuée !</div>
+
+    <section id="dashboard" class="section active">
+        <h2>Tableau de Bord Annuel</h2>
+        <br>
+        <div class="dashboard-grid">
+            <div class="card stat-card">
+                <div class="stat-label">Stock Entrant (Valeur)</div>
+                <div class="stat-val" id="totalStockValue">0 €</div>
+                <div class="stat-label" style="color: var(--success)">Dont Ristourne 9%: <span id="totalDiscountValue">0 €</span></div>
             </div>
-        </section>
+            <div class="card stat-card">
+                <div class="stat-label">Ventes (Sans Bonus)</div>
+                <div class="stat-val" id="salesNoBonus">0 €</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-label">Ventes (Avec Bonus)</div>
+                <div class="stat-val" id="salesWithBonus" style="color: var(--warning)">0 €</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-label">Ventes du Jour</div>
+                <div class="stat-val" id="salesToday">0 €</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Dernières Activités</h3>
+            <ul id="activityLog" class="item-list"></ul>
+        </div>
+    </section>
 
-        <section id="view-stock" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20">
-            <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2 z-10"><h2 class="text-2xl font-black uppercase">Inventaire</h2><button onclick="openProductModal()" class="bg-slate-900 dark:bg-white text-white dark:text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition"><i class="fa-solid fa-plus"></i></button></div>
-            <div id="stock-list" class="space-y-3"></div>
-        </section>
+    <section id="stock" class="section">
+        <h2>Gestion du Stock</h2>
+        <br>
+        <div class="card form-group">
+            <h3>Nouveau Stock Entrant</h3>
+            <br>
+            <label>Photo de l'article</label>
+            <input type="file" id="prodImg" accept="image/*">
+            <br><br>
+            <label>Catégorie</label>
+            <select id="prodCat">
+                <option value="Matelas">Matelas</option>
+                <option value="Tissus">Tissus pour matelas</option>
+                <option value="Oreillers">Oreillers</option>
+            </select>
+            <br><br>
+            <label>Nom du produit</label>
+            <input type="text" id="prodName" placeholder="Ex: Matelas Royal 140x190">
+            <br><br>
+            <label>Prix de vente unitaire (€)</label>
+            <input type="number" id="prodPrice" placeholder="0.00">
+            <br><br>
+            <label>Quantité Entrante</label>
+            <input type="number" id="prodQty" placeholder="1">
+            <br><br>
+            <p style="font-size: 0.8rem; color: var(--accent);">
+                Info: Une ristourne de 9% sera calculée automatiquement dans les rapports sur la valeur d'entrée.
+            </p>
+            <br>
+            <button class="btn-primary" onclick="addProduct()">Ajouter au Stock</button>
+        </div>
 
-        <section id="view-history" class="absolute inset-0 bg-slate-100 dark:bg-[#0b0b0f] transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 pb-24 z-20">
-            <h2 class="text-2xl font-black uppercase mb-6 sticky top-0 bg-slate-100/90 dark:bg-[#0b0b0f]/90 backdrop-blur-sm py-2">Journal</h2>
-            <div id="sales-history" class="space-y-3"></div>
-        </section>
-    </main>
+        <h3>Liste des Articles</h3>
+        <ul id="stockList" class="item-list">
+            </ul>
+    </section>
 
-    <nav class="flex-none pb-safe h-20 flex justify-between items-stretch z-40 relative shadow-lg bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-white/10">
-        <button onclick="switchTab('pos')" id="tab-pos" class="active-tab tab-btn group w-1/3"><i class="fa-solid fa-cash-register text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">Caisse</span></button>
-        <button onclick="switchTab('stock')" id="tab-stock" class="inactive-tab tab-btn group w-1/3"><i class="fa-solid fa-boxes-stacked text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">Stock</span></button>
-        <button onclick="switchTab('history')" id="tab-history" class="inactive-tab tab-btn group w-1/3"><i class="fa-solid fa-chart-line text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">Journal</span></button>
+    <section id="sales" class="section">
+        <h2>Enregistrer une Vente</h2>
+        <br>
+        <div class="card">
+            <label>Produit vendu</label>
+            <select id="saleProdId">
+                </select>
+            <br><br>
+            <label>Quantité</label>
+            <input type="number" id="saleQty" value="1" min="1">
+            <br><br>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <input type="checkbox" id="saleBonus" style="width: 20px;">
+                <label for="saleBonus" style="margin:0; color: var(--warning);">Appliquer Bonus Vente</label>
+            </div>
+            <button class="btn-primary" onclick="addSale()">Valider la Vente</button>
+        </div>
+        
+        <br>
+        <h3>Historique des Ventes</h3>
+        <ul id="salesList" class="item-list"></ul>
+    </section>
+
+    <nav>
+        <button class="nav-btn active" onclick="switchTab('dashboard', this)">
+            <div style="font-size: 1.5rem;">📊</div>
+            <span>Dash</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('stock', this)">
+            <div style="font-size: 1.5rem;">📦</div>
+            <span>Stock</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('sales', this)">
+            <div style="font-size: 1.5rem;">💰</div>
+            <span>Vente</span>
+        </button>
     </nav>
 
-    <div id="receiptModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 text-center relative overflow-hidden">
-            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-check text-4xl text-white"></i></div>
-            <h3 class="text-2xl font-black mb-8 dark:text-white">Vente Validée !</h3>
-            <div class="flex flex-col gap-3">
-                <a id="btn-whatsapp" href="#" target="_blank" class="w-full py-4 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-3">WhatsApp</a>
-                <button onclick="closeReceiptModal()" class="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300">Retour</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="productModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-bold dark:text-white">Produit</h3><button onclick="document.getElementById('productModal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button></div>
-            <div class="space-y-4">
-                <div class="mt-1 relative group"><input type="file" id="new-prod-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 z-10" onchange="handleImageUpload(this)"><div class="w-full h-32 bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400" id="image-preview-container"><i class="fa-solid fa-camera text-2xl"></i></div><img id="image-preview" src="" class="absolute inset-0 w-full h-full object-cover rounded-xl hidden"></div>
-                <input type="text" id="new-prod-name" placeholder="Nom" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold">
-                <div class="flex gap-3"><input type="number" id="new-prod-price" placeholder="Prix" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold"><input type="number" id="new-prod-stock" placeholder="Stock" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold"></div>
-                <select id="new-prod-cat" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 font-bold"><option value="Matelas">Matelas</option><option value="Oreillers">Oreillers</option><option value="Draps">Draps</option><option value="Autres">Autres</option></select>
-                <button onclick="saveNewProduct()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-xl mt-4">ENREGISTRER</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="priceModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl text-center">
-            <h3 class="text-xl font-black dark:text-white mb-4">Prix</h3>
-            <input type="number" id="negotiated-price" class="w-full p-4 text-center text-2xl font-mono font-bold rounded-xl bg-slate-50 dark:bg-[#0b0b0f] mb-6" placeholder="0">
-            <div class="flex gap-3"><button onclick="closePriceModal()" class="flex-1 py-3 rounded-xl bg-slate-100 font-bold">Annuler</button><button onclick="saveNegotiatedPrice()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold">Valider</button></div>
-        </div>
-    </div>
-
-    <div id="settingsModal" class="fixed inset-0 z-[220] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-bold mb-6 dark:text-white">Paramètres</h3><div class="space-y-3"><button onclick="exportData()" class="w-full py-4 rounded-xl bg-blue-50 text-blue-600 font-bold">Sauvegarder</button><div class="relative"><button class="w-full py-4 rounded-xl bg-slate-100 font-bold">Restaurer</button><input type="file" onchange="confirmImport(this)" class="absolute inset-0 opacity-0"></div><button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="w-full py-4 rounded-xl text-slate-400">Fermer</button></div><p class="text-xs text-slate-400 mt-6">v12.0</p></div></div>
-    <div id="importConfirmModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-black mb-4 dark:text-white">Restauration</h3><div class="flex gap-3"><button onclick="closeModal('importConfirmModal')" class="flex-1 py-3 rounded-xl bg-slate-100 font-bold">Non</button><button onclick="executeImport()" class="flex-1 py-3 rounded-xl bg-yellow-500 text-white font-bold">Oui</button></div></div></div>
-    <div id="resetModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-black mb-4 dark:text-white">RESET</h3><div class="flex gap-3"><button onclick="closeModal('resetModal')" class="flex-1 py-3 rounded-xl bg-slate-100 font-bold">Non</button><button onclick="executeReset()" class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold">Oui</button></div></div></div>
-    <div id="successModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 bg-black/90"><div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 text-center"><h3 class="text-xl font-black mb-4 text-green-500">Succès</h3><button onclick="closeModal('successModal')" class="w-full py-3 rounded-xl bg-green-600 text-white font-bold">OK</button></div></div>
-
-    <div id="lock-screen" class="fixed inset-0 z-[200] bg-slate-100 dark:bg-[#050505] flex flex-col items-center justify-center p-6 text-center">
-        <div class="w-20 h-20 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-2xl mb-8"><i class="fa-solid fa-lock text-3xl"></i></div>
-        <div class="flex gap-4 justify-center mb-8"><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div><div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 dot"></div></div>
-        <div class="grid grid-cols-3 gap-4 w-full max-w-xs">
-            <button onclick="enterPin(1)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">1</button><button onclick="enterPin(2)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">2</button><button onclick="enterPin(3)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">3</button>
-            <button onclick="enterPin(4)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">4</button><button onclick="enterPin(5)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">5</button><button onclick="enterPin(6)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">6</button>
-            <button onclick="enterPin(7)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">7</button><button onclick="enterPin(8)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">8</button><button onclick="enterPin(9)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">9</button>
-            <div></div><button onclick="enterPin(0)" class="h-16 rounded-full bg-white dark:bg-slate-800 font-mono text-xl font-bold">0</button><button onclick="clearPin()" class="h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-delete-left text-xl"></i></button>
-        </div>
-    </div>
-
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(reg => console.log('V12 OK')); });
+        // --- 1. GESTION DES DONNÉES (LocalStorage) ---
+        const DB_KEY = 'matelasDoDoData_v1';
+        
+        let appData = {
+            products: [], // { id, name, category, price, quantity, image, dateAdded }
+            sales: []     // { id, prodId, prodName, quantity, total, date, hasBonus }
+        };
+
+        function loadData() {
+            const stored = localStorage.getItem(DB_KEY);
+            if (stored) {
+                appData = JSON.parse(stored);
+            }
+            updateUI();
         }
+
+        function saveData() {
+            localStorage.setItem(DB_KEY, JSON.stringify(appData));
+            updateUI();
+        }
+
+        // --- 2. LOGIQUE MÉTIER ---
+
+        // Ajouter un produit (Stock Entrant)
+        function addProduct() {
+            const name = document.getElementById('prodName').value;
+            const cat = document.getElementById('prodCat').value;
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            const qty = parseInt(document.getElementById('prodQty').value);
+            const imgInput = document.getElementById('prodImg');
+
+            if(!name || !price || !qty) return alert("Veuillez remplir tous les champs");
+
+            // Gestion Image (Base64)
+            let imgData = null;
+            if (imgInput.files && imgInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imgData = e.target.result;
+                    saveProductToDB(name, cat, price, qty, imgData);
+                };
+                reader.readAsDataURL(imgInput.files[0]);
+            } else {
+                saveProductToDB(name, cat, price, qty, null);
+            }
+        }
+
+        function saveProductToDB(name, cat, price, qty, img) {
+            const newProd = {
+                id: Date.now(),
+                name,
+                category: cat,
+                price,
+                quantity: qty,
+                originalQty: qty, // Pour le calcul de valeur stock entrant
+                image: img,
+                dateAdded: new Date().toISOString()
+            };
+            appData.products.push(newProd);
+            saveData();
+            showNotification("Stock ajouté avec succès !");
+            
+            // Reset form
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodPrice').value = '';
+            document.getElementById('prodQty').value = '';
+            document.getElementById('prodImg').value = '';
+        }
+
+        // Enregistrer une vente
+        function addSale() {
+            const prodId = parseInt(document.getElementById('saleProdId').value);
+            const qty = parseInt(document.getElementById('saleQty').value);
+            const hasBonus = document.getElementById('saleBonus').checked;
+
+            const product = appData.products.find(p => p.id === prodId);
+
+            if (!product) return alert("Produit introuvable");
+            if (product.quantity < qty) return alert("Stock insuffisant !");
+
+            // Mise à jour stock
+            product.quantity -= qty;
+
+            const total = product.price * qty;
+
+            const newSale = {
+                id: Date.now(),
+                prodId: product.id,
+                prodName: product.name,
+                quantity: qty,
+                total: total,
+                hasBonus: hasBonus,
+                date: new Date().toISOString()
+            };
+
+            appData.sales.push(newSale);
+            saveData();
+            showNotification("Vente enregistrée !");
+        }
+
+        // --- 3. CALCULS ET AFFICHAGE (UI) ---
+
+        function updateUI() {
+            renderStockList();
+            renderSalesForm();
+            renderSalesList();
+            calculateDashboard();
+        }
+
+        function calculateDashboard() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const todayStr = now.toISOString().split('T')[0];
+
+            let totalStockInVal = 0;
+            let totalDiscount = 0;
+            let salesNoBonusVal = 0;
+            let salesWithBonusVal = 0;
+            let salesTodayVal = 0;
+
+            // 1. Calcul Stock Entrant (Année en cours)
+            appData.products.forEach(p => {
+                const d = new Date(p.dateAdded);
+                if (d.getFullYear() === currentYear) {
+                    const val = p.price * p.originalQty;
+                    totalStockInVal += val;
+                    // Ristourne 9% sur stock entrant
+                    totalDiscount += (val * 0.09);
+                }
+            });
+
+            // 2. Calcul Ventes
+            appData.sales.forEach(s => {
+                const d = new Date(s.date);
+                
+                // Annuel
+                if (d.getFullYear() === currentYear) {
+                    if (s.hasBonus) {
+                        salesWithBonusVal += s.total;
+                    } else {
+                        salesNoBonusVal += s.total;
+                    }
+                }
+
+                // Journalier
+                if (s.date.split('T')[0] === todayStr) {
+                    salesTodayVal += s.total;
+                }
+            });
+
+            // Affichage
+            document.getElementById('totalStockValue').innerText = formatMoney(totalStockInVal);
+            document.getElementById('totalDiscountValue').innerText = formatMoney(totalDiscount);
+            document.getElementById('salesNoBonus').innerText = formatMoney(salesNoBonusVal);
+            document.getElementById('salesWithBonus').innerText = formatMoney(salesWithBonusVal);
+            document.getElementById('salesToday').innerText = formatMoney(salesTodayVal);
+        }
+
+        function renderStockList() {
+            const list = document.getElementById('stockList');
+            list.innerHTML = '';
+            
+            // Trier par date décroissante
+            [...appData.products].reverse().forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'item-card';
+                // Image par défaut si pas d'image
+                const imgSrc = p.image ? p.image : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cG9seWxpbmUgcG9pbnRzPSIyMSAxNSAxNiAxMCA1IDIxIi8+PC9zdmc+';
+                
+                li.innerHTML = `
+                    <img src="${imgSrc}" class="item-img" alt="prod">
+                    <div class="item-info">
+                        <h3>${p.name} <span class="badge">${p.category}</span></h3>
+                        <p>Stock: <strong>${p.quantity}</strong> | Prix: ${formatMoney(p.price)}</p>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderSalesForm() {
+            const select = document.getElementById('saleProdId');
+            select.innerHTML = '';
+            appData.products.forEach(p => {
+                if(p.quantity > 0) {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.innerText = `${p.name} (Reste: ${p.quantity})`;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        function renderSalesList() {
+            const list = document.getElementById('salesList');
+            list.innerHTML = ''; // Clear current
+            
+            // 5 dernières ventes
+            const recentSales = [...appData.sales].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+            recentSales.forEach(s => {
+                const li = document.createElement('li');
+                li.className = 'item-card';
+                const bonusTag = s.hasBonus ? '<span class="badge" style="background:var(--warning)">BONUS</span>' : '';
+                
+                li.innerHTML = `
+                    <div class="item-info" style="width:100%">
+                        <div style="display:flex; justify-content:space-between">
+                            <h3>${s.prodName}</h3>
+                            <span>${formatMoney(s.total)}</span>
+                        </div>
+                        <p>${new Date(s.date).toLocaleTimeString()} - Qté: ${s.quantity} ${bonusTag}</p>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        // --- UTILITAIRES ---
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+        }
+
+        function switchTab(tabId, btn) {
+            // Cacher toutes les sections
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            // Afficher la cible
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function showNotification(msg) {
+            const notif = document.getElementById('notification');
+            notif.innerText = msg;
+            notif.style.transform = 'translateX(0)';
+            setTimeout(() => {
+                notif.style.transform = 'translateX(150%)';
+            }, 3000);
+        }
+
+        // Initialisation
+        loadData();
+
     </script>
-    <script src="script.js"></script>
 </body>
 </html>
