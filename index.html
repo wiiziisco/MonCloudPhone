@@ -46,23 +46,29 @@
         .stat-ristourne { font-size: 0.7rem; color: var(--purple); background: rgba(175, 82, 222, 0.1); padding: 1px 6px; border-radius: 6px; font-weight: 600; margin-top: 2px; display: inline-flex; align-items: center; gap: 4px; }
         #installBtn { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); background: var(--bg-card); color: var(--primary); border: 1px solid var(--separator); padding: 5px 15px; border-radius: 20px; font-weight: 600; cursor: pointer; display: none; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-        /* NAV */
-        nav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background: var(--nav-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); display: flex; justify-content: space-around; padding: 12px; border-radius: 35px; border: 0.5px solid var(--separator); z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .nav-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.4rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
-        .nav-btn.active { color: #fff; background: var(--primary); transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
-
-        /* FAB (FLOATING ACTION BUTTON) */
-        .fab-btn {
-            position: fixed; bottom: 100px; right: 20px;
-            width: 55px; height: 55px;
-            background: var(--success); color: white;
-            border-radius: 50%; border: none;
-            box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4);
-            font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
-            z-index: 1500; cursor: pointer; transition: transform 0.2s;
-            display: none; /* Caché par défaut, affiché par JS sur l'onglet Stock */
+        /* NAV - MODIFIÉE POUR 4 BOUTONS */
+        nav { 
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 380px; 
+            background: var(--nav-bg); 
+            backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); 
+            display: flex; justify-content: space-between; /* Espace égal */
+            padding: 12px 20px; 
+            border-radius: 35px; border: 0.5px solid var(--separator); 
+            z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
         }
-        .fab-btn:active { transform: scale(0.9); }
+        .nav-btn { 
+            background: none; border: none; 
+            color: var(--text-secondary); font-size: 1.4rem; 
+            width: 45px; height: 45px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        }
+        .nav-btn.active { color: #fff; background: var(--primary); transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
+        
+        /* Style spécifique pour le bouton Ajout (si on veut le différencier un jour, sinon identique) */
+        .nav-btn-add { color: var(--primary); } 
+        .nav-btn-add:active { transform: scale(0.9); background: rgba(0, 122, 255, 0.1); }
 
         /* SECTIONS & CARDS */
         .section { display: none; padding: 15px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.4s ease; }
@@ -119,10 +125,6 @@
     
     <div id="notification"></div>
     
-    <button id="addProdFab" class="fab-btn" onclick="openProductModal()">
-        <i class="fas fa-plus"></i>
-    </button>
-
     <div id="salesModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('salesModal')"><i class="fas fa-times"></i></span>
@@ -188,6 +190,9 @@
     <nav>
         <button class="nav-btn" onclick="switchTab('caisse',this)"><i class="fas fa-cash-register"></i></button>
         <button class="nav-btn active" onclick="switchTab('dashboard',this)"><i class="fas fa-chart-pie"></i></button>
+        
+        <button class="nav-btn nav-btn-add" onclick="openProductModal()"><i class="fas fa-plus-circle"></i></button>
+        
         <button class="nav-btn" onclick="switchTab('stock',this)"><i class="fas fa-box-open"></i></button>
     </nav>
 
@@ -216,13 +221,9 @@
         function switchTab(id,b){ 
             document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); 
             document.getElementById(id).classList.add('active'); 
+            // On désactive tous les boutons sauf celui cliqué
             document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); 
             b.classList.add('active'); 
-            
-            // GESTION DU FAB : Affiché uniquement sur l'onglet Stock
-            const fab = document.getElementById('addProdFab');
-            if(id === 'stock') fab.style.display = 'flex';
-            else fab.style.display = 'none';
         }
 
         // --- GESTION DES MODALES ---
