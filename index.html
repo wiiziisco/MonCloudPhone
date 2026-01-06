@@ -76,27 +76,59 @@
         .nav-btn-add { color: var(--primary); } 
         .nav-btn-add:active { transform: scale(0.9); background: rgba(0, 122, 255, 0.1); }
 
-        /* SECTIONS & CARDS */
+        /* SECTIONS & CARDS - NOUVEAU STYLE */
         .section { display: none; padding: 15px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.4s ease; }
         .section.active { display: block; } @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: var(--bg-card); border-radius: var(--radius-card); padding: 15px; margin-bottom: 15px; border: 1px solid var(--separator); }
         
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .stat-card { text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; height: 90px; }
+        .card { 
+            background: var(--bg-card); 
+            border-radius: var(--radius-card); 
+            padding: 18px; /* Plus d'espace */
+            margin-bottom: 16px; 
+            /* Suppression de la bordure, ajout d'ombres douces */
+            border: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04);
+            /* Transition fluide pour l'effet tactile */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* Effet tactile au clic */
+        .card:active {
+             transform: scale(0.98);
+             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Ajustement Dark Mode pour les ombres */
+        @media (prefers-color-scheme: dark) {
+             .card {
+                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15);
+                 border: 1px solid rgba(255, 255, 255, 0.05); /* Légère bordure pour définir en mode sombre */
+             }
+        }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .stat-card { text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; height: 100px; }
         .stat-val { font-size: 1.1rem; font-weight: 700; margin-top: 2px; word-break: break-all; letter-spacing: -0.5px; }
         .stat-label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
         .chart-container { position: relative; height: 200px; width: 100%; }
 
-        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-        .pos-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; position: relative; border: 1px solid var(--separator); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+        .pos-card { 
+            background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; position: relative; 
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .pos-card:active { transform: scale(0.97); }
+
         .pos-img { width: 100%; height: 100px; object-fit: cover; background: #eee; }
-        .pos-info { padding: 10px; }
+        .pos-info { padding: 12px; }
         .pos-title { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); }
         .pos-price { color: var(--primary); font-weight: 600; font-size: 0.85rem; }
         .pos-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; backdrop-filter: blur(8px); }
 
         ul { list-style: none; } 
-        .list-item { background: var(--bg-card); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--separator); }
+        .list-item { background: var(--bg-card); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border:none; }
 
         /* MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s; }
@@ -106,9 +138,10 @@
         .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.2rem; color: var(--text-secondary); }
 
         input, select { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--bg-input); color: var(--text-primary); font-size: 1rem; margin-bottom: 15px; }
-        .btn-primary { background: var(--primary); color: white; font-weight: 600; border: none; padding: 14px; border-radius: var(--radius-btn); width: 100%; font-size: 1rem; }
+        .btn-primary { background: var(--primary); color: white; font-weight: 600; border: none; padding: 14px; border-radius: var(--radius-btn); width: 100%; font-size: 1rem; transition: transform 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
         .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border-radius: 12px; padding: 5px; margin-bottom: 15px; }
-        .qty-btn { width: 40px; height: 40px; background: var(--bg-card); border: none; border-radius: 8px; font-size: 1.1rem; color: var(--text-primary); }
+        .qty-btn { width: 40px; height: 40px; background: var(--bg-card); border: none; border-radius: 8px; font-size: 1.1rem; color: var(--text-primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .qty-input { width: 50px; text-align: center; background: transparent; border: none; font-weight: bold; font-size: 1.1rem; color: var(--text-primary); }
 
         #notification { position: fixed; top: 15px; left: 50%; transform: translateX(-50%) translateY(-150%); padding: 10px 20px; background: rgba(30,30,30,0.9); backdrop-filter: blur(20px); color: white; border-radius: 30px; display: flex; gap: 10px; z-index: 3000; transition: transform 0.5s; font-size: 0.9rem; }
