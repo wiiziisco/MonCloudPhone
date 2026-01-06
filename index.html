@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     
@@ -66,7 +65,6 @@
         
         .card { background: var(--bg-card); border-radius: var(--radius-card); padding: 18px; margin-bottom: 16px; border: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .card:active { transform: scale(0.98); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
-        @media (prefers-color-scheme: dark) { .card { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); } }
         
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
         .stat-card { text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; height: 100px; }
@@ -74,7 +72,7 @@
         .stat-label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
         .chart-container { position: relative; height: 200px; width: 100%; }
 
-        /* HEADER DE SECTION AVEC RECHERCHE */
+        /* HEADER SECTION */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .section-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
         .search-box { display: flex; align-items: center; background: var(--bg-input); padding: 8px 12px; border-radius: 20px; width: 60%; transition: width 0.3s; }
@@ -83,6 +81,7 @@
         .search-box input { border: none; background: transparent; padding: 0; margin: 0; font-size: 0.9rem; width: 100%; color: var(--text-primary); }
         .search-box input:focus { outline: none; }
 
+        /* POS CARD & ACTIONS */
         .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
         .pos-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; position: relative; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .pos-card:active { transform: scale(0.97); }
@@ -92,19 +91,23 @@
         .pos-price { color: var(--primary); font-weight: 600; font-size: 0.85rem; }
         .pos-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; backdrop-filter: blur(8px); }
 
+        /* BOUTONS ACTIONS (EDIT/DELETE) */
+        .card-actions { position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; z-index: 10; }
+        .action-btn { width: 28px; height: 28px; border-radius: 50%; border: none; color: white; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .btn-edit { background: rgba(0, 122, 255, 0.85); }
+        .btn-delete { background: rgba(255, 59, 48, 0.85); }
+
         ul { list-style: none; } 
         .list-item { background: var(--bg-card); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border:none; }
 
-        /* MODAL & INPUTS */
+        /* MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { opacity: 1; }
         .modal-content { background: var(--bg-card); width: 100%; max-width: 600px; border-radius: 24px 24px 0 0; padding: 30px 25px 50px 25px; transform: translateY(100%); transition: transform 0.4s; border-top: 1px solid var(--separator); }
         .modal-overlay.show .modal-content { transform: translateY(0); }
         .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.2rem; color: var(--text-secondary); }
 
-        /* CSS Specific for Form Inputs (Distinct from Search) */
         .modal-content input, .modal-content select { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--bg-input); color: var(--text-primary); font-size: 1rem; margin-bottom: 15px; }
-        
         .btn-primary { background: var(--primary); color: white; font-weight: 600; border: none; padding: 14px; border-radius: var(--radius-btn); width: 100%; font-size: 1rem; transition: transform 0.2s; }
         .btn-primary:active { transform: scale(0.98); }
         .qty-control { display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border-radius: 12px; padding: 5px; margin-bottom: 15px; }
@@ -119,9 +122,7 @@
 <body onload="initApp()">
 
     <header>
-        <div class="header-brand">
-            <h1>Matelas <span>DoDo</span></h1>
-        </div>
+        <div class="header-brand"><h1>Matelas <span>DoDo</span></h1></div>
         <div class="header-stats">
             <div class="stat-entree"><small>Stock Entrant</small><span id="headerStockEntrant">0F</span></div>
             <div class="stat-ristourne"><i class="fas fa-gift"></i> 9%: <span id="headerRistourne">0F</span></div>
@@ -164,6 +165,19 @@
         </div>
     </div>
 
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('editModal')"><i class="fas fa-times"></i></span>
+            <h2 style="margin-bottom:20px">Modifier Produit</h2>
+            <input type="hidden" id="editProdId">
+            <input type="file" id="editProdImg" accept="image/*">
+            <select id="editProdCat"><option>Matelas</option><option>Oreillers</option><option>Tissus</option><option>Autre</option></select>
+            <input type="text" id="editProdName" placeholder="Nom du produit">
+            <input type="number" id="editProdPrice" placeholder="Prix Catalogue">
+            <button class="btn-primary" onclick="saveEditProduct()">Mettre à jour</button>
+        </div>
+    </div>
+
     <section id="dashboard" class="section">
         <h2 style="margin-bottom:15px; font-size:1.1rem; font-weight:700;">Aperçu</h2>
         <div class="dashboard-grid">
@@ -181,10 +195,7 @@
     <section id="caisse" class="section active">
         <div class="section-header">
             <h2>Caisse</h2>
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchPos" placeholder="Chercher..." onkeyup="filterPOS()">
-            </div>
+            <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchPos" placeholder="Chercher..." onkeyup="filterPOS()"></div>
         </div>
         <div id="posGrid" class="pos-grid"></div>
     </section>
@@ -205,41 +216,60 @@
     </nav>
 
     <script>
-        let deferredPrompt;
-        let chartInstance = null;
-
-        function initApp(){ 
-            loadData(); 
-            if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); 
-            initChart(); 
-        }
-        
+        let deferredPrompt; let chartInstance = null;
+        function initApp(){ loadData(); if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); initChart(); }
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').style.display = 'block'; });
         async function installApp(){ if(deferredPrompt){ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome === 'accepted') document.getElementById('installBtn').style.display='none'; } }
 
-        const DB_KEY='matelasDoDoData_v4'; 
-        let appData={products:[],sales:[]}, lastSaleData=null;
-
+        const DB_KEY='matelasDoDoData_v4'; let appData={products:[],sales:[]}, lastSaleData=null;
         function loadData(){ const s=localStorage.getItem(DB_KEY); if(s)appData=JSON.parse(s); updateUI(); }
         function saveData(){ localStorage.setItem(DB_KEY,JSON.stringify(appData)); updateUI(); }
         function updateUI(){ calculateDashboard(); renderPOSGrid(); renderSalesList(); renderStockList(); updateChartData(); }
         function formatMoney(a){ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XOF',maximumFractionDigits:0}).format(a).replace('XOF','F'); }
         function showNotification(m,t='s'){ const n=document.getElementById('notification'); n.innerHTML=t=='e'?`<i class="fas fa-exclamation"></i> ${m}`:`<i class="fas fa-check"></i> ${m}`; n.className=t=='e'?'notif-error':''; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),3000); }
-        
-        function switchTab(id,b){ 
-            document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); 
-            document.getElementById(id).classList.add('active'); 
-            document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); 
-            b.classList.add('active'); 
-        }
+        function switchTab(id,b){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
 
-        // --- GESTION DES MODALES ---
+        // --- MODALES & GESTION ---
         function openModal(p){ document.getElementById('salesModal').classList.add('show'); document.getElementById('salesModal').style.display='flex'; document.getElementById('saleFormStep').style.display='block'; document.getElementById('receiptStep').style.display='none'; document.getElementById('modalProdId').value=p.id; document.getElementById('modalProdName').innerText=p.name; document.getElementById('modalStockPrice').innerText=formatMoney(p.price); document.getElementById('modalActualPrice').value=p.price; document.getElementById('modalMaxStock').value=p.quantity; document.getElementById('modalQty').value=1; }
-        
         function openProductModal() { document.getElementById('productModal').classList.add('show'); document.getElementById('productModal').style.display='flex'; }
         function closeModal(id){ document.getElementById(id).classList.remove('show'); setTimeout(()=>document.getElementById(id).style.display='none',300); }
         function adjustQty(d){ const el=document.getElementById('modalQty'); let v=parseInt(el.value)+d, max=parseInt(document.getElementById('modalMaxStock').value); if(v<1)v=1; if(v>max){v=max;showNotification("Max Stock",'e');} el.value=v; }
-        
+
+        // --- ÉDITION & SUPPRESSION ---
+        function deleteProduct(id) {
+            if(confirm("Voulez-vous vraiment supprimer ce produit ?")) {
+                appData.products = appData.products.filter(p => p.id !== id);
+                saveData(); showNotification("Produit supprimé", 'e');
+            }
+        }
+        function openEditModal(id) {
+            const p = appData.products.find(x => x.id === id);
+            if(!p) return;
+            document.getElementById('editProdId').value = p.id;
+            document.getElementById('editProdName').value = p.name;
+            document.getElementById('editProdPrice').value = p.price;
+            document.getElementById('editModal').classList.add('show');
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        function saveEditProduct() {
+            const id = parseInt(document.getElementById('editProdId').value);
+            const p = appData.products.find(x => x.id === id);
+            if(p) {
+                p.name = document.getElementById('editProdName').value;
+                p.price = parseInt(document.getElementById('editProdPrice').value);
+                // Image handling if changed
+                const f = document.getElementById('editProdImg').files[0];
+                if(f) {
+                    const r = new FileReader();
+                    r.onload = e => { p.image = e.target.result; saveData(); closeModal('editModal'); };
+                    r.readAsDataURL(f);
+                } else {
+                    saveData(); closeModal('editModal');
+                }
+                showNotification("Produit modifié");
+            }
+        }
+
         function validateSale(){ 
             const pid=parseInt(document.getElementById('modalProdId').value), qty=parseInt(document.getElementById('modalQty').value), price=parseInt(document.getElementById('modalActualPrice').value), client=document.getElementById('modalClientName').value||"Client"; 
             const p=appData.products.find(x=>x.id===pid); 
@@ -252,69 +282,45 @@
         }
 
         function calculateDashboard(){ 
-            let st=0, today=0, bonus=0, tot=0, stockEntrantVal=0; 
-            const now=new Date().toISOString().split('T')[0]; 
+            let st=0, today=0, bonus=0, tot=0, stockEntrantVal=0; const now=new Date().toISOString().split('T')[0]; 
             appData.products.forEach(p=>{ st += p.price * p.quantity; const qInit = p.originalQty || p.quantity; stockEntrantVal += p.price * qInit; }); 
             appData.sales.forEach(s=>{ tot+=s.total; if(s.surplus)bonus+=s.surplus; if(s.date.startsWith(now))today+=s.total; }); 
-            document.getElementById('totalStockValue').innerText=formatMoney(st); 
-            document.getElementById('salesToday').innerText=formatMoney(today); 
-            document.getElementById('totalBonus').innerText=formatMoney(bonus); 
-            document.getElementById('totalSalesGlobal').innerText=formatMoney(tot); 
-            document.getElementById('headerStockEntrant').innerText = formatMoney(stockEntrantVal);
-            document.getElementById('headerRistourne').innerText = formatMoney(stockEntrantVal * 0.09);
+            document.getElementById('totalStockValue').innerText=formatMoney(st); document.getElementById('salesToday').innerText=formatMoney(today); document.getElementById('totalBonus').innerText=formatMoney(bonus); document.getElementById('totalSalesGlobal').innerText=formatMoney(tot); document.getElementById('headerStockEntrant').innerText=formatMoney(stockEntrantVal); document.getElementById('headerRistourne').innerText=formatMoney(stockEntrantVal * 0.09);
         }
 
-        function initChart() {
-            const ctx = document.getElementById('perfChart').getContext('2d');
-            chartInstance = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Ventes', data: [], borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(200, 200, 200, 0.1)' }, ticks: { display: false } } } } });
-        }
-        function updateChartData() {
-            if (!chartInstance) return;
-            const days = [], data = [], today = new Date();
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date(today); d.setDate(today.getDate() - i);
-                days.push(d.toLocaleDateString('fr-FR', { weekday: 'short' }));
-                const dateStr = d.toISOString().split('T')[0];
-                data.push(appData.sales.filter(s => s.date.startsWith(dateStr)).reduce((sum, s) => sum + s.total, 0));
-            }
-            chartInstance.data.labels = days; chartInstance.data.datasets[0].data = data; chartInstance.update();
-        }
+        function initChart() { const ctx = document.getElementById('perfChart').getContext('2d'); chartInstance = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Ventes', data: [], borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(200, 200, 200, 0.1)' }, ticks: { display: false } } } } }); }
+        function updateChartData() { if (!chartInstance) return; const days = [], data = [], today = new Date(); for (let i = 6; i >= 0; i--) { const d = new Date(today); d.setDate(today.getDate() - i); days.push(d.toLocaleDateString('fr-FR', { weekday: 'short' })); const dateStr = d.toISOString().split('T')[0]; data.push(appData.sales.filter(s => s.date.startsWith(dateStr)).reduce((sum, s) => sum + s.total, 0)); } chartInstance.data.labels = days; chartInstance.data.datasets[0].data = data; chartInstance.update(); }
 
-        // --- POS (CAISSE) & RECHERCHE ---
+        // --- POS & SEARCH ---
         function renderPOSGrid(list = appData.products){ 
             const g=document.getElementById('posGrid'); g.innerHTML=''; 
             list.forEach(p=>{ 
                 const img=p.image||'https://via.placeholder.com/150'; const op=p.quantity<=0?'0.5':'1'; 
-                g.innerHTML+=`<div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}"><span class="pos-badge">${p.quantity}</span><img src="${img}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div></div>`; 
+                g.innerHTML+=`
+                <div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}">
+                    <div class="card-actions">
+                        <button class="action-btn btn-edit" onclick="event.stopPropagation(); openEditModal(${p.id})"><i class="fas fa-pen"></i></button>
+                        <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <span class="pos-badge">${p.quantity}</span>
+                    <img src="${img}" class="pos-img">
+                    <div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div>
+                </div>`; 
             }); 
         }
-
-        function filterPOS() {
-            const query = document.getElementById('searchPos').value.toLowerCase();
-            const filtered = appData.products.filter(p => p.name.toLowerCase().includes(query));
-            renderPOSGrid(filtered);
-        }
+        function filterPOS() { const query = document.getElementById('searchPos').value.toLowerCase(); const filtered = appData.products.filter(p => p.name.toLowerCase().includes(query)); renderPOSGrid(filtered); }
 
         function renderSalesList(){ const l=document.getElementById('salesList'); l.innerHTML=''; [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,15).forEach(s=>{ l.innerHTML+=`<li class="list-item"><div><b>${s.clientName}</b><br><small>${s.prodName}</small></div><div><b>${formatMoney(s.total)}</b></div></li>`; }); }
         function renderStockList(){ const l=document.getElementById('stockList'); l.innerHTML=''; appData.products.forEach(p=>{ l.innerHTML+=`<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`; }); }
         
-        // --- FONCTION AJOUT ---
         function addProduct(){ 
             const n=document.getElementById('prodName').value, p=document.getElementById('prodPrice').value, q=document.getElementById('prodQty').value, f=document.getElementById('prodImg').files[0]; 
             if(!n||!p)return; 
             const r=new FileReader(); 
-            r.onload=e=>{ 
-                appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); 
-                saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); 
-                document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodQty').value=''; document.getElementById('prodImg').value='';
-            }; 
+            r.onload=e=>{ appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodQty').value=''; document.getElementById('prodImg').value=''; }; 
             if(f)r.readAsDataURL(f); else r.onload({target:{result:null}}); 
         }
-
-        function sendReceipt(){ 
-            const text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank'); 
-        }
+        function sendReceipt(){ const text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`; window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank'); }
     </script>
 </body>
 </html>
