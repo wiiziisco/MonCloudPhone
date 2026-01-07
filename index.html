@@ -135,15 +135,26 @@
                 <div class="qty-control"><button class="qty-btn" onclick="adjustQty(-1)">-</button><input type="number" id="modalQty" value="1" class="qty-input"><button class="qty-btn" onclick="adjustQty(1)">+</button></div>
                 <button class="btn-primary" onclick="validateSale()">Valider Vente</button>
             </div>
-            
             <div id="receiptStep" style="display:none;text-align:center">
                 <i class="fas fa-check-circle" style="font-size:3rem;color:var(--success);margin-bottom:15px"></i>
-                <h3 style="margin-bottom:10px">Vente Validée</h3>
-                <p id="bonusMsg" style="margin-bottom:20px"></p>
+                <h3 style="margin-bottom:10px">Vente Validée</h3><p id="bonusMsg" style="margin-bottom:20px"></p>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <button class="btn-primary" style="background:#25D366" onclick="sendReceipt('wa')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
                     <button class="btn-primary" style="background:#007AFF" onclick="sendReceipt('sms')"><i class="fas fa-comment-sms"></i> SMS</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content" style="text-align:center">
+            <span class="close-modal" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></span>
+            <i class="fas fa-exclamation-triangle" style="font-size:3rem;color:var(--danger);margin-bottom:15px;display:block"></i>
+            <h3 style="margin-bottom:10px">Suppression</h3>
+            <p style="color:var(--text-secondary); margin-bottom:25px">Voulez-vous vraiment supprimer ce produit de l'inventaire ?</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-primary" style="background:var(--bg-input); color:var(--text-primary)" onclick="closeModal('confirmModal')">Annuler</button>
+                <button class="btn-primary" style="background:var(--danger)" onclick="confirmDelete()">Supprimer</button>
             </div>
         </div>
     </div>
@@ -231,12 +242,24 @@
         function closeModal(id){ document.getElementById(id).classList.remove('show'); setTimeout(()=>document.getElementById(id).style.display='none',300); }
         function adjustQty(d){ const el=document.getElementById('modalQty'); let v=parseInt(el.value)+d, max=parseInt(document.getElementById('modalMaxStock').value); if(v<1)v=1; if(v>max){v=max;showNotification("Max Stock",'e');} el.value=v; }
 
+        // --- SUPPRESSION PERSONNALISÉE ---
+        let pendingDeleteId = null;
         function deleteProduct(id) {
-            if(confirm("Voulez-vous vraiment supprimer ce produit ?")) {
-                appData.products = appData.products.filter(p => p.id !== id);
-                saveData(); showNotification("Produit supprimé", 'e');
+            pendingDeleteId = id;
+            document.getElementById('confirmModal').classList.add('show');
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        function confirmDelete() {
+            if(pendingDeleteId) {
+                appData.products = appData.products.filter(p => p.id !== pendingDeleteId);
+                saveData(); 
+                showNotification("Produit supprimé", 'e');
+                closeModal('confirmModal');
+                pendingDeleteId = null;
             }
         }
+
+        // --- ÉDITION ---
         function openEditModal(id) {
             const p = appData.products.find(x => x.id === id);
             if(!p) return;
@@ -331,15 +354,10 @@
             let text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`;
             
             if(method === 'sms') {
-                // Pour SMS, on retire les astérisques de formatage WhatsApp (*)
                 text = text.replace(/\*/g, '');
-                const ua = navigator.userAgent.toLowerCase();
-                const isiOS = /iphone|ipad|ipod/.test(ua);
-                // iOS préfère '&', Android '?'
-                const sep = isiOS ? '&' : '?';
+                const sep = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) ? '&' : '?';
                 window.location.href = `sms:${sep}body=${encodeURIComponent(text)}`;
             } else {
-                // WhatsApp
                 window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
             }
         }
