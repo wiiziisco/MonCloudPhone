@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -14,6 +15,8 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/679/679821.png">
 
     <meta property="og:title" content="Matelas DoDo Manager">
+    <meta property="og:description" content="Gestion de stock et caisse.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1000&auto=format&fit=crop">
     <meta property="og:type" content="website">
 
     <title>Matelas DoDo Stock</title>
@@ -41,30 +44,36 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: var(--font-stack); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 110px; min-height: 100vh; transition: background 0.3s; }
 
-        /* PIN LOCK SCREEN */
+        /* PIN LOCK SCREEN (ADAPTATIF) */
         #pinOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000000; z-index: 5000;
+            background: var(--bg-body); /* S'adapte au thème */
+            z-index: 5000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: white; padding: 20px;
+            color: var(--text-primary); /* Texte s'adapte */
+            padding: 20px;
+            transition: background 0.3s;
         }
         .pin-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 30px; letter-spacing: 1px; }
+        
         .pin-dots { display: flex; gap: 15px; margin-bottom: 50px; }
-        .pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid white; transition: all 0.2s; }
-        .pin-dot.filled { background: white; }
+        .pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--text-primary); transition: all 0.2s; }
+        .pin-dot.filled { background: var(--text-primary); }
         .pin-dot.error { border-color: var(--danger); background: var(--danger); }
         
         .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; max-width: 300px; }
         .pin-btn { 
             width: 70px; height: 70px; border-radius: 50%; 
-            background: rgba(255,255,255,0.15); border: none; 
-            color: white; font-size: 1.8rem; font-weight: 500;
+            background: var(--bg-card); /* Bouton s'adapte */
+            border: 1px solid var(--separator);
+            color: var(--text-primary); font-size: 1.8rem; font-weight: 500;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto; backdrop-filter: blur(10px);
-            transition: background 0.2s; cursor: pointer;
+            margin: 0 auto; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Légère ombre */
+            transition: transform 0.1s; cursor: pointer;
         }
-        .pin-btn:active { background: rgba(255,255,255,0.4); }
-        .pin-btn-transp { background: transparent !important; }
+        .pin-btn:active { transform: scale(0.9); background: var(--bg-input); }
+        .pin-btn-transp { background: transparent !important; border: none; box-shadow: none; }
 
         /* APP STYLES */
         header { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; background: var(--header-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); border-bottom: 0.5px solid var(--separator); }
@@ -132,7 +141,7 @@
         .notif-error { background: var(--danger) !important; }
         .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         
-        /* SHAKE ANIMATION FOR PIN ERROR */
+        /* SHAKE ANIMATION */
         @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
         .shake { animation: shake 0.3s ease-in-out; }
     </style>
@@ -283,7 +292,7 @@
         const PIN_KEY = 'dodo_pin_code';
 
         function initApp(){ 
-            initPin(); // Demander le PIN au démarrage
+            initPin(); 
             loadData(); 
             if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); 
             initChart(); 
@@ -334,20 +343,15 @@
 
         function checkPin() {
             const savedPin = localStorage.getItem(PIN_KEY);
-            
-            // Première configuration
             if (!savedPin) {
                 localStorage.setItem(PIN_KEY, currentPinInput);
                 showNotification("Code PIN configuré !");
                 unlockApp();
                 return;
             }
-
-            // Vérification
             if (currentPinInput === savedPin) {
                 unlockApp();
             } else {
-                // Erreur
                 if(navigator.vibrate) navigator.vibrate(200);
                 const dots = document.querySelectorAll('.pin-dot');
                 dots.forEach(d => d.classList.add('error'));
@@ -360,9 +364,7 @@
             }
         }
 
-        function unlockApp() {
-            document.getElementById('pinOverlay').style.display = 'none';
-        }
+        function unlockApp() { document.getElementById('pinOverlay').style.display = 'none'; }
 
         // --- BACKUP & RESTORE ---
         function backupData() {
