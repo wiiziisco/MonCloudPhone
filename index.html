@@ -180,12 +180,8 @@
             <span class="close-modal" onclick="closeModal('actionModal')"><i class="fas fa-times"></i></span>
             <h2 style="margin-bottom:25px; text-align:center">Nouvelle Action</h2>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:10px;">
-                <button class="btn-primary btn-choice" style="background:var(--primary)" onclick="openProductModal()">
-                    <i class="fas fa-box"></i> Nouveau Stock
-                </button>
-                <button class="btn-primary btn-choice" style="background:var(--danger)" onclick="openExpenseModal()">
-                    <i class="fas fa-money-bill-wave"></i> Nouvelle Dépense
-                </button>
+                <button class="btn-primary btn-choice" style="background:var(--primary)" onclick="openProductModal()"><i class="fas fa-box"></i> Nouveau Stock</button>
+                <button class="btn-primary btn-choice" style="background:var(--danger)" onclick="openExpenseModal()"><i class="fas fa-money-bill-wave"></i> Nouvelle Dépense</button>
             </div>
         </div>
     </div>
@@ -292,7 +288,12 @@
         function loadData(){ const s=localStorage.getItem(DB_KEY); if(s) { appData=JSON.parse(s); if(!appData.expenses) appData.expenses = []; } updateUI(); }
         function saveData(){ localStorage.setItem(DB_KEY,JSON.stringify(appData)); updateUI(); }
         function updateUI(){ calculateDashboard(); renderPOSGrid(); renderSalesList(); renderStockList(); updateChartData(); }
-        function formatMoney(a){ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XOF',maximumFractionDigits:0}).format(a).replace('XOF','F'); }
+        
+        // --- NOUVEAU FORMAT AVEC POINT (1.000.000 F) ---
+        function formatMoney(a){
+            return parseInt(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " F";
+        }
+
         function showNotification(m,t='s'){ const n=document.getElementById('notification'); n.innerHTML=t=='e'?`<i class="fas fa-exclamation"></i> ${m}`:`<i class="fas fa-check"></i> ${m}`; n.className=t=='e'?'notif-error':''; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),3000); }
         function switchTab(id,b){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
 
@@ -308,47 +309,16 @@
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
-            // Header
-            doc.setFontSize(22);
-            doc.setFont("helvetica", "bold");
-            doc.text("MATELAS DODO", 105, 20, null, null, "center");
-            
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "normal");
-            doc.text("Mali - Bamako", 105, 30, null, null, "center");
-            
-            // Info Vente
-            const date = new Date().toLocaleDateString('fr-FR');
-            const time = new Date().toLocaleTimeString('fr-FR');
-            doc.text(`Date: ${date} à ${time}`, 20, 50);
-            doc.text(`Client: ${lastSaleData.clientName}`, 20, 58);
-            
-            // Ligne séparation
+            doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.text("MATELAS DODO", 105, 20, null, null, "center");
+            doc.setFontSize(12); doc.setFont("helvetica", "normal"); doc.text("Mali - Bamako", 105, 30, null, null, "center");
+            const date = new Date().toLocaleDateString('fr-FR'); const time = new Date().toLocaleTimeString('fr-FR');
+            doc.text(`Date: ${date} à ${time}`, 20, 50); doc.text(`Client: ${lastSaleData.clientName}`, 20, 58);
             doc.line(20, 65, 190, 65);
-            
-            // Détails Produit
-            doc.setFont("helvetica", "bold");
-            doc.text("Désignation", 20, 75);
-            doc.text("Qté", 130, 75);
-            doc.text("Total", 170, 75);
-            
-            doc.setFont("helvetica", "normal");
-            doc.text(lastSaleData.prodName, 20, 85);
-            doc.text(String(lastSaleData.quantity), 130, 85);
-            doc.text(formatMoney(lastSaleData.total), 170, 85);
-            
-            // Total
+            doc.setFont("helvetica", "bold"); doc.text("Désignation", 20, 75); doc.text("Qté", 130, 75); doc.text("Total", 170, 75);
+            doc.setFont("helvetica", "normal"); doc.text(lastSaleData.prodName, 20, 85); doc.text(String(lastSaleData.quantity), 130, 85); doc.text(formatMoney(lastSaleData.total), 170, 85);
             doc.line(20, 95, 190, 95);
-            doc.setFontSize(16);
-            doc.setFont("helvetica", "bold");
-            doc.text(`NET À PAYER: ${formatMoney(lastSaleData.total)}`, 190, 110, null, null, "right");
-            
-            // Footer
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "italic");
-            doc.text("Merci de votre confiance !", 105, 130, null, null, "center");
-            
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text(`NET À PAYER: ${formatMoney(lastSaleData.total)}`, 190, 110, null, null, "right");
+            doc.setFontSize(10); doc.setFont("helvetica", "italic"); doc.text("Merci de votre confiance !", 105, 130, null, null, "center");
             doc.save(`Recu_DoDo_${lastSaleData.id}.pdf`);
         }
 
