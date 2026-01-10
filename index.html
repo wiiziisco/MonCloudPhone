@@ -278,6 +278,9 @@
 
     <script>
         let deferredPrompt; let chartInstance = null; let currentPinInput = ""; const PIN_KEY = 'dodo_pin_code';
+        // LOGO DODO en Base64
+        const logoBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISEhUSEhIWFRUVFRUVFRUXFRUVFRUVFRUWFxUVFRUYHSggGBolHRUVITEhJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGxAQGi0lICUtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAOEA4QMBEQACEQEDEQH/xAAbAAEAAwEBAQEAAAAAAAAAAAAAAwQFAgYBB//EAD4QAAICAQIEAwYEBAUDBAMAAAECAAMRBCEFEjFBBhNRYSIycYGRoRSxwfAHI0JS0TNicuHxkqKyFSRzsv/EABoBAQADAQEBAAAAAAAAAAAAAAABAgMEBQb/xAAmEQEBAAIBBAICAgMBAAAAAAAAAQIRAwQSITFBBRNRImEUMoFC/9oADAMBAAIRAxEAPwD9xiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiB//2Q==";
+
         function initApp(){ initPin(); loadData(); if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); initChart(); }
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').style.display = 'block'; });
         async function installApp(){ if(deferredPrompt){ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome === 'accepted') document.getElementById('installBtn').style.display='none'; } }
@@ -288,11 +291,7 @@
         function loadData(){ const s=localStorage.getItem(DB_KEY); if(s) { appData=JSON.parse(s); if(!appData.expenses) appData.expenses = []; } updateUI(); }
         function saveData(){ localStorage.setItem(DB_KEY,JSON.stringify(appData)); updateUI(); }
         function updateUI(){ calculateDashboard(); renderPOSGrid(); renderSalesList(); renderStockList(); updateChartData(); }
-        
-        // --- NOUVEAU FORMAT AVEC POINT (1.000.000 F) ---
-        function formatMoney(a){
-            return parseInt(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " F";
-        }
+        function formatMoney(a){ return parseInt(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " F"; }
 
         function showNotification(m,t='s'){ const n=document.getElementById('notification'); n.innerHTML=t=='e'?`<i class="fas fa-exclamation"></i> ${m}`:`<i class="fas fa-check"></i> ${m}`; n.className=t=='e'?'notif-error':''; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),3000); }
         function switchTab(id,b){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
@@ -305,20 +304,51 @@
         function checkPin() { const savedPin = localStorage.getItem(PIN_KEY); if (!savedPin) { localStorage.setItem(PIN_KEY, currentPinInput); showNotification("Code PIN configuré !"); unlockApp(); return; } if (currentPinInput === savedPin) { unlockApp(); } else { if(navigator.vibrate) navigator.vibrate(200); const dots = document.querySelectorAll('.pin-dot'); dots.forEach(d => d.classList.add('error')); document.getElementById('pinDots').classList.add('shake'); setTimeout(() => { document.getElementById('pinDots').classList.remove('shake'); currentPinInput = ""; updatePinDots(); }, 400); } }
         function unlockApp() { document.getElementById('pinOverlay').style.display = 'none'; }
 
-        // --- PDF GENERATION ---
+        // --- PDF GENERATION AVEC LOGO ---
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.text("MATELAS DODO", 105, 20, null, null, "center");
-            doc.setFontSize(12); doc.setFont("helvetica", "normal"); doc.text("Mali - Bamako", 105, 30, null, null, "center");
-            const date = new Date().toLocaleDateString('fr-FR'); const time = new Date().toLocaleTimeString('fr-FR');
-            doc.text(`Date: ${date} à ${time}`, 20, 50); doc.text(`Client: ${lastSaleData.clientName}`, 20, 58);
-            doc.line(20, 65, 190, 65);
-            doc.setFont("helvetica", "bold"); doc.text("Désignation", 20, 75); doc.text("Qté", 130, 75); doc.text("Total", 170, 75);
-            doc.setFont("helvetica", "normal"); doc.text(lastSaleData.prodName, 20, 85); doc.text(String(lastSaleData.quantity), 130, 85); doc.text(formatMoney(lastSaleData.total), 170, 85);
-            doc.line(20, 95, 190, 95);
-            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text(`NET À PAYER: ${formatMoney(lastSaleData.total)}`, 190, 110, null, null, "right");
-            doc.setFontSize(10); doc.setFont("helvetica", "italic"); doc.text("Merci de votre confiance !", 105, 130, null, null, "center");
+            
+            // AJOUT LOGO (x=85, y=10, width=40, height=20)
+            doc.addImage(logoBase64, 'JPEG', 85, 10, 40, 20);
+
+            // Header (décalé vers le bas)
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("MATELAS DODO", 105, 38, null, null, "center");
+            
+            // NOUVELLE ADRESSE
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.text("Mali/Ségou/Bla", 105, 45, null, null, "center");
+            
+            const date = new Date().toLocaleDateString('fr-FR');
+            const time = new Date().toLocaleTimeString('fr-FR');
+            // Contenu (décalé vers le bas)
+            doc.text(`Date: ${date} à ${time}`, 20, 65);
+            doc.text(`Client: ${lastSaleData.clientName}`, 20, 73);
+            
+            doc.line(20, 80, 190, 80);
+            
+            doc.setFont("helvetica", "bold");
+            doc.text("Désignation", 20, 90);
+            doc.text("Qté", 130, 90);
+            doc.text("Total", 170, 90);
+            
+            doc.setFont("helvetica", "normal");
+            doc.text(lastSaleData.prodName, 20, 100);
+            doc.text(String(lastSaleData.quantity), 130, 100);
+            doc.text(formatMoney(lastSaleData.total), 170, 100);
+            
+            doc.line(20, 110, 190, 110);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text(`NET À PAYER: ${formatMoney(lastSaleData.total)}`, 190, 125, null, null, "right");
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "italic");
+            doc.text("Merci de votre confiance !", 105, 145, null, null, "center");
+            
             doc.save(`Recu_DoDo_${lastSaleData.id}.pdf`);
         }
 
