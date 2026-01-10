@@ -20,6 +20,7 @@
     <title>Matelas DoDo Stock</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         :root {
@@ -120,8 +121,6 @@
         #notification.show { transform: translateX(-50%) translateY(0); }
         .notif-error { background: var(--danger) !important; }
         .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        
-        /* EXPENSE STYLES */
         .expense-item { border-left: 4px solid var(--danger); }
         .expense-amount { color: var(--danger) !important; }
         .btn-choice { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 25px; height:120px; font-size:1.1rem; }
@@ -167,10 +166,11 @@
             <div id="receiptStep" style="display:none;text-align:center">
                 <i class="fas fa-check-circle" style="font-size:3rem;color:var(--success);margin-bottom:15px"></i>
                 <h3 style="margin-bottom:10px">Vente Validée</h3><p id="bonusMsg" style="margin-bottom:20px"></p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
                     <button class="btn-primary" style="background:#25D366" onclick="sendReceipt('wa')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
                     <button class="btn-primary" style="background:#007AFF" onclick="sendReceipt('sms')"><i class="fas fa-comment-sms"></i> SMS</button>
                 </div>
+                <button class="btn-primary" style="background:#FF3B30" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> Télécharger Reçu PDF</button>
             </div>
         </div>
     </div>
@@ -287,16 +287,9 @@
         async function installApp(){ if(deferredPrompt){ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome === 'accepted') document.getElementById('installBtn').style.display='none'; } }
 
         const DB_KEY='matelasDoDoData_v4'; 
-        let appData={products:[],sales:[], expenses:[]}, lastSaleData=null; // AJOUT EXPENSES
+        let appData={products:[],sales:[], expenses:[]}, lastSaleData=null;
 
-        function loadData(){ 
-            const s=localStorage.getItem(DB_KEY); 
-            if(s) { 
-                appData=JSON.parse(s); 
-                if(!appData.expenses) appData.expenses = []; // Init expenses if old version
-            } 
-            updateUI(); 
-        }
+        function loadData(){ const s=localStorage.getItem(DB_KEY); if(s) { appData=JSON.parse(s); if(!appData.expenses) appData.expenses = []; } updateUI(); }
         function saveData(){ localStorage.setItem(DB_KEY,JSON.stringify(appData)); updateUI(); }
         function updateUI(){ calculateDashboard(); renderPOSGrid(); renderSalesList(); renderStockList(); updateChartData(); }
         function formatMoney(a){ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XOF',maximumFractionDigits:0}).format(a).replace('XOF','F'); }
@@ -311,75 +304,60 @@
         function checkPin() { const savedPin = localStorage.getItem(PIN_KEY); if (!savedPin) { localStorage.setItem(PIN_KEY, currentPinInput); showNotification("Code PIN configuré !"); unlockApp(); return; } if (currentPinInput === savedPin) { unlockApp(); } else { if(navigator.vibrate) navigator.vibrate(200); const dots = document.querySelectorAll('.pin-dot'); dots.forEach(d => d.classList.add('error')); document.getElementById('pinDots').classList.add('shake'); setTimeout(() => { document.getElementById('pinDots').classList.remove('shake'); currentPinInput = ""; updatePinDots(); }, 400); } }
         function unlockApp() { document.getElementById('pinOverlay').style.display = 'none'; }
 
-        // --- ACTION MENU & EXPENSES ---
+        // --- PDF GENERATION ---
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("MATELAS DODO", 105, 20, null, null, "center");
+            
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text("Mali - Bamako", 105, 30, null, null, "center");
+            
+            // Info Vente
+            const date = new Date().toLocaleDateString('fr-FR');
+            const time = new Date().toLocaleTimeString('fr-FR');
+            doc.text(`Date: ${date} à ${time}`, 20, 50);
+            doc.text(`Client: ${lastSaleData.clientName}`, 20, 58);
+            
+            // Ligne séparation
+            doc.line(20, 65, 190, 65);
+            
+            // Détails Produit
+            doc.setFont("helvetica", "bold");
+            doc.text("Désignation", 20, 75);
+            doc.text("Qté", 130, 75);
+            doc.text("Total", 170, 75);
+            
+            doc.setFont("helvetica", "normal");
+            doc.text(lastSaleData.prodName, 20, 85);
+            doc.text(String(lastSaleData.quantity), 130, 85);
+            doc.text(formatMoney(lastSaleData.total), 170, 85);
+            
+            // Total
+            doc.line(20, 95, 190, 95);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text(`NET À PAYER: ${formatMoney(lastSaleData.total)}`, 190, 110, null, null, "right");
+            
+            // Footer
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "italic");
+            doc.text("Merci de votre confiance !", 105, 130, null, null, "center");
+            
+            doc.save(`Recu_DoDo_${lastSaleData.id}.pdf`);
+        }
+
+        // --- CORE FUNCTIONS ---
         function openActionMenu() { document.getElementById('actionModal').classList.add('show'); document.getElementById('actionModal').style.display='flex'; }
-        
         function openExpenseModal() { closeModal('actionModal'); document.getElementById('expenseModal').classList.add('show'); document.getElementById('expenseModal').style.display='flex'; }
-        
-        function addExpense() {
-            const desc = document.getElementById('expDesc').value;
-            const amount = document.getElementById('expAmount').value;
-            if(!desc || !amount) return;
-            appData.expenses.push({id:Date.now(), desc:desc, amount:parseInt(amount), date:new Date().toISOString()});
-            saveData(); showNotification("Dépense ajoutée"); closeModal('expenseModal');
-            document.getElementById('expDesc').value=''; document.getElementById('expAmount').value='';
-        }
-
-        // --- DASHBOARD UPDATE ---
-        function calculateDashboard(){ 
-            let st=0, todaySales=0, totalMargin=0, totalSales=0, stockEntrantVal=0, totalExp=0; 
-            const now=new Date().toISOString().split('T')[0]; 
-            
-            // Stock stats
-            appData.products.forEach(p=>{ st += p.price * p.quantity; const qInit = p.originalQty || p.quantity; stockEntrantVal += p.price * qInit; }); 
-            
-            // Sales stats
-            appData.sales.forEach(s=>{ 
-                totalSales += s.total; 
-                if(s.surplus) totalMargin += s.surplus; 
-                if(s.date.startsWith(now)) todaySales += s.total; 
-            });
-
-            // Expense stats
-            if(appData.expenses) {
-                appData.expenses.forEach(e => totalExp += e.amount);
-            }
-
-            const netResult = totalMargin - totalExp;
-
-            document.getElementById('totalStockValue').innerText=formatMoney(st); 
-            document.getElementById('salesToday').innerText=formatMoney(todaySales); 
-            
-            const elBonus = document.getElementById('totalBonus');
-            elBonus.innerText = formatMoney(netResult);
-            elBonus.style.color = netResult >= 0 ? 'var(--success)' : 'var(--danger)'; // Rouge si perte
-
-            document.getElementById('totalExpenses').innerText=formatMoney(totalExp); 
-            
-            document.getElementById('headerStockEntrant').innerText=formatMoney(stockEntrantVal); 
-            document.getElementById('headerRistourne').innerText=formatMoney(stockEntrantVal * 0.09);
-        }
-
-        // --- LISTES MIXTES ---
-        function renderSalesList(){ 
-            const l=document.getElementById('salesList'); l.innerHTML=''; 
-            // Combiner Ventes et Dépenses
-            let allItems = [...appData.sales.map(s=>({...s, type:'sale'})), ...(appData.expenses||[]).map(e=>({...e, type:'expense'}))];
-            
-            allItems.sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,30).forEach(item=>{ 
-                const d = new Date(item.date);
-                const dateStr = d.toLocaleDateString('fr-FR');
-                const timeStr = d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                
-                if(item.type === 'sale') {
-                    l.innerHTML+=`<li class="list-item"><div><b>${item.clientName}</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${item.prodName}</small></div><div style="text-align:right"><b>${formatMoney(item.total)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`; 
-                } else {
-                    l.innerHTML+=`<li class="list-item expense-item"><div><b>Dépense</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${item.desc}</small></div><div style="text-align:right"><b class="expense-amount">- ${formatMoney(item.amount)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`;
-                }
-            }); 
-        }
-
-        // --- OTHER FUNCTIONS (UNCHANGED) ---
+        function addExpense() { const desc = document.getElementById('expDesc').value; const amount = document.getElementById('expAmount').value; if(!desc || !amount) return; appData.expenses.push({id:Date.now(), desc:desc, amount:parseInt(amount), date:new Date().toISOString()}); saveData(); showNotification("Dépense ajoutée"); closeModal('expenseModal'); document.getElementById('expDesc').value=''; document.getElementById('expAmount').value=''; }
+        function calculateDashboard(){ let st=0, todaySales=0, totalMargin=0, totalSales=0, stockEntrantVal=0, totalExp=0; const now=new Date().toISOString().split('T')[0]; appData.products.forEach(p=>{ st += p.price * p.quantity; const qInit = p.originalQty || p.quantity; stockEntrantVal += p.price * qInit; }); appData.sales.forEach(s=>{ totalSales += s.total; if(s.surplus) totalMargin += s.surplus; if(s.date.startsWith(now)) todaySales += s.total; }); if(appData.expenses) { appData.expenses.forEach(e => totalExp += e.amount); } const netResult = totalMargin - totalExp; document.getElementById('totalStockValue').innerText=formatMoney(st); document.getElementById('salesToday').innerText=formatMoney(todaySales); const elBonus = document.getElementById('totalBonus'); elBonus.innerText = formatMoney(netResult); elBonus.style.color = netResult >= 0 ? 'var(--success)' : 'var(--danger)'; document.getElementById('totalExpenses').innerText=formatMoney(totalExp); document.getElementById('headerStockEntrant').innerText=formatMoney(stockEntrantVal); document.getElementById('headerRistourne').innerText=formatMoney(stockEntrantVal * 0.09); }
+        function renderSalesList(){ const l=document.getElementById('salesList'); l.innerHTML=''; let allItems = [...appData.sales.map(s=>({...s, type:'sale'})), ...(appData.expenses||[]).map(e=>({...e, type:'expense'}))]; allItems.sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,30).forEach(item=>{ const d = new Date(item.date); const dateStr = d.toLocaleDateString('fr-FR'); const timeStr = d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}); if(item.type === 'sale') { l.innerHTML+=`<li class="list-item"><div><b>${item.clientName}</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${item.prodName}</small></div><div style="text-align:right"><b>${formatMoney(item.total)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`; } else { l.innerHTML+=`<li class="list-item expense-item"><div><b>Dépense</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${item.desc}</small></div><div style="text-align:right"><b class="expense-amount">- ${formatMoney(item.amount)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`; } }); }
         function backupData() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); const date = new Date().toISOString().slice(0,10); downloadAnchorNode.setAttribute("download", `backup_dodo_${date}.json`); document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove(); showNotification("Sauvegarde téléchargée !"); }
         function triggerRestore() { if(confirm("ATTENTION : Cela va REMPLACER toutes les données actuelles par celles du fichier. Êtes-vous sûr ?")) { document.getElementById('restoreInput').click(); } }
         function restoreData(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importedData = JSON.parse(e.target.result); if(importedData.products && importedData.sales) { appData = importedData; saveData(); showNotification("Données restaurées avec succès !"); } else { showNotification("Fichier invalide", 'e'); } } catch(err) { showNotification("Erreur de lecture", 'e'); } }; reader.readAsText(file); input.value = ''; }
