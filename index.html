@@ -15,8 +15,6 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/679/679821.png">
 
     <meta property="og:title" content="Matelas DoDo Manager">
-    <meta property="og:description" content="Gestion de stock et caisse.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1000&auto=format&fit=crop">
     <meta property="og:type" content="website">
 
     <title>Matelas DoDo Stock</title>
@@ -44,38 +42,20 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: var(--font-stack); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 110px; min-height: 100vh; transition: background 0.3s; }
 
-        /* PIN LOCK SCREEN (ADAPTATIF) */
-        #pinOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-body); /* S'adapte au thème */
-            z-index: 5000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--text-primary); /* Texte s'adapte */
-            padding: 20px;
-            transition: background 0.3s;
-        }
+        /* PIN LOCK */
+        #pinOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-primary); padding: 20px; transition: background 0.3s; }
         .pin-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 30px; letter-spacing: 1px; }
-        
         .pin-dots { display: flex; gap: 15px; margin-bottom: 50px; }
         .pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--text-primary); transition: all 0.2s; }
         .pin-dot.filled { background: var(--text-primary); }
         .pin-dot.error { border-color: var(--danger); background: var(--danger); }
-        
         .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; max-width: 300px; }
-        .pin-btn { 
-            width: 70px; height: 70px; border-radius: 50%; 
-            background: var(--bg-card); /* Bouton s'adapte */
-            border: 1px solid var(--separator);
-            color: var(--text-primary); font-size: 1.8rem; font-weight: 500;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Légère ombre */
-            transition: transform 0.1s; cursor: pointer;
-        }
+        .pin-btn { width: 70px; height: 70px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--separator); color: var(--text-primary); font-size: 1.8rem; font-weight: 500; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.1s; cursor: pointer; }
         .pin-btn:active { transform: scale(0.9); background: var(--bg-input); }
         .pin-btn-transp { background: transparent !important; border: none; box-shadow: none; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+        .shake { animation: shake 0.3s ease-in-out; }
 
-        /* APP STYLES */
         header { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; background: var(--header-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); border-bottom: 0.5px solid var(--separator); }
         .header-brand h1 { font-weight: 800; font-size: 1.1rem; margin: 0; line-height: 1; } .header-brand h1 span { color: var(--primary); }
         .header-stats { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
@@ -141,31 +121,23 @@
         .notif-error { background: var(--danger) !important; }
         .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         
-        /* SHAKE ANIMATION */
-        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
-        .shake { animation: shake 0.3s ease-in-out; }
+        /* EXPENSE STYLES */
+        .expense-item { border-left: 4px solid var(--danger); }
+        .expense-amount { color: var(--danger) !important; }
+        .btn-choice { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 25px; height:120px; font-size:1.1rem; }
+        .btn-choice i { font-size: 2rem; margin-bottom: 10px; }
     </style>
 </head>
 <body onload="initApp()">
 
     <div id="pinOverlay">
         <div class="pin-title" id="pinTitle">Entrez le code PIN</div>
-        <div class="pin-dots" id="pinDots">
-            <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-        </div>
+        <div class="pin-dots" id="pinDots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
         <div class="pin-pad">
-            <button class="pin-btn" onclick="addPin(1)">1</button>
-            <button class="pin-btn" onclick="addPin(2)">2</button>
-            <button class="pin-btn" onclick="addPin(3)">3</button>
-            <button class="pin-btn" onclick="addPin(4)">4</button>
-            <button class="pin-btn" onclick="addPin(5)">5</button>
-            <button class="pin-btn" onclick="addPin(6)">6</button>
-            <button class="pin-btn" onclick="addPin(7)">7</button>
-            <button class="pin-btn" onclick="addPin(8)">8</button>
-            <button class="pin-btn" onclick="addPin(9)">9</button>
-            <div class="pin-btn pin-btn-transp"></div>
-            <button class="pin-btn" onclick="addPin(0)">0</button>
-            <button class="pin-btn pin-btn-transp" onclick="clearPin()"><i class="fas fa-backspace"></i></button>
+            <button class="pin-btn" onclick="addPin(1)">1</button><button class="pin-btn" onclick="addPin(2)">2</button><button class="pin-btn" onclick="addPin(3)">3</button>
+            <button class="pin-btn" onclick="addPin(4)">4</button><button class="pin-btn" onclick="addPin(5)">5</button><button class="pin-btn" onclick="addPin(6)">6</button>
+            <button class="pin-btn" onclick="addPin(7)">7</button><button class="pin-btn" onclick="addPin(8)">8</button><button class="pin-btn" onclick="addPin(9)">9</button>
+            <div class="pin-btn pin-btn-transp"></div><button class="pin-btn" onclick="addPin(0)">0</button><button class="pin-btn pin-btn-transp" onclick="clearPin()"><i class="fas fa-backspace"></i></button>
         </div>
     </div>
 
@@ -203,16 +175,28 @@
         </div>
     </div>
 
-    <div id="confirmModal" class="modal-overlay">
-        <div class="modal-content" style="text-align:center">
-            <span class="close-modal" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></span>
-            <i class="fas fa-exclamation-triangle" style="font-size:3rem;color:var(--danger);margin-bottom:15px;display:block"></i>
-            <h3 style="margin-bottom:10px">Suppression</h3>
-            <p style="color:var(--text-secondary); margin-bottom:25px">Voulez-vous vraiment supprimer ce produit de l'inventaire ?</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <button class="btn-primary" style="background:var(--bg-input); color:var(--text-primary)" onclick="closeModal('confirmModal')">Annuler</button>
-                <button class="btn-primary" style="background:var(--danger)" onclick="confirmDelete()">Supprimer</button>
+    <div id="actionModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('actionModal')"><i class="fas fa-times"></i></span>
+            <h2 style="margin-bottom:25px; text-align:center">Nouvelle Action</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:10px;">
+                <button class="btn-primary btn-choice" style="background:var(--primary)" onclick="openProductModal()">
+                    <i class="fas fa-box"></i> Nouveau Stock
+                </button>
+                <button class="btn-primary btn-choice" style="background:var(--danger)" onclick="openExpenseModal()">
+                    <i class="fas fa-money-bill-wave"></i> Nouvelle Dépense
+                </button>
             </div>
+        </div>
+    </div>
+
+    <div id="expenseModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('expenseModal')"><i class="fas fa-times"></i></span>
+            <h2 style="margin-bottom:20px; color:var(--danger)">Ajouter Dépense</h2>
+            <input type="text" id="expDesc" placeholder="Motif (ex: Transport, Repas...)">
+            <input type="number" id="expAmount" placeholder="Montant (FCFA)">
+            <button class="btn-primary" style="background:var(--danger)" onclick="addExpense()">Valider Dépense</button>
         </div>
     </div>
 
@@ -229,12 +213,24 @@
         </div>
     </div>
 
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content" style="text-align:center">
+            <span class="close-modal" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></span>
+            <i class="fas fa-exclamation-triangle" style="font-size:3rem;color:var(--danger);margin-bottom:15px;display:block"></i>
+            <h3 style="margin-bottom:10px">Suppression</h3>
+            <p style="color:var(--text-secondary); margin-bottom:25px">Voulez-vous vraiment supprimer ce produit ?</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-primary" style="background:var(--bg-input); color:var(--text-primary)" onclick="closeModal('confirmModal')">Annuler</button>
+                <button class="btn-primary" style="background:var(--danger)" onclick="confirmDelete()">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
     <div id="editModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('editModal')"><i class="fas fa-times"></i></span>
             <h2 style="margin-bottom:20px">Modifier Produit</h2>
-            <input type="hidden" id="editProdId">
-            <input type="file" id="editProdImg" accept="image/*">
+            <input type="hidden" id="editProdId"><input type="file" id="editProdImg" accept="image/*">
             <select id="editProdCat"><option>Matelas</option><option>Oreillers</option><option>Tissus</option><option>Autre</option></select>
             <input type="text" id="editProdName" placeholder="Nom du produit">
             <input type="number" id="editProdPrice" placeholder="Prix Catalogue">
@@ -247,8 +243,8 @@
         <div class="dashboard-grid">
             <div class="card stat-card"><div class="stat-label">Stock Actuel</div><div class="stat-val" id="totalStockValue">0</div></div>
             <div class="card stat-card"><div class="stat-label">Ventes Jour</div><div class="stat-val" id="salesToday" style="color:var(--success)">0</div></div>
-            <div class="card stat-card"><div class="stat-label">Marge Nette</div><div class="stat-val" id="totalBonus">0</div></div>
-            <div class="card stat-card"><div class="stat-label">Total Global</div><div class="stat-val" id="totalSalesGlobal">0</div></div>
+            <div class="card stat-card"><div class="stat-label">Résultat Net</div><div class="stat-val" id="totalBonus">0</div></div>
+            <div class="card stat-card"><div class="stat-label">Dépenses Global</div><div class="stat-val" id="totalExpenses" style="color:var(--danger)">0</div></div>
         </div>
         <div class="card">
             <h3 style="margin-bottom:10px; font-size:0.9rem;">Performance du Jour</h3>
@@ -266,241 +262,142 @@
 
     <section id="stock" class="section">
         <h2 style="margin-bottom:15px; font-size:1.1rem; font-weight:700;">Stock & Historique</h2>
-        
         <div class="data-actions">
             <button class="btn-primary" style="background:var(--success); font-size:0.9rem" onclick="backupData()"><i class="fas fa-download"></i> Sauvegarder</button>
             <button class="btn-primary" style="background:var(--warning); font-size:0.9rem" onclick="triggerRestore()"><i class="fas fa-upload"></i> Restaurer</button>
             <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="restoreData(this)">
         </div>
-
         <h3 style="margin:20px 0 10px; font-size:0.9rem; color:var(--text-secondary); text-transform:uppercase;">Inventaire</h3>
         <ul id="stockList"></ul>
-        <h3 style="margin:30px 0 10px; font-size:0.9rem; color:var(--text-secondary); text-transform:uppercase;">Historique des Ventes</h3>
+        <h3 style="margin:30px 0 10px; font-size:0.9rem; color:var(--text-secondary); text-transform:uppercase;">Historique (Ventes & Dépenses)</h3>
         <ul id="salesList"></ul>
     </section>
 
     <nav>
         <button class="nav-btn active" onclick="switchTab('caisse',this)"><i class="fas fa-cash-register"></i></button>
         <button class="nav-btn" onclick="switchTab('dashboard',this)"><i class="fas fa-chart-pie"></i></button>
-        <button class="nav-btn nav-btn-add" onclick="openProductModal()"><i class="fas fa-plus-circle"></i></button>
+        <button class="nav-btn nav-btn-add" onclick="openActionMenu()"><i class="fas fa-plus-circle"></i></button>
         <button class="nav-btn" onclick="switchTab('stock',this)"><i class="fas fa-clock-rotate-left"></i></button>
     </nav>
 
     <script>
-        let deferredPrompt; let chartInstance = null;
-        let currentPinInput = "";
-        const PIN_KEY = 'dodo_pin_code';
-
-        function initApp(){ 
-            initPin(); 
-            loadData(); 
-            if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); 
-            initChart(); 
-        }
-        
+        let deferredPrompt; let chartInstance = null; let currentPinInput = ""; const PIN_KEY = 'dodo_pin_code';
+        function initApp(){ initPin(); loadData(); if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); initChart(); }
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').style.display = 'block'; });
         async function installApp(){ if(deferredPrompt){ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome === 'accepted') document.getElementById('installBtn').style.display='none'; } }
 
-        const DB_KEY='matelasDoDoData_v4'; let appData={products:[],sales:[]}, lastSaleData=null;
-        function loadData(){ const s=localStorage.getItem(DB_KEY); if(s)appData=JSON.parse(s); updateUI(); }
+        const DB_KEY='matelasDoDoData_v4'; 
+        let appData={products:[],sales:[], expenses:[]}, lastSaleData=null; // AJOUT EXPENSES
+
+        function loadData(){ 
+            const s=localStorage.getItem(DB_KEY); 
+            if(s) { 
+                appData=JSON.parse(s); 
+                if(!appData.expenses) appData.expenses = []; // Init expenses if old version
+            } 
+            updateUI(); 
+        }
         function saveData(){ localStorage.setItem(DB_KEY,JSON.stringify(appData)); updateUI(); }
         function updateUI(){ calculateDashboard(); renderPOSGrid(); renderSalesList(); renderStockList(); updateChartData(); }
         function formatMoney(a){ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XOF',maximumFractionDigits:0}).format(a).replace('XOF','F'); }
         function showNotification(m,t='s'){ const n=document.getElementById('notification'); n.innerHTML=t=='e'?`<i class="fas fa-exclamation"></i> ${m}`:`<i class="fas fa-check"></i> ${m}`; n.className=t=='e'?'notif-error':''; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),3000); }
         function switchTab(id,b){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
 
-        // --- PIN SECURITY LOGIC ---
-        function initPin() {
-            const savedPin = localStorage.getItem(PIN_KEY);
-            if (!savedPin) {
-                document.getElementById('pinTitle').innerText = "Créer un code PIN (4 chiffres)";
-            } else {
-                document.getElementById('pinTitle').innerText = "Verrouillé - Entrez le code";
-            }
-        }
-
-        function addPin(num) {
-            if (currentPinInput.length < 4) {
-                currentPinInput += num;
-                updatePinDots();
-                if (currentPinInput.length === 4) checkPin();
-            }
-        }
-
-        function clearPin() {
-            currentPinInput = currentPinInput.slice(0, -1);
-            updatePinDots();
-        }
-
-        function updatePinDots() {
-            const dots = document.querySelectorAll('.pin-dot');
-            dots.forEach((dot, idx) => {
-                if (idx < currentPinInput.length) dot.classList.add('filled');
-                else dot.classList.remove('filled');
-                dot.classList.remove('error'); // Reset error
-            });
-        }
-
-        function checkPin() {
-            const savedPin = localStorage.getItem(PIN_KEY);
-            if (!savedPin) {
-                localStorage.setItem(PIN_KEY, currentPinInput);
-                showNotification("Code PIN configuré !");
-                unlockApp();
-                return;
-            }
-            if (currentPinInput === savedPin) {
-                unlockApp();
-            } else {
-                if(navigator.vibrate) navigator.vibrate(200);
-                const dots = document.querySelectorAll('.pin-dot');
-                dots.forEach(d => d.classList.add('error'));
-                document.getElementById('pinDots').classList.add('shake');
-                setTimeout(() => {
-                    document.getElementById('pinDots').classList.remove('shake');
-                    currentPinInput = "";
-                    updatePinDots();
-                }, 400);
-            }
-        }
-
+        // --- PIN LOGIC ---
+        function initPin() { const savedPin = localStorage.getItem(PIN_KEY); if (!savedPin) { document.getElementById('pinTitle').innerText = "Créer un code PIN (4 chiffres)"; } else { document.getElementById('pinTitle').innerText = "Verrouillé - Entrez le code"; } }
+        function addPin(num) { if (currentPinInput.length < 4) { currentPinInput += num; updatePinDots(); if (currentPinInput.length === 4) checkPin(); } }
+        function clearPin() { currentPinInput = currentPinInput.slice(0, -1); updatePinDots(); }
+        function updatePinDots() { const dots = document.querySelectorAll('.pin-dot'); dots.forEach((dot, idx) => { if (idx < currentPinInput.length) dot.classList.add('filled'); else dot.classList.remove('filled'); dot.classList.remove('error'); }); }
+        function checkPin() { const savedPin = localStorage.getItem(PIN_KEY); if (!savedPin) { localStorage.setItem(PIN_KEY, currentPinInput); showNotification("Code PIN configuré !"); unlockApp(); return; } if (currentPinInput === savedPin) { unlockApp(); } else { if(navigator.vibrate) navigator.vibrate(200); const dots = document.querySelectorAll('.pin-dot'); dots.forEach(d => d.classList.add('error')); document.getElementById('pinDots').classList.add('shake'); setTimeout(() => { document.getElementById('pinDots').classList.remove('shake'); currentPinInput = ""; updatePinDots(); }, 400); } }
         function unlockApp() { document.getElementById('pinOverlay').style.display = 'none'; }
 
-        // --- BACKUP & RESTORE ---
-        function backupData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            const date = new Date().toISOString().slice(0,10);
-            downloadAnchorNode.setAttribute("download", `backup_dodo_${date}.json`);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            showNotification("Sauvegarde téléchargée !");
+        // --- ACTION MENU & EXPENSES ---
+        function openActionMenu() { document.getElementById('actionModal').classList.add('show'); document.getElementById('actionModal').style.display='flex'; }
+        
+        function openExpenseModal() { closeModal('actionModal'); document.getElementById('expenseModal').classList.add('show'); document.getElementById('expenseModal').style.display='flex'; }
+        
+        function addExpense() {
+            const desc = document.getElementById('expDesc').value;
+            const amount = document.getElementById('expAmount').value;
+            if(!desc || !amount) return;
+            appData.expenses.push({id:Date.now(), desc:desc, amount:parseInt(amount), date:new Date().toISOString()});
+            saveData(); showNotification("Dépense ajoutée"); closeModal('expenseModal');
+            document.getElementById('expDesc').value=''; document.getElementById('expAmount').value='';
         }
 
-        function triggerRestore() { if(confirm("ATTENTION : Cela va REMPLACER toutes les données actuelles par celles du fichier. Êtes-vous sûr ?")) { document.getElementById('restoreInput').click(); } }
-
-        function restoreData(input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if(importedData.products && importedData.sales) {
-                        appData = importedData;
-                        saveData();
-                        showNotification("Données restaurées avec succès !");
-                    } else { showNotification("Fichier invalide", 'e'); }
-                } catch(err) { showNotification("Erreur de lecture", 'e'); }
-            };
-            reader.readAsText(file);
-            input.value = '';
-        }
-
-        // --- MODALES & GESTION ---
-        function openModal(p){ document.getElementById('salesModal').classList.add('show'); document.getElementById('salesModal').style.display='flex'; document.getElementById('saleFormStep').style.display='block'; document.getElementById('receiptStep').style.display='none'; document.getElementById('modalProdId').value=p.id; document.getElementById('modalProdName').innerText=p.name; document.getElementById('modalStockPrice').innerText=formatMoney(p.price); document.getElementById('modalActualPrice').value=p.price; document.getElementById('modalMaxStock').value=p.quantity; document.getElementById('modalQty').value=1; }
-        function openProductModal() { document.getElementById('productModal').classList.add('show'); document.getElementById('productModal').style.display='flex'; }
-        function closeModal(id){ document.getElementById(id).classList.remove('show'); setTimeout(()=>document.getElementById(id).style.display='none',300); }
-        function adjustQty(d){ const el=document.getElementById('modalQty'); let v=parseInt(el.value)+d, max=parseInt(document.getElementById('modalMaxStock').value); if(v<1)v=1; if(v>max){v=max;showNotification("Max Stock",'e');} el.value=v; }
-
-        let pendingDeleteId = null;
-        function deleteProduct(id) { pendingDeleteId = id; document.getElementById('confirmModal').classList.add('show'); document.getElementById('confirmModal').style.display = 'flex'; }
-        function confirmDelete() { if(pendingDeleteId) { appData.products = appData.products.filter(p => p.id !== pendingDeleteId); saveData(); showNotification("Produit supprimé", 'e'); closeModal('confirmModal'); pendingDeleteId = null; } }
-
-        function openEditModal(id) {
-            const p = appData.products.find(x => x.id === id);
-            if(!p) return;
-            document.getElementById('editProdId').value = p.id;
-            document.getElementById('editProdName').value = p.name;
-            document.getElementById('editProdPrice').value = p.price;
-            document.getElementById('editModal').classList.add('show');
-            document.getElementById('editModal').style.display = 'flex';
-        }
-        function saveEditProduct() {
-            const id = parseInt(document.getElementById('editProdId').value);
-            const p = appData.products.find(x => x.id === id);
-            if(p) {
-                p.name = document.getElementById('editProdName').value;
-                p.price = parseInt(document.getElementById('editProdPrice').value);
-                const f = document.getElementById('editProdImg').files[0];
-                if(f) { const r = new FileReader(); r.onload = e => { p.image = e.target.result; saveData(); closeModal('editModal'); }; r.readAsDataURL(f); } 
-                else { saveData(); closeModal('editModal'); }
-                showNotification("Produit modifié");
-            }
-        }
-
-        function validateSale(){ 
-            const pid=parseInt(document.getElementById('modalProdId').value), qty=parseInt(document.getElementById('modalQty').value), price=parseInt(document.getElementById('modalActualPrice').value), client=document.getElementById('modalClientName').value||"Client"; 
-            const p=appData.products.find(x=>x.id===pid); 
-            if(p.quantity<qty)return showNotification("Stock insuffisant",'e'); 
-            p.quantity-=qty; 
-            const sale={id:Date.now(),prodId:p.id,prodName:p.name,clientName:client,quantity:qty,unitPriceSold:price,total:price*qty,surplus:(price-p.price)*qty,date:new Date().toISOString()}; 
-            appData.sales.push(sale); lastSaleData=sale; saveData(); 
-            document.getElementById('saleFormStep').style.display='none'; document.getElementById('receiptStep').style.display='block'; 
-            const b=sale.surplus; document.getElementById('bonusMsg').innerHTML=b>0?`Bonus: <b style="color:var(--success)">+${formatMoney(b)}</b>`:b<0?`Rabais: <b style="color:var(--danger)">${formatMoney(b)}</b>`:'Prix Standard'; 
-        }
-
+        // --- DASHBOARD UPDATE ---
         function calculateDashboard(){ 
-            let st=0, today=0, bonus=0, tot=0, stockEntrantVal=0; const now=new Date().toISOString().split('T')[0]; 
+            let st=0, todaySales=0, totalMargin=0, totalSales=0, stockEntrantVal=0, totalExp=0; 
+            const now=new Date().toISOString().split('T')[0]; 
+            
+            // Stock stats
             appData.products.forEach(p=>{ st += p.price * p.quantity; const qInit = p.originalQty || p.quantity; stockEntrantVal += p.price * qInit; }); 
-            appData.sales.forEach(s=>{ tot+=s.total; if(s.surplus)bonus+=s.surplus; if(s.date.startsWith(now))today+=s.total; }); 
-            document.getElementById('totalStockValue').innerText=formatMoney(st); document.getElementById('salesToday').innerText=formatMoney(today); document.getElementById('totalBonus').innerText=formatMoney(bonus); document.getElementById('totalSalesGlobal').innerText=formatMoney(tot); document.getElementById('headerStockEntrant').innerText=formatMoney(stockEntrantVal); document.getElementById('headerRistourne').innerText=formatMoney(stockEntrantVal * 0.09);
-        }
-
-        function initChart() { const ctx = document.getElementById('perfChart').getContext('2d'); chartInstance = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Ventes', data: [], borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(200, 200, 200, 0.1)' }, ticks: { display: false } } } } }); }
-        function updateChartData() {
-            if (!chartInstance) return;
-            const hours = ['08h', '10h', '12h', '14h', '16h', '18h', '20h', '22h'];
-            const data = [0, 0, 0, 0, 0, 0, 0, 0];
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todaysSales = appData.sales.filter(s => s.date.startsWith(todayStr));
-            todaysSales.forEach(s => {
-                const h = new Date(s.date).getHours();
-                if(h >= 8 && h < 10) data[0] += s.total; else if(h >= 10 && h < 12) data[1] += s.total; else if(h >= 12 && h < 14) data[2] += s.total; else if(h >= 14 && h < 16) data[3] += s.total; else if(h >= 16 && h < 18) data[4] += s.total; else if(h >= 18 && h < 20) data[5] += s.total; else if(h >= 20 && h < 22) data[6] += s.total; else if(h >= 22) data[7] += s.total;
+            
+            // Sales stats
+            appData.sales.forEach(s=>{ 
+                totalSales += s.total; 
+                if(s.surplus) totalMargin += s.surplus; 
+                if(s.date.startsWith(now)) todaySales += s.total; 
             });
-            chartInstance.data.labels = hours; chartInstance.data.datasets[0].data = data; chartInstance.update();
+
+            // Expense stats
+            if(appData.expenses) {
+                appData.expenses.forEach(e => totalExp += e.amount);
+            }
+
+            const netResult = totalMargin - totalExp;
+
+            document.getElementById('totalStockValue').innerText=formatMoney(st); 
+            document.getElementById('salesToday').innerText=formatMoney(todaySales); 
+            
+            const elBonus = document.getElementById('totalBonus');
+            elBonus.innerText = formatMoney(netResult);
+            elBonus.style.color = netResult >= 0 ? 'var(--success)' : 'var(--danger)'; // Rouge si perte
+
+            document.getElementById('totalExpenses').innerText=formatMoney(totalExp); 
+            
+            document.getElementById('headerStockEntrant').innerText=formatMoney(stockEntrantVal); 
+            document.getElementById('headerRistourne').innerText=formatMoney(stockEntrantVal * 0.09);
         }
 
-        function renderPOSGrid(list = appData.products){ 
-            const g=document.getElementById('posGrid'); g.innerHTML=''; 
-            list.forEach(p=>{ 
-                const img=p.image||'https://via.placeholder.com/150'; const op=p.quantity<=0?'0.5':'1'; 
-                g.innerHTML+=`<div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}">
-                    <div class="card-actions"><button class="action-btn btn-edit" onclick="event.stopPropagation(); openEditModal(${p.id})"><i class="fas fa-pen"></i></button><button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></div>
-                    <span class="pos-badge">${p.quantity}</span><img src="${img}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div></div>`; 
-            }); 
-        }
-        function filterPOS() { const query = document.getElementById('searchPos').value.toLowerCase(); const filtered = appData.products.filter(p => p.name.toLowerCase().includes(query)); renderPOSGrid(filtered); }
-
+        // --- LISTES MIXTES ---
         function renderSalesList(){ 
             const l=document.getElementById('salesList'); l.innerHTML=''; 
-            [...appData.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,20).forEach(s=>{ 
-                const d = new Date(s.date);
+            // Combiner Ventes et Dépenses
+            let allItems = [...appData.sales.map(s=>({...s, type:'sale'})), ...(appData.expenses||[]).map(e=>({...e, type:'expense'}))];
+            
+            allItems.sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,30).forEach(item=>{ 
+                const d = new Date(item.date);
                 const dateStr = d.toLocaleDateString('fr-FR');
                 const timeStr = d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                l.innerHTML+=`<li class="list-item"><div><b>${s.clientName}</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${s.prodName}</small></div><div style="text-align:right"><b>${formatMoney(s.total)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`; 
+                
+                if(item.type === 'sale') {
+                    l.innerHTML+=`<li class="list-item"><div><b>${item.clientName}</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${item.prodName}</small></div><div style="text-align:right"><b>${formatMoney(item.total)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`; 
+                } else {
+                    l.innerHTML+=`<li class="list-item expense-item"><div><b>Dépense</b> <span style="color:var(--text-secondary); font-size:0.8rem;">à ${timeStr}</span><br><small>${item.desc}</small></div><div style="text-align:right"><b class="expense-amount">- ${formatMoney(item.amount)}</b><br><small style="font-size:0.7rem; color:var(--text-secondary)">${dateStr}</small></div></li>`;
+                }
             }); 
         }
-        function renderStockList(){ const l=document.getElementById('stockList'); l.innerHTML=''; appData.products.forEach(p=>{ l.innerHTML+=`<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`; }); }
-        
-        function addProduct(){ 
-            const n=document.getElementById('prodName').value, p=document.getElementById('prodPrice').value, q=document.getElementById('prodQty').value, f=document.getElementById('prodImg').files[0]; 
-            if(!n||!p)return; 
-            const r=new FileReader(); 
-            r.onload=e=>{ appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodQty').value=''; document.getElementById('prodImg').value=''; }; 
-            if(f)r.readAsDataURL(f); else r.onload({target:{result:null}}); 
-        }
 
-        function sendReceipt(method){
-            let text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`;
-            if(method === 'sms') {
-                text = text.replace(/\*/g, '');
-                const sep = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) ? '&' : '?';
-                window.location.href = `sms:${sep}body=${encodeURIComponent(text)}`;
-            } else { window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); }
-        }
+        // --- OTHER FUNCTIONS (UNCHANGED) ---
+        function backupData() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); const date = new Date().toISOString().slice(0,10); downloadAnchorNode.setAttribute("download", `backup_dodo_${date}.json`); document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove(); showNotification("Sauvegarde téléchargée !"); }
+        function triggerRestore() { if(confirm("ATTENTION : Cela va REMPLACER toutes les données actuelles par celles du fichier. Êtes-vous sûr ?")) { document.getElementById('restoreInput').click(); } }
+        function restoreData(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importedData = JSON.parse(e.target.result); if(importedData.products && importedData.sales) { appData = importedData; saveData(); showNotification("Données restaurées avec succès !"); } else { showNotification("Fichier invalide", 'e'); } } catch(err) { showNotification("Erreur de lecture", 'e'); } }; reader.readAsText(file); input.value = ''; }
+        function openModal(p){ document.getElementById('salesModal').classList.add('show'); document.getElementById('salesModal').style.display='flex'; document.getElementById('saleFormStep').style.display='block'; document.getElementById('receiptStep').style.display='none'; document.getElementById('modalProdId').value=p.id; document.getElementById('modalProdName').innerText=p.name; document.getElementById('modalStockPrice').innerText=formatMoney(p.price); document.getElementById('modalActualPrice').value=p.price; document.getElementById('modalMaxStock').value=p.quantity; document.getElementById('modalQty').value=1; }
+        function openProductModal() { closeModal('actionModal'); document.getElementById('productModal').classList.add('show'); document.getElementById('productModal').style.display='flex'; }
+        function closeModal(id){ document.getElementById(id).classList.remove('show'); setTimeout(()=>document.getElementById(id).style.display='none',300); }
+        function adjustQty(d){ const el=document.getElementById('modalQty'); let v=parseInt(el.value)+d, max=parseInt(document.getElementById('modalMaxStock').value); if(v<1)v=1; if(v>max){v=max;showNotification("Max Stock",'e');} el.value=v; }
+        let pendingDeleteId = null; function deleteProduct(id) { pendingDeleteId = id; document.getElementById('confirmModal').classList.add('show'); document.getElementById('confirmModal').style.display = 'flex'; } function confirmDelete() { if(pendingDeleteId) { appData.products = appData.products.filter(p => p.id !== pendingDeleteId); saveData(); showNotification("Produit supprimé", 'e'); closeModal('confirmModal'); pendingDeleteId = null; } }
+        function openEditModal(id) { const p = appData.products.find(x => x.id === id); if(!p) return; document.getElementById('editProdId').value = p.id; document.getElementById('editProdName').value = p.name; document.getElementById('editProdPrice').value = p.price; document.getElementById('editModal').classList.add('show'); document.getElementById('editModal').style.display = 'flex'; }
+        function saveEditProduct() { const id = parseInt(document.getElementById('editProdId').value); const p = appData.products.find(x => x.id === id); if(p) { p.name = document.getElementById('editProdName').value; p.price = parseInt(document.getElementById('editProdPrice').value); const f = document.getElementById('editProdImg').files[0]; if(f) { const r = new FileReader(); r.onload = e => { p.image = e.target.result; saveData(); closeModal('editModal'); }; r.readAsDataURL(f); } else { saveData(); closeModal('editModal'); } showNotification("Produit modifié"); } }
+        function validateSale(){ const pid=parseInt(document.getElementById('modalProdId').value), qty=parseInt(document.getElementById('modalQty').value), price=parseInt(document.getElementById('modalActualPrice').value), client=document.getElementById('modalClientName').value||"Client"; const p=appData.products.find(x=>x.id===pid); if(p.quantity<qty)return showNotification("Stock insuffisant",'e'); p.quantity-=qty; const sale={id:Date.now(),prodId:p.id,prodName:p.name,clientName:client,quantity:qty,unitPriceSold:price,total:price*qty,surplus:(price-p.price)*qty,date:new Date().toISOString()}; appData.sales.push(sale); lastSaleData=sale; saveData(); document.getElementById('saleFormStep').style.display='none'; document.getElementById('receiptStep').style.display='block'; const b=sale.surplus; document.getElementById('bonusMsg').innerHTML=b>0?`Bonus: <b style="color:var(--success)">+${formatMoney(b)}</b>`:b<0?`Rabais: <b style="color:var(--danger)">${formatMoney(b)}</b>`:'Prix Standard'; }
+        function initChart() { const ctx = document.getElementById('perfChart').getContext('2d'); chartInstance = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Ventes', data: [], borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(200, 200, 200, 0.1)' }, ticks: { display: false } } } } }); }
+        function updateChartData() { if (!chartInstance) return; const hours = ['08h', '10h', '12h', '14h', '16h', '18h', '20h', '22h']; const data = [0, 0, 0, 0, 0, 0, 0, 0]; const todayStr = new Date().toISOString().split('T')[0]; const todaysSales = appData.sales.filter(s => s.date.startsWith(todayStr)); todaysSales.forEach(s => { const h = new Date(s.date).getHours(); if(h >= 8 && h < 10) data[0] += s.total; else if(h >= 10 && h < 12) data[1] += s.total; else if(h >= 12 && h < 14) data[2] += s.total; else if(h >= 14 && h < 16) data[3] += s.total; else if(h >= 16 && h < 18) data[4] += s.total; else if(h >= 18 && h < 20) data[5] += s.total; else if(h >= 20 && h < 22) data[6] += s.total; else if(h >= 22) data[7] += s.total; }); chartInstance.data.labels = hours; chartInstance.data.datasets[0].data = data; chartInstance.update(); }
+        function renderPOSGrid(list = appData.products){ const g=document.getElementById('posGrid'); g.innerHTML=''; list.forEach(p=>{ const img=p.image||'https://via.placeholder.com/150'; const op=p.quantity<=0?'0.5':'1'; g.innerHTML+=`<div class="pos-card" style="opacity:${op}" onclick="${p.quantity>0?`openModal({id:${p.id},name:'${p.name.replace(/'/g,"\'")}',price:${p.price},quantity:${p.quantity}})`:''}"> <div class="card-actions"><button class="action-btn btn-edit" onclick="event.stopPropagation(); openEditModal(${p.id})"><i class="fas fa-pen"></i></button><button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></div> <span class="pos-badge">${p.quantity}</span><img src="${img}" class="pos-img"><div class="pos-info"><div class="pos-title">${p.name}</div><div class="pos-price">${formatMoney(p.price)}</div></div></div>`; }); }
+        function filterPOS() { const query = document.getElementById('searchPos').value.toLowerCase(); const filtered = appData.products.filter(p => p.name.toLowerCase().includes(query)); renderPOSGrid(filtered); }
+        function renderStockList(){ const l=document.getElementById('stockList'); l.innerHTML=''; appData.products.forEach(p=>{ l.innerHTML+=`<li class="list-item"><span>${p.name}</span><span>Qté: <b>${p.quantity}</b></span></li>`; }); }
+        function addProduct(){ const n=document.getElementById('prodName').value, p=document.getElementById('prodPrice').value, q=document.getElementById('prodQty').value, f=document.getElementById('prodImg').files[0]; if(!n||!p)return; const r=new FileReader(); r.onload=e=>{ appData.products.push({id:Date.now(),name:n,price:parseInt(p),quantity:parseInt(q),originalQty:parseInt(q),image:f?e.target.result:null}); saveData(); showNotification("Produit Ajouté"); closeModal('productModal'); document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodQty').value=''; document.getElementById('prodImg').value=''; }; if(f)r.readAsDataURL(f); else r.onload({target:{result:null}}); }
+        function sendReceipt(method){ let text = `🧾 *Reçu Matelas DoDo*\n\n👤 Client: ${lastSaleData.clientName}\n📦 Produit: ${lastSaleData.prodName}\n🔢 Quantité: ${lastSaleData.quantity}\n💰 *Total Payé: ${formatMoney(lastSaleData.total)}*\n\n✅ Merci pour votre achat !`; if(method === 'sms') { text = text.replace(/\*/g, ''); const sep = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) ? '&' : '?'; window.location.href = `sms:${sep}body=${encodeURIComponent(text)}`; } else { window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); } }
     </script>
 </body>
 </html>
