@@ -123,8 +123,8 @@
         .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .expense-item { border-left: 4px solid var(--danger); }
         .expense-amount { color: var(--danger) !important; }
-        .btn-choice { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 25px; height:120px; font-size:1.1rem; }
-        .btn-choice i { font-size: 2rem; margin-bottom: 10px; }
+        .btn-choice { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 25px; height:90px; font-size:1rem; }
+        .btn-choice i { font-size: 1.8rem; margin-bottom: 8px; }
     </style>
 </head>
 <body onload="initApp()">
@@ -178,10 +178,18 @@
     <div id="actionModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('actionModal')"><i class="fas fa-times"></i></span>
-            <h2 style="margin-bottom:25px; text-align:center">Nouvelle Action</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:10px;">
-                <button class="btn-primary btn-choice" style="background:var(--primary)" onclick="openProductModal()"><i class="fas fa-box"></i> Nouveau Stock</button>
-                <button class="btn-primary btn-choice" style="background:var(--danger)" onclick="openExpenseModal()"><i class="fas fa-money-bill-wave"></i> Nouvelle Dépense</button>
+            <h2 style="margin-bottom:25px; text-align:center">Menu Actions</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                <button class="btn-primary btn-choice" style="background:var(--primary)" onclick="openProductModal()">
+                    <i class="fas fa-box"></i> Stock
+                </button>
+                <button class="btn-primary btn-choice" style="background:var(--danger)" onclick="openExpenseModal()">
+                    <i class="fas fa-money-bill-wave"></i> Dépense
+                </button>
+                <button class="btn-primary btn-choice" style="background:var(--purple); grid-column: span 2;" onclick="document.getElementById('logoInput').click()">
+                    <i class="fas fa-image"></i> Configurer Logo PDF
+                </button>
+                <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="uploadLogo(this)">
             </div>
         </div>
     </div>
@@ -278,17 +286,22 @@
 
     <script>
         let deferredPrompt; let chartInstance = null; let currentPinInput = ""; const PIN_KEY = 'dodo_pin_code';
-        // LOGO DODO en Base64
-        const logoBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISEhUSEhIWFRUVFRUVFRUXFRUVFRUVFRUWFxUVFRUYHSggGBolHRUVITEhJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGxAQGi0lICUtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAOEA4QMBEQACEQEDEQH/xAAbAAEAAwEBAQEAAAAAAAAAAAAAAwQFAgYBB//EAD4QAAICAQIEAwYEBAUDBAMAAAECAAMRBCEFEjFBBhNRYSIycYGRoRSxwfAHI0JS0TNicuHxkqKyFSRzsv/EABoBAQADAQEBAAAAAAAAAAAAAAABAgMEBQb/xAAmEQEBAAIBBAICAgMBAAAAAAAAAQIRAwQSITFBBRNRImEUMoFC/9oADAMBAAIRAxEAPwD9xiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiB//2Q==";
-
         function initApp(){ initPin(); loadData(); if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); initChart(); }
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').style.display = 'block'; });
         async function installApp(){ if(deferredPrompt){ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome === 'accepted') document.getElementById('installBtn').style.display='none'; } }
 
         const DB_KEY='matelasDoDoData_v4'; 
-        let appData={products:[],sales:[], expenses:[]}, lastSaleData=null;
+        let appData={products:[],sales:[], expenses:[], settings:{logo: null}}, lastSaleData=null;
 
-        function loadData(){ const s=localStorage.getItem(DB_KEY); if(s) { appData=JSON.parse(s); if(!appData.expenses) appData.expenses = []; } updateUI(); }
+        function loadData(){ 
+            const s=localStorage.getItem(DB_KEY); 
+            if(s) { 
+                appData=JSON.parse(s); 
+                if(!appData.expenses) appData.expenses = []; 
+                if(!appData.settings) appData.settings = {logo: null}; // Ensure settings
+            } 
+            updateUI(); 
+        }
         function saveData(){ localStorage.setItem(DB_KEY,JSON.stringify(appData)); updateUI(); }
         function updateUI(){ calculateDashboard(); renderPOSGrid(); renderSalesList(); renderStockList(); updateChartData(); }
         function formatMoney(a){ return parseInt(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " F"; }
@@ -304,27 +317,57 @@
         function checkPin() { const savedPin = localStorage.getItem(PIN_KEY); if (!savedPin) { localStorage.setItem(PIN_KEY, currentPinInput); showNotification("Code PIN configuré !"); unlockApp(); return; } if (currentPinInput === savedPin) { unlockApp(); } else { if(navigator.vibrate) navigator.vibrate(200); const dots = document.querySelectorAll('.pin-dot'); dots.forEach(d => d.classList.add('error')); document.getElementById('pinDots').classList.add('shake'); setTimeout(() => { document.getElementById('pinDots').classList.remove('shake'); currentPinInput = ""; updatePinDots(); }, 400); } }
         function unlockApp() { document.getElementById('pinOverlay').style.display = 'none'; }
 
-        // --- PDF GENERATION AVEC LOGO ---
+        // --- GESTION LOGO UPLOAD ---
+        function uploadLogo(input) {
+            const file = input.files[0];
+            if (!file) return;
+            // Compress simple (limit to reasonable width)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 300; // Resize to max 300px width
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    appData.settings.logo = dataUrl;
+                    saveData();
+                    showNotification("Logo sauvegardé !");
+                    closeModal('actionModal');
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // --- PDF GENERATION AVEC LOGO & ADRESSE ---
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // AJOUT LOGO (x=85, y=10, width=40, height=20)
-            doc.addImage(logoBase64, 'JPEG', 85, 10, 40, 20);
+            // LOGO (Si configuré)
+            if (appData.settings && appData.settings.logo) {
+                try {
+                    doc.addImage(appData.settings.logo, 'JPEG', 85, 10, 40, 20);
+                } catch(e) { console.error("Err logo", e); }
+            }
 
-            // Header (décalé vers le bas)
+            // Header
             doc.setFontSize(16);
             doc.setFont("helvetica", "bold");
             doc.text("MATELAS DODO", 105, 38, null, null, "center");
             
-            // NOUVELLE ADRESSE
+            // ADRESSE CORRIGÉE
             doc.setFontSize(11);
             doc.setFont("helvetica", "normal");
             doc.text("Mali/Ségou/Bla", 105, 45, null, null, "center");
             
             const date = new Date().toLocaleDateString('fr-FR');
             const time = new Date().toLocaleTimeString('fr-FR');
-            // Contenu (décalé vers le bas)
             doc.text(`Date: ${date} à ${time}`, 20, 65);
             doc.text(`Client: ${lastSaleData.clientName}`, 20, 73);
             
